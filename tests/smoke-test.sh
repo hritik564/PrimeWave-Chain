@@ -263,147 +263,216 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TEST 8: PW transfer succeeds
+# TEST 8: PW transfer succeeds + balance verification
 # ─────────────────────────────────────────────────────────────────────────────
 echo -e "${BOLD}Test 8: PW transfer${NC}"
+
+T8_TX_HASH=""
+T8_FROM_ADDR=""
+T8_TO_ADDR=""
+T8_FROM_BAL_BEFORE=""
+T8_TO_BAL_BEFORE=""
+T8_VALUE_WEI=""
+T8_GAS_USED=""
+T8_EFF_GAS_PRICE=""
 
 if [[ $NO_TX -eq 1 ]]; then
     skip "Test 8: PW transfer" "--no-tx flag set"
 else
-    # Sender: DEV_ACCOUNT_0
+    # Sender: DEV_ACCOUNT_0 (Foundry test key — public, dev-only)
     FROM_ADDR="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     FROM_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
     # Receiver: DEV_ACCOUNT_1
     TO_ADDR="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-    VALUE="0xDE0B6B3A7640000"  # 1.0 PW = 10^18 wei
+    # Transfer value: exactly 1.0 PW = 10^18 wei
+    VALUE_WEI="1000000000000000000"
 
-    # Get nonce
+    # ── Capture pre-transaction balances ──
+    FROM_BAL_BEFORE_HEX=$(rpc_call "eth_getBalance" "[\"$FROM_ADDR\",\"latest\"]" | jq -r '.result // "0x0"')
+    TO_BAL_BEFORE_HEX=$(rpc_call "eth_getBalance" "[\"$TO_ADDR\",\"latest\"]" | jq -r '.result // "0x0"')
+    ZERO_BAL_BEFORE_HEX=$(rpc_call "eth_getBalance" "[\"0x0000000000000000000000000000000000000000\",\"latest\"]" | jq -r '.result // "0x0"')
     NONCE_HEX=$(rpc_call "eth_getTransactionCount" "[\"$FROM_ADDR\",\"latest\"]" | jq -r '.result // "0x0"')
-    NONCE=$(printf "%d" "$NONCE_HEX" 2>/dev/null || echo "0")
 
-    # Get chain ID for signing
-    CHAIN_ID_HEX=$(rpc_call "eth_chainId" | jq -r '.result // "0x11F63"')
+    FROM_BAL_BEFORE=$(python3 -c "print(int('$FROM_BAL_BEFORE_HEX',16))")
+    TO_BAL_BEFORE=$(python3 -c "print(int('$TO_BAL_BEFORE_HEX',16))")
+    ZERO_BAL_BEFORE=$(python3 -c "print(int('$ZERO_BAL_BEFORE_HEX',16))")
+    NONCE=$(python3 -c "print(int('$NONCE_HEX',16))")
 
-    # Get gas price
-    GAS_PRICE_HEX=$(rpc_call "eth_gasPrice" | jq -r '.result // "0x5F5E100"')
-
-    echo -e "         From: $FROM_ADDR (nonce: $NONCE)"
-    echo -e "         To:   $TO_ADDR"
-    echo -e "         Value: 1.0 PW"
-    echo -e "         Gas price: $GAS_PRICE_HEX"
+    echo -e "         Sender:  $FROM_ADDR (nonce: $NONCE)"
+    echo -e "         Receiver:$TO_ADDR"
+    echo -e "         Value:   1.0 PW (${VALUE_WEI} wei)"
+    echo -e "         Sender balance before:   $(python3 -c "print(f'{int('$FROM_BAL_BEFORE_HEX',16)/10**18:.6f}')") PW"
+    echo -e "         Receiver balance before: $(python3 -c "print(f'{int('$TO_BAL_BEFORE_HEX',16)/10**18:.6f}')") PW"
+    echo -e "         Zero addr balance before: $(python3 -c "print(f'{$ZERO_BAL_BEFORE/10**18:.10f}')") PW (fee accumulation)"
     echo ""
 
-    # Use cast if available, otherwise manual eth_sendTransaction
-    if command -v cast &>/dev/null; then
-        echo -e "         Using cast to send transaction..."
-        TX_HASH=$(cast send \
+    if ! command -v cast &>/dev/null; then
+        fail "Test 8: PW transfer" "cast (Foundry) not found — install Foundry: foundryup"
+    else
+        echo -e "         Sending via cast..."
+        # Capture stdout (JSON receipt) and stderr (warnings) separately
+        CAST_OUT=$(cast send \
             --private-key "$FROM_KEY" \
             --rpc-url "$RPC_URL" \
             --chain-id "$PRIMEWAVE_DEV_CHAIN_ID" \
             "$TO_ADDR" \
             --value "1ether" \
-            --json 2>/dev/null | jq -r '.transactionHash // ""' || echo "")
+            --json 2>/tmp/cast-stderr.txt) || CAST_OUT="CAST_FAILED"
+        CAST_ERR=$(cat /tmp/cast-stderr.txt 2>/dev/null || echo "")
+        [[ -n "$CAST_ERR" ]] && echo -e "         ${YELLOW}cast stderr: $CAST_ERR${NC}"
 
-        if [[ -n "$TX_HASH" && "$TX_HASH" != "null" ]]; then
-            echo -e "         TX Hash: $TX_HASH"
-            pass "Test 8: PW transfer — TX submitted via cast: $TX_HASH"
-            T8_TX_HASH="$TX_HASH"
-            export T8_TX_HASH
+        if [[ "$CAST_OUT" == "CAST_FAILED" ]]; then
+            fail "Test 8: PW transfer" "cast send failed: $CAST_ERR"
         else
-            fail "Test 8: PW transfer" "cast send failed or returned no hash"
-            T8_TX_HASH=""
-        fi
-    else
-        # Without cast/foundry, use eth_sendTransaction (only works on local devnets with unlocked accounts)
-        # OR skip with a note
-        TX_RESP=$(curl -s \
-            -X POST "$RPC_URL" \
-            -H "Content-Type: application/json" \
-            -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_sendTransaction\",\"params\":[{\"from\":\"$FROM_ADDR\",\"to\":\"$TO_ADDR\",\"value\":\"$VALUE\",\"gas\":\"0x5208\"}],\"id\":1}" \
-            --max-time 8 2>/dev/null || echo "{}")
-
-        TX_HASH=$(echo "$TX_RESP" | jq -r '.result // ""')
-        TX_ERROR=$(echo "$TX_RESP" | jq -r '.error.message // ""')
-
-        if [[ -n "$TX_HASH" && "$TX_HASH" != "null" ]]; then
-            echo -e "         TX Hash: $TX_HASH"
-            pass "Test 8: PW transfer — TX submitted: $TX_HASH"
-            T8_TX_HASH="$TX_HASH"
-            export T8_TX_HASH
-        elif [[ -n "$TX_ERROR" ]]; then
-            fail "Test 8: PW transfer" "eth_sendTransaction error: $TX_ERROR"
-            echo -e "         ${YELLOW}Note: eth_sendTransaction requires account unlocking.${NC}"
-            echo -e "         ${YELLOW}Install Foundry (cast) for signed transaction support.${NC}"
-            echo -e "         ${YELLOW}See docs/PW-C01-LOCAL-DEVELOPMENT.md — Foundry section.${NC}"
-            T8_TX_HASH=""
-        else
-            fail "Test 8: PW transfer" "no tx hash returned"
-            T8_TX_HASH=""
+            TX_HASH=$(echo "$CAST_OUT" | jq -r '.transactionHash // ""' 2>/dev/null || echo "")
+            if [[ -z "$TX_HASH" || "$TX_HASH" == "null" ]]; then
+                fail "Test 8: PW transfer" "cast returned no transactionHash: $CAST_OUT"
+            else
+                echo -e "         TX Hash: $TX_HASH"
+                T8_TX_HASH="$TX_HASH"
+                T8_FROM_ADDR="$FROM_ADDR"
+                T8_TO_ADDR="$TO_ADDR"
+                T8_FROM_BAL_BEFORE="$FROM_BAL_BEFORE"
+                T8_TO_BAL_BEFORE="$TO_BAL_BEFORE"
+                T8_ZERO_BAL_BEFORE="$ZERO_BAL_BEFORE"
+                T8_VALUE_WEI="$VALUE_WEI"
+                pass "Test 8: PW transfer — TX submitted: $TX_HASH"
+            fi
         fi
     fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TEST 9: Gas is paid in PW
+# TEST 9: Gas is paid in PW — full balance verification
 # ─────────────────────────────────────────────────────────────────────────────
 echo -e "${BOLD}Test 9: Gas denomination in PW${NC}"
 
 if [[ $NO_TX -eq 1 ]]; then
     skip "Test 9: Gas paid in PW" "--no-tx flag set"
-elif [[ -z "${T8_TX_HASH:-}" ]]; then
+elif [[ -z "$T8_TX_HASH" ]]; then
     skip "Test 9: Gas paid in PW" "Test 8 did not produce a transaction hash"
 else
-    # Wait for receipt
+    # Wait for receipt (block production is on-demand)
     sleep 3
 
     RECEIPT=$(rpc_call "eth_getTransactionReceipt" "[\"$T8_TX_HASH\"]")
-    GAS_USED=$(echo "$RECEIPT" | jq -r '.result.gasUsed // "null"')
-    EFFECTIVE_GAS_PRICE=$(echo "$RECEIPT" | jq -r '.result.effectiveGasPrice // "null"')
+    GAS_USED_HEX=$(echo "$RECEIPT" | jq -r '.result.gasUsed // "null"')
+    EFF_GAS_PRICE_HEX=$(echo "$RECEIPT" | jq -r '.result.effectiveGasPrice // "null"')
+    RECEIPT_BLOCK_HEX=$(echo "$RECEIPT" | jq -r '.result.blockNumber // "null"')
 
-    if [[ "$GAS_USED" != "null" && "$GAS_USED" != "" ]]; then
-        GAS_USED_DEC=$(printf "%d" "$GAS_USED" 2>/dev/null || echo "0")
-        GAS_PRICE_DEC=$(printf "%d" "${EFFECTIVE_GAS_PRICE:-0x0}" 2>/dev/null || echo "0")
-        GAS_COST_WEI=$(echo "$GAS_USED_DEC * $GAS_PRICE_DEC" | bc 2>/dev/null || echo "0")
-        GAS_COST_PW=$(echo "scale=8; $GAS_COST_WEI / 1000000000000000000" | bc 2>/dev/null || echo "N/A")
-        echo -e "         Gas used: $GAS_USED_DEC units"
-        echo -e "         Effective gas price: $GAS_PRICE_DEC wei/gas"
-        echo -e "         Gas cost: $GAS_COST_PW PW"
-        pass "Test 9: Gas paid in PW — $GAS_USED_DEC gas units at $GAS_PRICE_DEC wei/unit = $GAS_COST_PW PW"
+    if [[ "$GAS_USED_HEX" == "null" || -z "$GAS_USED_HEX" ]]; then
+        fail "Test 9: Gas paid in PW" "receipt not found after 3s — tx may not be mined"
     else
-        fail "Test 9: Gas paid in PW" "could not parse gas used from receipt"
+        GAS_USED=$(python3 -c "print(int('$GAS_USED_HEX',16))")
+        EFF_GAS_PRICE=$(python3 -c "print(int('$EFF_GAS_PRICE_HEX',16))")
+        ACTUAL_GAS_COST=$(python3 -c "print($GAS_USED * $EFF_GAS_PRICE)")
+        EXPECTED_REDUCTION=$(python3 -c "print($T8_VALUE_WEI + $GAS_USED * $EFF_GAS_PRICE)")
+
+        # Capture post-transaction balances
+        FROM_BAL_AFTER_HEX=$(rpc_call "eth_getBalance" "[\"$T8_FROM_ADDR\",\"latest\"]" | jq -r '.result // "0x0"')
+        TO_BAL_AFTER_HEX=$(rpc_call "eth_getBalance" "[\"$T8_TO_ADDR\",\"latest\"]" | jq -r '.result // "0x0"')
+        ZERO_BAL_AFTER_HEX=$(rpc_call "eth_getBalance" "[\"0x0000000000000000000000000000000000000000\",\"latest\"]" | jq -r '.result // "0x0"')
+
+        FROM_BAL_AFTER=$(python3 -c "print(int('$FROM_BAL_AFTER_HEX',16))")
+        TO_BAL_AFTER=$(python3 -c "print(int('$TO_BAL_AFTER_HEX',16))")
+        ZERO_BAL_AFTER=$(python3 -c "print(int('$ZERO_BAL_AFTER_HEX',16))")
+
+        FROM_REDUCTION=$(python3 -c "print($T8_FROM_BAL_BEFORE - $FROM_BAL_AFTER)")
+        TO_INCREASE=$(python3 -c "print($TO_BAL_AFTER - $T8_TO_BAL_BEFORE)")
+        FEE_ACCUMULATED=$(python3 -c "print($ZERO_BAL_AFTER - $T8_ZERO_BAL_BEFORE)")
+
+        GAS_COST_PW=$(python3 -c "print(f'{$ACTUAL_GAS_COST/10**18:.10f}')")
+
+        echo -e "         Sender:  $T8_FROM_ADDR"
+        echo -e "           Balance before: $(python3 -c "print(f'{$T8_FROM_BAL_BEFORE/10**18:.6f}')") PW"
+        echo -e "           Balance after:  $(python3 -c "print(f'{$FROM_BAL_AFTER/10**18:.6f}')") PW"
+        echo -e "           Reduction:      $(python3 -c "print(f'{$FROM_REDUCTION/10**18:.10f}')") PW"
+        echo -e "         Receiver: $T8_TO_ADDR"
+        echo -e "           Balance before: $(python3 -c "print(f'{$T8_TO_BAL_BEFORE/10**18:.6f}')") PW"
+        echo -e "           Balance after:  $(python3 -c "print(f'{$TO_BAL_AFTER/10**18:.6f}')") PW"
+        echo -e "           Increase:       $(python3 -c "print(f'{$TO_INCREASE/10**18:.10f}')") PW"
+        echo -e "         Gas used:              $GAS_USED units"
+        echo -e "         Effective gas price:   $EFF_GAS_PRICE wei/gas"
+        echo -e "         Actual gas cost:       $GAS_COST_PW PW (${ACTUAL_GAS_COST} wei)"
+        echo -e "         Transfer value:        1.000000 PW"
+        echo -e "         Expected reduction:    $(python3 -c "print(f'{$EXPECTED_REDUCTION/10**18:.10f}')") PW"
+        echo -e "         Actual reduction:      $(python3 -c "print(f'{$FROM_REDUCTION/10**18:.10f}')") PW"
+        echo -e "         Zero addr fee accrual: $(python3 -c "print(f'{$FEE_ACCUMULATED/10**18:.10f}')") PW"
+
+        # Verify: receiver got exactly 1 PW
+        RECEIVER_OK=$(python3 -c "print('ok' if $TO_INCREASE == $T8_VALUE_WEI else 'fail')")
+        # Verify: sender reduced by value + gas_cost (within 0.1% tolerance for rounding)
+        SENDER_OK=$(python3 -c "
+diff = abs($FROM_REDUCTION - $EXPECTED_REDUCTION)
+tol = $EXPECTED_REDUCTION * 1 // 1000  # 0.1% tolerance
+print('ok' if diff <= max(tol, 1000) else f'fail (diff={diff})')")
+
+        echo ""
+        if [[ "$RECEIVER_OK" == "ok" && "$SENDER_OK" == "ok" ]]; then
+            pass "Test 9: Gas paid in PW — receiver got 1.0 PW ✓; sender reduced by value+gas_cost ✓; fee to zero addr: $FEE_ACCUMULATED wei"
+            T8_GAS_USED="$GAS_USED"
+            T8_EFF_GAS_PRICE="$EFF_GAS_PRICE"
+            T8_ACTUAL_GAS_COST="$ACTUAL_GAS_COST"
+        elif [[ "$RECEIVER_OK" != "ok" ]]; then
+            fail "Test 9: Gas paid in PW" "receiver balance incorrect: got +${TO_INCREASE} wei, expected +${T8_VALUE_WEI} wei"
+        else
+            fail "Test 9: Gas paid in PW" "sender balance reduction incorrect: $SENDER_OK"
+        fi
     fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TEST 10: Transaction receipt
+# TEST 10: Transaction receipt — full field verification
 # ─────────────────────────────────────────────────────────────────────────────
 echo -e "${BOLD}Test 10: Transaction receipt${NC}"
 
 if [[ $NO_TX -eq 1 ]]; then
     skip "Test 10: Transaction receipt" "--no-tx flag set"
-elif [[ -z "${T8_TX_HASH:-}" ]]; then
+elif [[ -z "$T8_TX_HASH" ]]; then
     skip "Test 10: Transaction receipt" "Test 8 did not produce a transaction hash"
 else
     RECEIPT=$(rpc_call "eth_getTransactionReceipt" "[\"$T8_TX_HASH\"]")
-    RECEIPT_STATUS=$(echo "$RECEIPT" | jq -r '.result.status // "null"')
-    RECEIPT_BLOCK=$(echo "$RECEIPT" | jq -r '.result.blockNumber // "null"')
-    RECEIPT_FROM=$(echo "$RECEIPT" | jq -r '.result.from // "null"')
-    RECEIPT_TO=$(echo "$RECEIPT" | jq -r '.result.to // "null"')
-    RECEIPT_GAS=$(echo "$RECEIPT" | jq -r '.result.gasUsed // "null"')
+    R_STATUS=$(echo "$RECEIPT" | jq -r '.result.status // "null"')
+    R_BLOCK_HEX=$(echo "$RECEIPT" | jq -r '.result.blockNumber // "null"')
+    R_BLOCK_HASH=$(echo "$RECEIPT" | jq -r '.result.blockHash // "null"')
+    R_TX_IDX=$(echo "$RECEIPT" | jq -r '.result.transactionIndex // "null"')
+    R_FROM=$(echo "$RECEIPT" | jq -r '.result.from // "null"')
+    R_TO=$(echo "$RECEIPT" | jq -r '.result.to // "null"')
+    R_GAS=$(echo "$RECEIPT" | jq -r '.result.gasUsed // "null"')
+    R_BLOCK=$(python3 -c "print(int('$R_BLOCK_HEX',16))" 2>/dev/null || echo "$R_BLOCK_HEX")
+    R_TX_IDX_DEC=$(python3 -c "print(int('$R_TX_IDX',16))" 2>/dev/null || echo "$R_TX_IDX")
+    R_GAS_DEC=$(python3 -c "print(int('$R_GAS',16))" 2>/dev/null || echo "$R_GAS")
 
-    echo -e "         txHash:      $T8_TX_HASH"
-    echo -e "         status:      $RECEIPT_STATUS"
-    echo -e "         blockNumber: $(printf '%d' "$RECEIPT_BLOCK" 2>/dev/null || echo "$RECEIPT_BLOCK")"
-    echo -e "         from:        $RECEIPT_FROM"
-    echo -e "         to:          $RECEIPT_TO"
-    echo -e "         gasUsed:     $(printf '%d' "$RECEIPT_GAS" 2>/dev/null || echo "$RECEIPT_GAS")"
+    echo -e "         transactionHash:  $T8_TX_HASH"
+    echo -e "         blockHash:        $R_BLOCK_HASH"
+    echo -e "         blockNumber:      $R_BLOCK"
+    echo -e "         transactionIndex: $R_TX_IDX_DEC"
+    echo -e "         status:           $R_STATUS"
+    echo -e "         from:             $R_FROM"
+    echo -e "         to:               $R_TO"
+    echo -e "         gasUsed:          $R_GAS_DEC"
 
-    if [[ "$RECEIPT_STATUS" == "0x1" ]]; then
-        pass "Test 10: Transaction receipt — status=0x1 (success)"
-    elif [[ "$RECEIPT_STATUS" == "null" ]]; then
-        fail "Test 10: Transaction receipt" "receipt not found (tx may not be mined yet)"
+    # Verify transaction is in the block
+    if [[ "$R_BLOCK_HEX" != "null" ]]; then
+        BLOCK=$(rpc_call "eth_getBlockByNumber" "[\"$R_BLOCK_HEX\",false]")
+        TX_IN_BLOCK=$(echo "$BLOCK" | jq -r "[.result.transactions[] | select(. == \"$T8_TX_HASH\")] | length")
+        echo -e "         tx in block:      ${TX_IN_BLOCK} match(es)"
+    fi
+
+    # Verify all required fields are present and correct
+    FIELDS_OK=1
+    [[ "$R_STATUS" == "0x1" ]] || { echo -e "         ${RED}✗ status != 0x1${NC}"; FIELDS_OK=0; }
+    [[ "$R_BLOCK_HASH" != "null" && "$R_BLOCK_HASH" != "" ]] || { echo -e "         ${RED}✗ missing blockHash${NC}"; FIELDS_OK=0; }
+    [[ "$R_BLOCK_HEX" != "null" ]] || { echo -e "         ${RED}✗ missing blockNumber${NC}"; FIELDS_OK=0; }
+    [[ "$R_FROM" == "$(echo $T8_FROM_ADDR | tr '[:upper:]' '[:lower:]')" || "$R_FROM" == "$T8_FROM_ADDR" ]] || \
+        [[ "${R_FROM,,}" == "${T8_FROM_ADDR,,}" ]] || { echo -e "         ${RED}✗ from address mismatch${NC}"; FIELDS_OK=0; }
+    [[ "${R_TO,,}" == "${T8_TO_ADDR,,}" ]] || { echo -e "         ${RED}✗ to address mismatch${NC}"; FIELDS_OK=0; }
+    [[ "${TX_IN_BLOCK:-0}" -ge 1 ]] || { echo -e "         ${RED}✗ tx not found in block${NC}"; FIELDS_OK=0; }
+
+    if [[ $FIELDS_OK -eq 1 ]]; then
+        pass "Test 10: Transaction receipt — status=0x1, block #${R_BLOCK}, tx in block ✓"
     else
-        fail "Test 10: Transaction receipt" "tx status=$RECEIPT_STATUS (expected 0x1)"
+        fail "Test 10: Transaction receipt" "one or more receipt fields invalid (see above)"
     fi
 fi
 

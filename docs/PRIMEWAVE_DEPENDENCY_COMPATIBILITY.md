@@ -133,11 +133,14 @@ This document records the exact, pinned version of every external dependency in 
 | **Dependency name** | Foundry (Forge, Cast, Anvil, Chisel) |
 | **Repository** | `foundry-rs/foundry` |
 | **Official source** | https://github.com/foundry-rs/foundry |
-| **Pinned version** | Specific commit — to be pinned at PW-C01 development start |
+| **Pinned version** | `1.7.1` |
+| **Pinned commit** | `4072e48705af9d93e3c0f6e29e93b5e9a40caed8` |
+| **Build date** | May 8, 2026 |
 | **License** | MIT / Apache-2.0 |
-| **Pinned?** | 🔵 DEFERRED — pin commit hash in CI at PW-C01 start |
-| **Compatibility evidence** | Standard Solidity build/test/deploy tooling. Compatible with Solidity 0.8.30 and OpenZeppelin v5.x. |
-| **How to pin** | In CI: `foundryup --version <commit-hash>` or use `foundry-toolchain` GitHub Action with `version: <commit-hash>` |
+| **Pinned?** | ✅ YES — pinned at PW-C02; commit recorded in `scripts/_common.sh` (`FOUNDRY_COMMIT`) and `foundry.toml` |
+| **Compatibility evidence** | Verified against PrimeWave local dev L1 (Chain ID 73571, AvalancheGo v1.14.2). `cast send` successfully broadcast and confirmed an EIP-1559 type-2 transaction (TX `0x33e72fa680357740a093219ba8b79b4308ee5d9b1d6d9e5ade002a1959f9a7b2`, block #1). `forge` compiles Solidity 0.8.30 contracts with EVM target `shanghai`. No issues encountered. |
+| **How to pin** | In CI: `foundryup --commit 4072e48705af9d93e3c0f6e29e93b5e9a40caed8`. `foundry.toml` records `solc = "0.8.30"` and `evm_version = "shanghai"`. |
+| **Notes** | `lib` key in `[profile.default]` is invalid in v1.7.1 — use `libs = ["path"]` (array). Warning "Found unknown `lib` config" indicates misconfiguration; fix to `libs`. Confirmed fixed in PW-C02. |
 
 ---
 
@@ -166,7 +169,7 @@ This document records the exact, pinned version of every external dependency in 
 | Solidity | 0.8.30 | icm-services contracts, OpenZeppelin v5.6.1 | ✅ Pinned |
 | OpenZeppelin Contracts | v5.6.1 | Solidity ≥ 0.8.20; EVM Shanghai+ | ✅ Pinned |
 | OpenZeppelin Upgradeable | v5.6.1 | Synchronized with OZ Contracts v5.6.1 | ✅ Pinned |
-| Foundry | TBD | Solidity 0.8.30, OZ v5.x | 🔵 Deferred |
+| Foundry | v1.7.1 / `4072e48705` | Solidity 0.8.30, OZ v5.x, AvalancheGo v1.14.2 | ✅ Pinned |
 | Avalanche CLI | TBD | AvalancheGo v1.14.2 | 🔵 Deferred |
 
 ---
@@ -184,15 +187,15 @@ The following rules apply to ALL production PrimeWave Chain software:
 
 ---
 
-## 5. Remaining Compatibility Actions for PW-C01
+## 5. Remaining Compatibility Actions
 
-| Action | Priority | Blocker? |
-|---|---|---|
-| Pin Foundry commit in CI | 🔴 Must complete at PW-C01 start | YES — development |
-| Pin Avalanche CLI version | 🔴 Must complete at testnet initiation | YES — testnet |
-| Final source review of `StakingManager.sol` at commit `40e1c89` | 🟠 Before Phase 2 implementation | YES — Phase 2 |
-| Legal review of `LicenseRef-Ecosystem` on icm-services | 🔴 Before mainnet deployment | YES — mainnet |
-| Pin exact OZ v5.6.1 patch if 5.7.0 releases stable before deployment | 🟡 Monitor | NO — v5.6.1 is stable |
+| Action | Sprint Resolved | Priority | Blocker? |
+|---|---|---|---|
+| Pin Foundry commit in CI | ✅ PW-C02 | 🔴 CI config | YES — development |
+| Pin Avalanche CLI version | PW-C03+ | 🔴 Must complete at testnet initiation | YES — testnet |
+| Final source review of `StakingManager.sol` at commit `40e1c89` | PW-C03+ | 🟠 Before Phase 2 implementation | YES — Phase 2 |
+| Legal review of `LicenseRef-Ecosystem` on icm-services | Pre-mainnet | 🔴 Before mainnet deployment | YES — mainnet |
+| Pin exact OZ v5.6.1 patch if 5.7.0 releases stable before deployment | Ongoing | 🟡 Monitor | NO — v5.6.1 is stable |
 
 ---
 

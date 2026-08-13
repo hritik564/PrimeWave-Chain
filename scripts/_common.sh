@@ -11,11 +11,22 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export REPO_ROOT
 
-# ── Pinned dependency versions (from PW-C00 FINAL GATE) ──────────────────────
+# ── Foundry toolchain — add to PATH ──────────────────────────────────────────
+# Foundry is installed via foundryup to ~/.foundry/bin/
+# Version pinned below (PW-C02); update only with documented compatibility review.
+FOUNDRY_BIN="${HOME:-/root}/.foundry/bin"
+if [[ -d "$FOUNDRY_BIN" ]] && [[ ":$PATH:" != *":$FOUNDRY_BIN:"* ]]; then
+    export PATH="$FOUNDRY_BIN:$PATH"
+fi
+
+# ── Pinned dependency versions (from PW-C00 FINAL GATE / PW-C02) ─────────────
 # DO NOT change these without a documented compatibility review.
 AVALANCHEGO_VERSION="v1.14.2"
 AVALANCHE_CLI_VERSION="v1.9.5"
-export AVALANCHEGO_VERSION AVALANCHE_CLI_VERSION
+FOUNDRY_VERSION="1.7.1"
+FOUNDRY_COMMIT="4072e48705af9d93e3c0f6e29e93b5e9a40caed8"
+FOUNDRY_BUILD_DATE="2026-05-08"
+export AVALANCHEGO_VERSION AVALANCHE_CLI_VERSION FOUNDRY_VERSION FOUNDRY_COMMIT FOUNDRY_BUILD_DATE
 
 # ── Binary locations ──────────────────────────────────────────────────────────
 LOCAL_BIN_DIR="$REPO_ROOT/local-bin"

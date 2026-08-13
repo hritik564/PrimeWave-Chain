@@ -1,0 +1,800 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C02 — NATIVE PW TRANSACTIONS + FEE ARCHITECTURE VALIDATION
+
+============================================================
+STATUS
+============================================================
+
+PW-C00:
+PASSED / LOCKED
+
+PW-C01:
+CONDITIONAL PASS
+
+PW-C01 successfully established:
+
+- Local PrimeWave Avalanche L1
+- Multi-node local environment
+- EVM execution
+- Native PW
+- RPC
+- Development Chain ID
+- Block production
+- Reproducible local scripts
+
+PW-C01 left the following core transaction tests unverified because Foundry was unavailable:
+
+- Native PW transfer
+- Gas paid in PW
+- Transaction receipt verification
+
+PW-C02 exists specifically to close those gaps and validate the Avalanche fee architecture BEFORE implementing PrimeWave's final 70/20/10 economics.
+
+============================================================
+1. PRIMARY OBJECTIVE
+============================================================
+
+PW-C02 has TWO objectives.
+
+OBJECTIVE A:
+Complete end-to-end native PW transaction verification.
+
+OBJECTIVE B:
+Determine exactly how PrimeWave can implement:
+
+70% → Validators
+20% → PrimeWave Treasury
+10% → Burn
+
+using the actual Avalanche L1 fee/reward architecture.
+
+IMPORTANT:
+
+PW-C02 is primarily a VALIDATION sprint.
+
+Do NOT implement the final PrimeWave 70/20/10 production fee-split mechanism until the Avalanche architecture has been technically validated.
+
+============================================================
+2. ABSOLUTE SCOPE BOUNDARY
+============================================================
+
+DO NOT implement:
+
+- PWUSD
+- RewardVault
+- ValidatorFeeVault
+- PWSwap
+- PrimeWave Dex
+- PrimeWave App integration
+- MLM income
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- Salary
+- P2P
+- Bridges
+- BEP-20 migration
+- Custom wallet
+- Phase 2 PrimeWaveStakingManager
+- Production governance
+- Production validators
+- Public testnet
+- Mainnet
+
+DO NOT create production keys.
+
+DO NOT deploy production contracts.
+
+DO NOT change any locked tokenomics.
+
+============================================================
+3. SOURCE OF TRUTH
+============================================================
+
+Before doing anything, read the existing documentation:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_INFRASTRUCTURE.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PW-C01-LOCAL-DEVELOPMENT.md
+- docs/PW-C01-TEST-REPORT.md
+- docs/PW-C00-FINAL-GATE.md
+
+These documents contain locked PrimeWave decisions.
+
+Do not silently modify them.
+
+============================================================
+4. DEPENDENCY RULE
+============================================================
+
+Use the exact dependency versions already approved and pinned during PW-C00.
+
+Do NOT upgrade dependencies merely to make Foundry or tests easier.
+
+If a compatibility problem occurs:
+
+STOP.
+
+Document it.
+
+Do not silently change the AvalancheGo/ICM/Solidity/OpenZeppelin baseline.
+
+============================================================
+5. FOUNDRY SETUP
+============================================================
+
+Install Foundry for local development/testing.
+
+Use a deterministic/pinned Foundry version.
+
+Determine the most appropriate stable version compatible with:
+
+- Solidity 0.8.30
+- OpenZeppelin v5.6.1
+- PrimeWave local Avalanche L1
+
+Record:
+
+- forge version
+- cast version
+- anvil version if used
+
+Do NOT use Foundry to replace AvalancheGo.
+
+Foundry is only the testing/development tool.
+
+Create/update the appropriate project configuration.
+
+If Foundry installation cannot be performed safely/reproducibly in Replit:
+
+STOP and document the problem.
+
+============================================================
+6. NATIVE PW TRANSFER TEST
+============================================================
+
+Complete the previously skipped PW transfer test.
+
+Use development accounts only.
+
+Test:
+
+DEV_ACCOUNT_0
+→ sends PW
+→ DEV_ACCOUNT_1
+
+Verify:
+
+- sender address
+- receiver address
+- amount
+- nonce
+- gas limit
+- gas price
+- transaction hash
+- block number
+- receipt status
+- gas used
+- sender balance before
+- sender balance after
+- receiver balance before
+- receiver balance after
+
+The receiver must receive the exact intended PW amount.
+
+The sender's balance must decrease by:
+
+PW transfer value
++
+actual gas cost
+
+Do NOT hardcode expected gas cost.
+
+Read the actual receipt.
+
+============================================================
+7. GAS PAYMENT TEST
+============================================================
+
+Prove that PW is actually used to pay EVM transaction gas.
+
+Before transaction:
+
+Record:
+
+sender PW balance
+
+Submit transaction.
+
+After receipt:
+
+Record:
+
+sender PW balance
+receiver PW balance
+gas used
+gas price
+effective gas price where available
+
+Calculate:
+
+actual gas cost =
+gas used × effective gas price
+
+Verify the sender balance reduction is consistent with:
+
+transfer value + actual gas cost
+
+Allow only normal RPC/provider rounding representation differences.
+
+Do NOT merely inspect the configured native currency symbol.
+
+The test must prove the economic transaction actually consumed PW.
+
+============================================================
+8. TRANSACTION RECEIPT TEST
+============================================================
+
+Verify a real native PW transaction receipt.
+
+The receipt must contain/confirm where supported:
+
+- transaction hash
+- block hash
+- block number
+- transaction index
+- gas used
+- status
+- from
+- to
+
+Verify:
+
+status = successful
+
+Verify the transaction exists in the block.
+
+============================================================
+9. MULTI-NODE STATE VERIFICATION
+============================================================
+
+After the PW transfer:
+
+Query the resulting block/state from multiple local nodes.
+
+Verify that:
+
+Node 1
+Node 2
+Node 3
+
+agree on:
+
+- latest block
+- transaction inclusion
+- sender balance
+- receiver balance
+
+If one node is not directly exposed through RPC, document exactly how synchronization was verified.
+
+============================================================
+10. AUTOMATED TEST SUITE
+============================================================
+
+Update the C01 smoke suite so the following tests no longer remain skipped:
+
+Test 8:
+PW transfer
+
+Test 9:
+Gas paid in PW
+
+Test 10:
+Transaction receipt
+
+Create a repeatable automated test.
+
+The test should fail if:
+
+- PW transfer fails
+- gas is not paid in PW
+- receipt is unsuccessful
+- transaction is not mined
+- balances are incorrect
+- nodes disagree
+
+Do NOT make tests pass by weakening assertions.
+
+============================================================
+11. AVALANCHE FEE ARCHITECTURE INVESTIGATION
+============================================================
+
+Now investigate the actual Avalanche L1 fee architecture used by the pinned PrimeWave environment.
+
+Specifically inspect:
+
+- Fee Manager
+- Reward Manager
+- relevant precompiles
+- fee configuration
+- base fee
+- gas target
+- gas limit
+- transaction fee collection
+- fee destination
+- reward destination
+- burn capability
+- validator reward behavior
+- block producer behavior
+- native-token fee handling
+
+Use the actual installed/pinned AvalancheGo source and official Avalanche documentation where possible.
+
+Do not rely solely on old tutorials.
+
+============================================================
+12. FEE MANAGER VALIDATION
+============================================================
+
+Determine:
+
+1. How PrimeWave configures transaction fees.
+
+2. How gas price/base fee is determined.
+
+3. How fee configuration can be queried.
+
+4. Who receives transaction fees by default.
+
+5. Whether fees can be directed to a specific address.
+
+6. Whether fee routing can be changed after deployment.
+
+7. What permissions are required to change fee configuration.
+
+8. Whether Fee Manager changes are subject to governance/timelock.
+
+9. Whether fees can be burned.
+
+10. Whether fees can be split across multiple destinations.
+
+Record exact precompile/interface details.
+
+Do NOT modify production configuration.
+
+Local development configuration changes are permitted for testing.
+
+============================================================
+13. REWARD MANAGER VALIDATION
+============================================================
+
+Determine exactly how the Avalanche Reward Manager works in our pinned environment.
+
+Answer:
+
+1. What entity receives transaction-fee rewards?
+
+2. Can rewards go to validators?
+
+3. Can rewards be redirected to a vault?
+
+4. Can rewards be split?
+
+5. Can a treasury receive a defined percentage?
+
+6. Can a burn address receive a defined percentage?
+
+7. Can validator rewards be pooled?
+
+8. Does Reward Manager itself mint anything?
+
+9. Does it interact with Native Minter?
+
+10. Does its behavior conflict with PrimeWave's fixed 100M PW supply?
+
+11. Does it support the required PrimeWave 70/20/10 architecture?
+
+Provide source-level evidence where practical.
+
+============================================================
+14. 70/20/10 FEASIBILITY TEST
+============================================================
+
+The LOCKED PrimeWave economic rule is:
+
+70% → Validators
+20% → Treasury
+10% → Burn
+
+Determine whether Avalanche's existing fee/reward architecture can implement this EXACTLY.
+
+Evaluate at least these models:
+
+MODEL A:
+Native Avalanche Fee/Reward Manager only.
+
+MODEL B:
+Fee Manager + existing Reward Manager configuration.
+
+MODEL C:
+Fee Manager + custom PrimeWave fee-routing component.
+
+MODEL D:
+Fee collection → PrimeWave ValidatorFeeVault → distribution.
+
+For each model explain:
+
+- correctness
+- security
+- gas cost
+- complexity
+- upgradeability
+- auditability
+- compatibility with fixed 100M supply
+- validator compatibility
+- delegation compatibility
+- operational complexity
+
+Do NOT select a custom architecture merely because it is easier to code.
+
+============================================================
+15. CRITICAL SUPPLY-INVARIANT CHECK
+============================================================
+
+Verify that the proposed fee architecture cannot accidentally create PW.
+
+The PrimeWave supply invariant remains:
+
+TOTAL PW SUPPLY <= 100,000,000
+
+The fee mechanism must not introduce:
+
+- inflation
+- hidden minting
+- Native Minter dependency
+- reward inflation
+- automatic token creation
+
+If any Avalanche fee/reward mechanism uses native minting:
+
+DOCUMENT IT.
+
+Do NOT automatically enable it.
+
+Explain whether it can be disabled or replaced.
+
+============================================================
+16. 10% BURN ANALYSIS
+============================================================
+
+Determine exactly how the 10% burn should technically work.
+
+Possible approaches may include:
+
+- protocol-level burn
+- designated burn address
+- inaccessible address
+- native fee burn mechanism
+
+Do NOT choose blindly.
+
+Determine:
+
+- whether the burned amount is actually removed from total supply
+- whether the burn affects the 100M maximum
+- whether the burn is observable
+- whether the burn is reversible
+- whether the burn requires a contract
+- whether a native burn mechanism exists
+
+The final recommendation must be compatible with:
+
+100M maximum supply.
+
+============================================================
+17. 20% TREASURY ANALYSIS
+============================================================
+
+Determine how the 20% Treasury share should be accumulated.
+
+The eventual PrimeWave Treasury must be:
+
+- separate
+- auditable
+- governed
+- protected by multisig
+- subject to the 48-hour timelock for ordinary administrative actions
+
+Do NOT create the production Treasury multisig.
+
+For C02 only:
+
+Use a clearly labeled development Treasury address if needed for testing.
+
+Do NOT create real production keys.
+
+============================================================
+18. 70% VALIDATOR ANALYSIS
+============================================================
+
+Determine how the 70% validator share can eventually be distributed.
+
+The current PrimeWave decision is:
+
+Validator fee entitlement ∝ effective validator weight × eligibility/uptime
+
+For the initial 15 equal-weight validators:
+
+approximately equal entitlement if eligibility is equal.
+
+Determine whether Avalanche's native architecture can support this.
+
+Do NOT implement the final validator fee distribution yet.
+
+The objective is to determine the technically correct architecture.
+
+============================================================
+19. DO NOT CONFUSE TWO REWARD SYSTEMS
+============================================================
+
+PrimeWave has TWO separate validator economic mechanisms.
+
+A. FINITE STAKING REWARD RESERVE
+
+15,000,000 PW
+
+Maximum emission:
+
+3,000,000 PW/year
+
+No inflation.
+
+No minting.
+
+B. ONGOING TRANSACTION FEES
+
+70% of applicable gas/fee economics.
+
+These are NOT the same.
+
+Do not combine their accounting.
+
+Do not modify the 15M RewardVault design.
+
+============================================================
+20. LOCAL FEE EXPERIMENTS
+============================================================
+
+Where technically safe, perform controlled local experiments.
+
+Examples:
+
+Experiment 1:
+Normal PW transaction.
+
+Experiment 2:
+Change development fee configuration.
+
+Experiment 3:
+Observe resulting fee.
+
+Experiment 4:
+Inspect fee destination.
+
+Experiment 5:
+Test burn behavior if supported.
+
+Experiment 6:
+Test reward destination if supported.
+
+Experiment 7:
+Verify total supply before/after.
+
+All experiments must use the local development network.
+
+Do NOT perform experiments on public networks.
+
+============================================================
+21. COST CONTROL
+============================================================
+
+Do NOT:
+
+- deploy public infrastructure
+- purchase RPC services
+- purchase monitoring
+- deploy public validators
+- create public testnet
+- deploy mainnet
+- build PWSwap
+- build PrimeWave Dex
+- build PWUSD
+- create production Treasury
+- create production multisig
+- create production Monetary Authority keys
+
+Use only the local development environment.
+
+============================================================
+22. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C02-TRANSACTION-TEST-REPORT.md
+
+Include:
+
+- Foundry version
+- test environment
+- accounts used
+- PW transfer test
+- gas test
+- receipt test
+- multi-node state verification
+- test results
+
+Create:
+
+docs/PW-C02-FEE-ARCHITECTURE-ANALYSIS.md
+
+Include:
+
+1. Fee Manager
+2. Reward Manager
+3. Native Minter implications
+4. Fee collection
+5. Validator rewards
+6. Treasury routing
+7. Burn mechanism
+8. 70/20/10 feasibility
+9. Recommended architecture
+10. Security implications
+11. Gas implications
+12. Upgrade implications
+13. Supply-invariant implications
+14. Open questions
+
+Create:
+
+docs/PW-C02-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Tests completed
+C. Native PW transaction proof
+D. Gas payment proof
+E. Receipt proof
+F. Multi-node verification
+G. Fee architecture findings
+H. 70/20/10 feasibility
+I. Recommended implementation architecture
+J. Risks
+K. Remaining questions
+L. Exact prerequisites for PW-C03
+
+============================================================
+23. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C02 is COMPLETE only when:
+
+[ ] Foundry is installed and version pinned.
+
+[ ] Native PW transfer succeeds.
+
+[ ] Sender balance decreases correctly.
+
+[ ] Receiver balance increases correctly.
+
+[ ] Gas is demonstrably paid in PW.
+
+[ ] Actual gas cost is calculated from receipt.
+
+[ ] Transaction receipt is successful.
+
+[ ] Transaction is included in a block.
+
+[ ] Multiple nodes agree on resulting state.
+
+[ ] Tests 8–10 from C01 are no longer skipped.
+
+[ ] Automated transaction tests pass.
+
+[ ] Fee Manager behavior is documented.
+
+[ ] Reward Manager behavior is documented.
+
+[ ] Native Minter implications are documented.
+
+[ ] Treasury routing feasibility is documented.
+
+[ ] Validator fee routing feasibility is documented.
+
+[ ] Burn feasibility is documented.
+
+[ ] Exact 70/20/10 feasibility is determined.
+
+[ ] Fixed 100M PW supply is preserved.
+
+[ ] No production fee mechanism is deployed.
+
+[ ] No production contracts are deployed.
+
+[ ] No production keys are generated.
+
+[ ] Documentation is complete.
+
+============================================================
+24. FAILURE POLICY
+============================================================
+
+If Avalanche's native fee/reward architecture cannot implement 70/20/10 exactly:
+
+DO NOT improvise.
+
+DO NOT immediately build a custom contract.
+
+Document:
+
+- exact limitation
+- evidence
+- possible alternatives
+- recommended solution
+- security implications
+- cost implications
+
+Then STOP and wait for approval.
+
+Similarly, if Foundry cannot interact correctly with the local Avalanche environment:
+
+Do not replace AvalancheGo with Anvil as the "solution."
+
+Anvil may be used for isolated Solidity testing if useful, but the final transaction verification must occur against the actual PrimeWave local L1.
+
+============================================================
+25. IMPORTANT — NO PW-C03 YET
+============================================================
+
+At completion:
+
+STOP.
+
+Do NOT implement:
+
+- ValidatorFeeVault
+- RewardVault
+- custom fee splitter
+- custom staking manager
+- PWUSD
+- PWSwap
+
+Even if the architecture is obvious.
+
+PW-C02 must first produce the technical evidence needed to approve those implementations.
+
+============================================================
+26. FINAL STOP CONDITION
+============================================================
+
+When all acceptance criteria are satisfied:
+
+STOP.
+
+Report:
+
+PW-C02 COMPLETE
+
+and wait for explicit approval before PW-C03.
+
+============================================================
+END OF PW-C02
+============================================================

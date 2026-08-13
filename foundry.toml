@@ -1,0 +1,47 @@
+# PrimeWave Chain — Foundry Configuration
+# =========================================
+# ENVIRONMENT: LOCAL DEVELOPMENT / TESTING
+# NOT FOR PRODUCTION DEPLOYMENT
+#
+# Pinned versions (PW-C02):
+#   forge/cast/anvil: v1.7.1 (commit 4072e48705, 2026-05-08)
+#   Solidity:         0.8.30 (required by icm-services contracts)
+#   OpenZeppelin:     v5.6.1 (see docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md)
+
+[profile.default]
+# Solidity version — LOCKED. Do not change without a documented compatibility review.
+solc = "0.8.30"
+
+# EVM target — Shanghai (required by icm-services / OZ v5.6.1)
+evm_version = "shanghai"
+
+# Source and output directories
+src    = "contracts/src"
+out    = "contracts/out"
+libs   = ["contracts/lib"]
+test   = "contracts/test"
+script = "contracts/script"
+
+# Optimizer — enabled for production; disabled in tests for coverage accuracy
+optimizer       = true
+optimizer_runs  = 200
+
+# Remappings (add when OZ / icm-services are installed as submodules)
+# remappings = [
+#   "@openzeppelin/contracts/=contracts/lib/openzeppelin-contracts/contracts/",
+#   "@openzeppelin/contracts-upgradeable/=contracts/lib/openzeppelin-contracts-upgradeable/contracts/",
+#   "icm-services/=contracts/lib/icm-services/",
+# ]
+
+# RPC endpoint — local development chain (PW-C01)
+[rpc_endpoints]
+primewavedev = "http://127.0.0.1:9656/ext/bc/yNRRcwqYaWqn9g4XcAiNe7DufgEHqpF2mmvcG6go1cRvtZo4S/rpc"
+
+# Chain aliases
+[etherscan]
+# No mainnet/testnet configuration yet — local only
+
+[fmt]
+line_length = 120
+tab_width   = 4
+bracket_spacing = true
