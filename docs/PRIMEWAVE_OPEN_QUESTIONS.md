@@ -217,23 +217,32 @@ See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
 
 ---
 
-### OQ-017 — RewardVault Reward Schedule (Emission Rate)
-**Status:** 🔴 NEW — MUST RESOLVE BEFORE PHASE 1 DEPLOYMENT
-**Question:** What is the daily/epoch emission rate from the 15M PW RewardVault?
-- How many PW per day / per epoch?
-- Over what expected duration (e.g., 3 years = ~13,700 PW/day)?
-- Who can adjust the rate via governance?
-**Decision required from:** PrimeWave leadership.
-**Blocker for:** RewardVault contract implementation.
+### ✅ OQ-017 — RewardVault Reward Schedule (RESOLVED)
+
+**Resolution (locked August 13, 2026):** Maximum annual staking emissions of **3,000,000 PW/year**, distributed via linear schedule.
+
+| Parameter | Value |
+|---|---|
+| Annual cap | 3,000,000 PW |
+| Daily maximum | ≈ 8,219.18 PW/day |
+| Vault life (at max rate) | **5 years minimum** (extends if unused) |
+| Unused emissions | Stay in vault — not burned, not rolled over |
+| Rate adjustability | Governance may only reduce the cap (never raise above 3M/year) |
+
+**Full details:** `PRIMEWAVE_REWARD_ECONOMICS.md` Section 2.5 and `PRIMEWAVE_OQ017_OQ018_RESOLUTION.md`.
 
 ---
 
-### OQ-018 — icm-services Release Tag / Version Pin
-**Status:** 🔴 NEW — MUST RESOLVE BEFORE DEVELOPMENT
-**Question:** Which specific release tag of `ava-labs/icm-services` should PrimeWave use?
-- Must be a tagged release, not `main` branch
-- Tags must be verified for production readiness
-**Action:** Check `ava-labs/icm-services` tags at development start; pin to latest stable release.
+### ✅ OQ-018 — icm-services Release Tag / Version Pin (RESOLVED)
+
+**Resolution (locked August 13, 2026):** Pin `ava-labs/icm-services` to tag **`icm-relayer-v1.7.5`**, commit **`40e1c89`** (released January 26, 2026).
+
+- AvalancheGo compatibility: v1.14.0 (Granite) and v1.14.2 (Granite.2 — explicitly backwards-compatible)
+- Solidity version: 0.8.30, EVM target: Shanghai
+- Contracts path: `icm-contracts/contracts/validator-manager/`
+- Foundry reference: `{ git = "https://github.com/ava-labs/icm-services", tag = "icm-relayer-v1.7.5" }`
+
+**Full details:** `PRIMEWAVE_OQ017_OQ018_RESOLUTION.md`.
 
 ---
 
@@ -269,8 +278,7 @@ Long-term objective; requires separate design, legal review, and custodial arran
 
 | Priority | Count | Status |
 |---|---|---|
-| ✅ Resolved (OQ-001 to OQ-006) | 6 | Resolved in PW-C00 Decision Resolution |
-| 🔴 Critical new (OQ-017, OQ-018) | 2 | Must resolve before Phase 1 deployment |
+| ✅ Resolved (OQ-001 to OQ-006, OQ-017, OQ-018) | 8 | Resolved in PW-C00 Decision Resolution |
 | 🟠 High (OQ-019) | 1 | Must verify before Phase 2 |
 | 🟡 Medium (OQ-007 to OQ-016) | 10 | Resolve before testnet/mainnet |
 | 🟢 Deferred (OQ-020 to OQ-022) | 3 | Later sprints |

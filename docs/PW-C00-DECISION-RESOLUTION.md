@@ -202,8 +202,8 @@ PrimeWave Chain — Sovereign Avalanche L1 (ACP-77 / ACP-99)
 | OQ-014 | PWUSD per-period mint cap | 🟡 Leadership decision needed |
 | OQ-015 | Team allocation vesting | 🟡 Leadership decision needed |
 | OQ-016 | Governance timelock durations | 🟡 Leadership decision needed |
-| **OQ-017** | **RewardVault emission rate (daily PW)** | 🔴 **Must resolve before Phase 1** |
-| **OQ-018** | **icm-services release tag to pin** | 🔴 **Must resolve before development** |
+| ✅ OQ-017 | RewardVault emission rate → **3M PW/year max, ~8,219.18 PW/day** | RESOLVED Aug 13, 2026 |
+| ✅ OQ-018 | icm-services release tag → **`icm-relayer-v1.7.5` / commit `40e1c89`** | RESOLVED Aug 13, 2026 |
 | OQ-019 | StakingManager._reward() interface compatibility | 🟠 Verify before Phase 2 |
 | OQ-020–022 | Slashing, PWSwap fee governance, PWUSD redemption | 🟢 Later sprints |
 
@@ -321,11 +321,14 @@ docs/PRIMEWAVE_OPEN_QUESTIONS.md        (OQ-001 to OQ-006 marked resolved; OQ-01
 PW-C01 may begin ONLY when ALL of the following are confirmed:
 
 **Technical (must be researched):**
-- [ ] OQ-018 resolved: Specific `ava-labs/icm-services` release tag pinned for development
+- [x] ~~OQ-018 resolved: icm-services release tag pinned~~ → **DONE: `icm-relayer-v1.7.5` / `40e1c89`**
+- [ ] Confirm exact OpenZeppelin v5.x patch version to pin
+- [ ] Confirm Subnet-EVM version compatible with AvalancheGo v1.14.2
+- [ ] Verify `StakingManager._reward()` is `internal virtual` at commit `40e1c89` (partial resolution of OQ-019)
 - [ ] `icm-services` license reviewed by PrimeWave legal counsel
 
 **Leadership decisions required:**
-- [ ] OQ-017 resolved: RewardVault emission rate decided (daily PW distribution amount)
+- [x] ~~OQ-017 resolved: RewardVault emission rate~~ → **DONE: 3,000,000 PW/year max, ≈8,219.18 PW/day**
 - [ ] OQ-011 resolved: Unbonding period chosen (14 or 21 days)
 - [ ] OQ-013 resolved: Emergency multisig signers and exact powers defined
 - [ ] OQ-015 resolved: Team allocation vesting decision (yes/no and schedule)

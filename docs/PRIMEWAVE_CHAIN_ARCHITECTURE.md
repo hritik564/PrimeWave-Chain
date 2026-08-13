@@ -171,7 +171,7 @@ PrimeWave Chain uses the following confirmed official dependencies (OQ-001 resol
 
 | Dependency | Repository | Version / Notes |
 |---|---|---|
-| **Validator Manager contracts** | `ava-labs/icm-services` (main branch → pin to release tag) | Replaces archived `ava-labs/icm-contracts`. Solidity 0.8.30, EVM: shanghai. Actively maintained (last commit Aug 10, 2026). |
+| **Validator Manager contracts** | `ava-labs/icm-services` tag `icm-relayer-v1.7.5` commit `40e1c89` | Replaces archived `ava-labs/icm-contracts`. Solidity 0.8.30, EVM: shanghai. Released Jan 26, 2026. Compatible with AvalancheGo v1.14.0–v1.14.2. |
 | **AvalancheGo node** | `ava-labs/avalanchego` | Current: v1.14.2. Lock exact version at testnet initiation. |
 | **Subnet-EVM** | `ava-labs/subnet-evm` | Lock exact version at testnet initiation. |
 | **Avalanche CLI** | `ava-labs/avalanche-cli` | Used for L1 creation / conversion. Lock at testnet initiation. |

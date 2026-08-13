@@ -92,6 +92,25 @@ The invariant is enforced by:
 
 ---
 
+## 3B. Staking Reward Emission Rate (OQ-017 Resolved)
+
+The 15M PW RewardVault distributes staking rewards at a maximum rate of **3,000,000 PW per year**.
+
+| Parameter | Value |
+|---|---|
+| Maximum annual emission | 3,000,000 PW |
+| Daily maximum | ≈ 8,219.18 PW/day |
+| Vault minimum duration | 5 years (at sustained max emissions; extends if validators under-earn) |
+| Unused emissions | Remain in vault — not burned, not redistributed |
+
+**Phase 1 (15 validators, equal weight, fully eligible):**
+- Max per-validator per year: 200,000 PW (3M ÷ 15)
+- Max per-validator per day: ≈ 547.95 PW
+
+Full specification and Solidity constants: `PRIMEWAVE_REWARD_ECONOMICS.md` Section 2.5.
+
+---
+
 ## 4. Gas Economics
 
 ### 4.0 Important: Two Separate Mechanisms

@@ -72,19 +72,55 @@ A validator or delegator accumulates rewards only when:
 3. **Not slashed:** No active slashing penalty reducing entitlement
 4. **Within allocation period:** RewardVault balance > 0
 
-### 2.5 Reward Schedule
+### 2.5 Reward Schedule (OQ-017 RESOLVED — LOCKED)
 
-The reward schedule determines how much of the 15M PW is distributed per period. Options:
+**Decision (locked August 13, 2026):** Linear emission schedule with a **3,000,000 PW maximum annual cap**.
 
-| Model | Description | Pros | Cons |
-|---|---|---|---|
-| Linear decay | Fixed amount per epoch | Predictable, simple | No early incentive boost |
-| Exponential decay | Higher early rewards, trailing off | Classic DeFi incentive | Complex math |
-| Fixed APR | Defined annual yield % on staked amount | Intuitive to validators | Rate must be set carefully |
+#### Emission Parameters
 
-**Recommended for Phase 1:** Linear schedule — divide 15M PW by expected Phase 1 duration (e.g., 3 years = ~13,700 PW/day). Governance can adjust the rate. When vault reaches 0, rewards stop.
+| Parameter | Value |
+|---|---|
+| Maximum annual emission | 3,000,000 PW |
+| Daily maximum | ≈ 8,219.18 PW/day (3,000,000 ÷ 365) |
+| Per-block maximum (2s blocks, 43,200 blk/day) | ≈ 0.19027 PW/block |
+| Vault size | 15,000,000 PW |
+| Minimum vault duration (at max emissions, 100% eligible validators) | **5 years** (15M ÷ 3M) |
+| Emissions model | Linear — fixed daily cap |
+| Unused emissions | Remain in RewardVault (not burned, not redistributed) |
 
-> The exact reward schedule (daily emission rate) MUST be decided and documented before deployment.
+#### Unused Emissions Rule
+
+A critical property: if validators earn **less than the daily maximum** in a given period (due to below-threshold uptime, fewer active validators, or other eligibility shortfalls), the unclaimed difference **stays in the vault**. It is NOT redistributed, NOT burned, and does NOT roll over to inflate the next period's distribution. The vault balance decreases only by the amount actually distributed.
+
+This means:
+- Vault duration **extends beyond 5 years** in any period where total eligible emissions are below the 3M/year cap
+- The 5-year figure is the minimum (all validators fully eligible, all 3M PW distributed each year)
+
+#### Emission Rate Governance
+
+The 3,000,000 PW/year maximum is the governance-set cap. Future governance may reduce (not increase) this cap via the Protocol Admin multisig + timelock. Any reduction takes effect from the next epoch. The cap cannot be increased above 3,000,000 PW/year without a protocol upgrade.
+
+#### Epoch Calculation
+
+For the on-chain reward-index model, the per-epoch maximum emission is:
+
+```
+MAX_ANNUAL_EMISSION = 3_000_000e18  // PW in wei
+SECONDS_PER_YEAR    = 31_536_000   // 365 * 24 * 60 * 60
+
+maxEpochEmission = MAX_ANNUAL_EMISSION * epochDurationSeconds / SECONDS_PER_YEAR
+
+// Example: 1-day epoch (86,400 seconds):
+maxEpochEmission = 3_000_000e18 * 86_400 / 31_536_000
+                 = 8_219_178_082_191_780_821  // ~8,219.18 PW
+```
+
+Actual epoch emission:
+```
+epochEmission = min(maxEpochEmission, RewardVault.balance())
+```
+
+This ensures the vault can never over-distribute, even if the cap is not yet hit.
 
 ### 2.6 Delegator Rewards
 

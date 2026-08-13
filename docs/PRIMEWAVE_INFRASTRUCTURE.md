@@ -217,7 +217,7 @@ The following table documents the current official Avalanche dependencies confir
 
 | Component | Official Repository | Status | Notes |
 |---|---|---|---|
-| Validator Manager Contracts (PoAManager, StakingManager, etc.) | `ava-labs/icm-services` | ✅ Active (last commit Aug 2026) | Successor to archived `icm-contracts`. Contracts in `icm-contracts/` subdir. Solidity 0.8.30. |
+| Validator Manager Contracts (PoAManager, StakingManager, etc.) | `ava-labs/icm-services` tag `icm-relayer-v1.7.5` / commit `40e1c89` | ✅ **Pinned** | Successor to archived `icm-contracts`. Released Jan 26, 2026. Contracts in `icm-contracts/` subdir. Solidity 0.8.30. Compatible with AvalancheGo v1.14.0–v1.14.2. |
 | AvalancheGo | `ava-labs/avalanchego` | ✅ Active | v1.14.2 current. Pin at testnet. |
 | Subnet-EVM | `ava-labs/subnet-evm` | ✅ Active | Pin at testnet. |
 | Avalanche CLI | `ava-labs/avalanche-cli` | ✅ Active | Used for L1 create/convert. Pin at testnet. |

@@ -93,18 +93,26 @@ The `PoAManager` contract (from `ava-labs/icm-services`, ACP-99 compliant, Solid
 
 In the PoA phase, validator weight (consensus influence) is configured by the admin. All 15 initial validators should have equal weight (1/15 each) unless a technical reason requires otherwise.
 
-### 2.5 Phase 1 Staking Rewards (from RewardVault)
+### 2.5 Phase 1 Staking Rewards (from RewardVault — OQ-017 Resolved)
 
 During Phase 1:
 - No user staking or delegation (PoA only)
-- The 15M PW `RewardVault` is active
-- Validators receive rewards via periodic distribution from vault
-- Distribution can be:
-  - **On-chain:** Admin calls `RewardVault.distribute(validatorAddress, amount)` on a schedule
-  - **Automated:** A trusted keeper/bot calls distribution based on uptime data
-- Reward amounts are proportional to validated uptime
+- The 15M PW `RewardVault` is active from genesis
+- On-chain accrual/claim model (reward-index algorithm) — see `PRIMEWAVE_REWARD_ECONOMICS.md`
 
-> **Governance question (to be resolved before PW-C01):** Who controls `RewardVault.distribute()` in Phase 1? Recommended: multisig with time-delayed disbursements.
+**Emission rate (locked August 13, 2026):**
+
+| Parameter | Value |
+|---|---|
+| Maximum annual emission | 3,000,000 PW |
+| Daily maximum | ≈ 8,219.18 PW/day |
+| Per-validator per year (15 equal-weight, fully eligible) | 200,000 PW max |
+| Per-validator per day | ≈ 547.95 PW max |
+| Vault life at max emission | 5 years minimum |
+
+Unused emissions (below-threshold uptime, etc.) remain in the vault — never burned.
+
+Full specification, Solidity constants, and epoch calculation: `PRIMEWAVE_REWARD_ECONOMICS.md` Section 2.5.
 
 ---
 
