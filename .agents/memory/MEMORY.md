@@ -1,0 +1,1 @@
+- [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Architecture/research sprint complete; critical NativeMinter conflict found; fixed-supply PoA+RewardVault solution designed; 12 docs in docs/

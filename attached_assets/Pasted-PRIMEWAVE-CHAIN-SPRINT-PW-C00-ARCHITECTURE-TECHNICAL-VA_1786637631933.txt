@@ -1,0 +1,915 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C00 — ARCHITECTURE & TECHNICAL VALIDATION
+
+IMPORTANT:
+This is Sprint PW-C00.
+
+This sprint is for ARCHITECTURE, RESEARCH, VALIDATION AND DOCUMENTATION ONLY.
+
+DO NOT start building the production blockchain yet.
+
+DO NOT create or finalize production genesis.
+DO NOT deploy mainnet.
+DO NOT deploy production smart contracts.
+DO NOT generate production validator keys.
+DO NOT make irreversible infrastructure decisions.
+
+The purpose of this sprint is to establish a technically sound specification that future PrimeWave Chain sprints will implement.
+
+============================================================
+1. PROJECT
+============================================================
+
+Project name:
+PrimeWave Chain
+
+PrimeWave Chain will be an EVM-compatible sovereign Avalanche L1.
+
+Native asset:
+PW
+
+Official chain ecosystem:
+PrimeWave
+
+The existing PrimeWave MLM/business application is a SEPARATE project.
+
+PrimeWave Chain must NOT import or copy the existing PrimeWave application's business logic.
+
+The future application will communicate with PrimeWave Chain through well-defined APIs/RPC/blockchain transactions.
+
+============================================================
+2. LOCKED PRIMEWAVE DECISIONS
+============================================================
+
+The following decisions are already approved and MUST NOT be changed autonomously.
+
+If a technical constraint conflicts with one of them, STOP and document the conflict instead of changing the decision.
+
+------------------------------------------------------------
+PW
+------------------------------------------------------------
+
+Maximum PW supply:
+
+100,000,000 PW
+
+PW is the native asset of PrimeWave Chain.
+
+PW is used for:
+
+- Gas
+- Holding
+- Trading
+- Staking
+- Delegation
+- Network economics
+
+PW has NO normal mint function.
+
+There must be no arbitrary post-genesis PW minting mechanism.
+
+Existing BEP-20 PW on BNB Chain is NOT the native PrimeWave Chain PW.
+
+PrimeWave Chain V1 will NOT:
+
+- bridge BEP-20 PW
+- wrap BEP-20 PW
+- migrate BEP-20 PW
+- create a BEP-20/native bridge
+- depend on BNB Chain PW
+
+PrimeWave Chain native PW is the production PW asset.
+
+------------------------------------------------------------
+PW DISTRIBUTION
+------------------------------------------------------------
+
+Total:
+
+100,000,000 PW
+
+Allocation:
+
+40,000,000 PW — PWSwap Liquidity
+15,000,000 PW — PrimeWave Treasury
+10,000,000 PW — Team & Development
+15,000,000 PW — Validator & Staking Rewards
+5,000,000 PW — Presale Phase 1
+7,500,000 PW — Presale Phase 2
+7,500,000 PW — Presale Phase 3
+
+Total:
+100,000,000 PW
+
+Presale prices:
+
+Phase 1:
+$0.01
+
+Phase 2:
+$0.025
+
+Phase 3:
+$0.04
+
+Current locked decision:
+NO presale vesting.
+
+------------------------------------------------------------
+GAS ECONOMICS
+------------------------------------------------------------
+
+PW is the native gas asset.
+
+Target allocation of applicable gas/fee economics:
+
+70% → Validators
+20% → PrimeWave Treasury
+10% → Burn
+
+This 70/20/10 decision is LOCKED.
+
+Do not replace this with a different economic model without explicit approval.
+
+Exact gas price, gas limit and related network parameters will be determined through testnet benchmarking.
+
+------------------------------------------------------------
+VALIDATORS
+------------------------------------------------------------
+
+Initial mainnet validators:
+
+15
+
+Initial model:
+
+PrimeWave + vetted independent operators.
+
+Long-term objective:
+
+Progressive decentralization.
+
+Eventually broader external validator participation should be possible subject to finalized protocol rules.
+
+Delegation:
+
+YES
+
+Validator commission target:
+
+5–10%
+
+Unbonding target:
+
+14–21 days
+
+Slashing:
+
+YES, but only for clearly provable protocol/security violations.
+
+Ordinary downtime should have moderate penalties rather than catastrophic slashing.
+
+Validator/staking allocation:
+
+15,000,000 PW
+
+There must be NO unrestricted PW inflation.
+
+------------------------------------------------------------
+PWUSD
+------------------------------------------------------------
+
+Official name:
+
+PrimeWave USD
+
+Ticker:
+
+PWUSD
+
+PWUSD is separate from PW.
+
+PW is the native blockchain asset.
+
+PWUSD is the PrimeWave ecosystem settlement asset.
+
+Primary intended uses:
+
+- PWSwap
+- ROI income
+- Binary Matching income
+- Binary Orbit income
+- Level income
+- Salary income
+- Future P2P settlement
+
+PWUSD currently has no fixed maximum supply.
+
+One designated Monetary Authority will have PWUSD mint authority.
+
+IMPORTANT:
+
+The PWUSD Monetary Authority MUST NOT automatically receive authority to:
+
+- withdraw Treasury funds
+- transfer arbitrary user funds
+- modify arbitrary user balances
+- manage validators
+- upgrade the blockchain
+- control emergency security
+- manipulate PWSwap reserves
+
+The authority must be narrowly scoped to PWUSD monetary operations.
+
+Every PWUSD mint/burn must be auditable and emit appropriate events.
+
+Future objective:
+
+PWUSD → actual USDT withdrawal/redemption through the PrimeWave application.
+
+Do NOT claim that PWUSD itself is Tether USDT.
+
+------------------------------------------------------------
+PWSWAP
+------------------------------------------------------------
+
+PrimeWave will have its own DEX:
+
+PWSwap
+
+V1 trading pair:
+
+PW / PWUSD
+
+AMM:
+
+Constant-product / V2-style architecture.
+
+Initial liquidity target:
+
+40,000,000 PW
+2,000,000 PWUSD
+
+Initial implied PW price:
+
+$0.05
+
+Swap fee:
+
+0.30%
+
+100% of swap fee:
+
+PrimeWave Treasury
+
+PWSwap must have:
+
+- Slippage protection
+- Minimum received protection
+- Liquidity accounting
+- LP accounting
+- Fee accounting
+- TWAP/reference-price capability
+- Emergency controls
+- Proper events
+- Strong invariant testing
+
+There must be no arbitrary administrator price-setting function.
+
+Initial liquidity lock target:
+
+36 months.
+
+PWSwap development will be handled as a separate PrimeWave Swap project, but the protocol contracts and blockchain integration must be architecturally compatible with PrimeWave Chain.
+
+Do NOT build the PWSwap frontend during PW-C00.
+
+------------------------------------------------------------
+MARKET DATA / PRIMEWAVE DEX
+------------------------------------------------------------
+
+PrimeWave will have a separate project:
+
+PrimeWave Dex
+
+It will provide a DexScreener/DEXTools-style market analytics experience for PW/PWUSD.
+
+It must eventually support:
+
+- Candlestick charts
+- OHLCV
+- 5m
+- 15m
+- 1H
+- 4H
+- 1D
+- 1W
+- Price
+- Price change
+- Volume
+- Liquidity
+- Market/reference capitalization
+- FDV
+- Buys
+- Sells
+- Trade count
+- Recent trades
+- Pool reserves
+- LP additions
+- LP removals
+- Historical market data
+
+Architecture:
+
+PrimeWave Chain
+→ PWSwap events
+→ Indexer
+→ Market database
+→ Market data API
+→ PrimeWave Dex
+
+PrimeWave Dex must own its own market-data pipeline.
+
+Do NOT make PrimeWave Dex dependent on DexScreener for its core functionality.
+
+Do NOT build PrimeWave Dex during PW-C00.
+
+------------------------------------------------------------
+GOVERNANCE
+------------------------------------------------------------
+
+V1 governance:
+
+Controlled governance.
+
+Long-term:
+
+Progressive decentralization.
+
+Treasury:
+
+Multisig + timelock.
+
+Protocol administration:
+
+Multisig + timelock.
+
+Emergency security:
+
+Separate emergency multisig.
+
+PWUSD Monetary Authority:
+
+Separate role.
+
+There must NOT be a single unrestricted "super admin".
+
+------------------------------------------------------------
+CROSS-CHAIN
+------------------------------------------------------------
+
+V1:
+
+NO external bridge.
+
+NO BEP-20 bridge.
+
+NO wrapped PW.
+
+NO PW migration.
+
+NO external cross-chain dependency.
+
+Future interoperability may be evaluated after PrimeWave Chain has matured and passed security review.
+
+------------------------------------------------------------
+INFRASTRUCTURE
+------------------------------------------------------------
+
+PrimeWave will have:
+
+- Mainnet
+- Testnet
+- Validator nodes
+- RPC
+- WebSocket RPC
+- Explorer
+- Indexer
+- Monitoring
+- Alerting
+- Backups
+- Disaster recovery
+- Infrastructure automation
+
+Target block time:
+
+Approximately 2 seconds.
+
+Final block timing must be benchmarked on testnet.
+
+Do not invent final production infrastructure specifications without benchmarking.
+
+============================================================
+3. MOST IMPORTANT TECHNICAL ISSUE
+============================================================
+
+You MUST investigate the current Avalanche L1 architecture and determine how PrimeWave can satisfy ALL of these simultaneously:
+
+1. Maximum PW supply = 100,000,000.
+2. PW has no arbitrary mint function.
+3. 15,000,000 PW are allocated to validator/staking rewards.
+4. Validators and delegators must be able to receive rewards.
+5. PrimeWave must not introduce uncontrolled inflation.
+
+Investigate the current Avalanche architecture, including where relevant:
+
+- Validator Manager
+- NativeTokenStakingManager
+- StakingManager
+- Reward Manager
+- Native Minter precompile
+- P-Chain validator operations
+- Initial validator set
+- Subsequent validator registration
+- Native token staking
+- Delegation
+- Uptime/reward mechanisms
+- Validator weight
+- Reward calculation
+- Reward distribution
+- Any supported mechanism for finite/preallocated reward reserves
+
+Do NOT assume the answer.
+
+Verify the current implementation/documentation for the exact Avalanche version being considered.
+
+If the standard NativeTokenStakingManager requires native-token minting and therefore conflicts with the fixed 100M PW/no-mint requirement:
+
+DO NOT silently enable inflation.
+
+DO NOT change the tokenomics.
+
+DO NOT remove the 15M allocation.
+
+DO NOT invent a fake mechanism.
+
+Instead:
+
+1. Explain the conflict.
+2. Identify technically valid alternatives.
+3. Compare them.
+4. Recommend the safest compatible architecture.
+5. Clearly identify whether explicit PrimeWave approval is required.
+
+============================================================
+4. INITIAL VALIDATOR ARCHITECTURE
+============================================================
+
+Research and document:
+
+- How the initial 15 validators are established.
+- How Validator Manager is initialized.
+- Validator registration.
+- Validator weight.
+- Minimum stake.
+- Delegation.
+- Commission.
+- Unbonding.
+- Validator removal.
+- Validator replacement.
+- Churn limitations.
+- Uptime requirements.
+- Reward eligibility.
+- Slashing.
+- Transition from initial launch validators to the intended staking model.
+
+Pay particular attention to the distinction between initial validators and later PoS/staking validators.
+
+============================================================
+5. SUPPLY INVARIANT
+============================================================
+
+Design a formal invariant:
+
+TOTAL PW SUPPLY <= 100,000,000
+
+The system must make it possible to prove that:
+
+Genesis allocations
++
+any permitted transfers
++
+staking rewards
++
+treasury operations
++
+liquidity operations
+-
+burns
+
+can never create more than the maximum supply.
+
+Create automated tests/specifications that will eventually verify this invariant.
+
+============================================================
+6. SECURITY THREAT MODEL
+============================================================
+
+Create a preliminary threat model covering at minimum:
+
+BLOCKCHAIN:
+
+- Validator compromise
+- Validator collusion
+- Sybil attack
+- Network partition
+- Consensus failure
+- Chain halt
+- RPC compromise
+- Key compromise
+
+PW:
+
+- Unauthorized minting
+- Supply inflation
+- Genesis allocation error
+- Unauthorized transfer
+
+PWUSD:
+
+- Unauthorized mint
+- Monetary Authority compromise
+- Excessive minting
+- Role escalation
+- Unauthorized burn
+- Replay
+- Accounting mismatch
+
+PWSWAP:
+
+- Reentrancy
+- Flash-loan manipulation
+- Price manipulation
+- Oracle manipulation
+- Liquidity theft
+- LP accounting errors
+- Fee accounting errors
+
+GOVERNANCE:
+
+- Multisig compromise
+- Timelock bypass
+- Malicious upgrade
+- Emergency authority abuse
+
+INFRASTRUCTURE:
+
+- RPC failure
+- Database corruption
+- Indexer corruption
+- DDoS
+- Credential leakage
+- Validator key theft
+
+============================================================
+7. REPOSITORY ARCHITECTURE
+============================================================
+
+Propose a clean repository structure for PrimeWave Chain.
+
+At minimum consider separation of:
+
+/chain
+/genesis
+/validators
+/contracts
+/governance
+/pwusd
+/infrastructure
+/indexer
+/testing
+/security
+/scripts
+/docs
+
+You may recommend a better structure if technically justified.
+
+Do NOT create a giant monolithic codebase.
+
+Do NOT copy the existing PrimeWave web application's source code into this project.
+
+============================================================
+8. TECHNOLOGY SELECTION
+============================================================
+
+Recommend the appropriate technologies for:
+
+- Avalanche L1 configuration
+- Solidity contracts
+- Contract framework
+- Unit testing
+- Integration testing
+- Fuzz testing
+- Blockchain/indexer layer
+- Database
+- API
+- Infrastructure automation
+- Monitoring
+- CI/CD
+- Security tooling
+
+For each major choice, explain:
+
+- Why it is appropriate
+- Security implications
+- Maintenance implications
+- Cost implications
+- Replit compatibility
+- Avalanche compatibility
+
+Do not choose technologies merely because they are popular.
+
+============================================================
+9. CHAIN CONFIGURATION SPECIFICATION
+============================================================
+
+Prepare a preliminary specification for:
+
+- Chain name
+- Network name
+- Native symbol
+- Chain ID strategy
+- Block time target
+- Gas strategy
+- Gas limit strategy
+- Native token denomination
+- EVM compatibility
+- Required precompiles
+- Validator Manager
+- Staking Manager
+- Reward Manager
+- Native Minter implications
+- Warp/ICM requirements
+- Genesis structure
+- Initial validator structure
+- Initial token allocation
+
+IMPORTANT:
+
+Do NOT finalize a production Chain ID during this sprint.
+
+Instead document the process for selecting a unique Chain ID during testnet/mainnet preparation.
+
+============================================================
+10. COST-EFFECTIVE ARCHITECTURE
+============================================================
+
+Cost efficiency is a major requirement.
+
+Do NOT recommend unnecessary infrastructure.
+
+Prefer:
+
+- Open-source components where secure and mature
+- Existing Avalanche tooling
+- Existing EVM-compatible infrastructure
+- Reusable libraries
+- Shared indexing/data infrastructure
+- Managed infrastructure where it is cheaper and safer than self-hosting
+- Automation rather than manual operations
+
+Avoid premature development of:
+
+- Custom wallet
+- Custom bridge
+- Multi-chain infrastructure
+- Multiple trading pairs
+- Custom oracle network
+- Mobile app
+- P2P marketplace
+- Unnecessary microservices
+
+The goal is:
+
+SECURITY + COMPLETENESS + LOW OPERATING COST
+
+not maximum complexity.
+
+============================================================
+11. FUTURE PROJECT DEPENDENCIES
+============================================================
+
+The PrimeWave ecosystem will eventually consist of:
+
+PROJECT 1:
+PrimeWave Chain
+
+PROJECT 2:
+PrimeWave Swap
+
+PROJECT 3:
+PrimeWave Dex
+
+PROJECT 4:
+Existing PrimeWave Application
+
+PrimeWave Chain is the foundational protocol.
+
+PrimeWave Swap depends on the chain/PWSwap protocol.
+
+PrimeWave Dex depends on blockchain events/indexing and PWSwap data.
+
+The existing PrimeWave application will later integrate with the blockchain.
+
+Do not merge these projects into one codebase.
+
+Design clean interfaces between them.
+
+============================================================
+12. DOCUMENTATION REQUIRED
+============================================================
+
+Create:
+
+1. docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+
+2. docs/PRIMEWAVE_TOKENOMICS.md
+
+3. docs/PRIMEWAVE_VALIDATOR_SPEC.md
+
+4. docs/PRIMEWAVE_PWUSD_ARCHITECTURE.md
+
+5. docs/PRIMEWAVE_PWSWAP_INTERFACE.md
+
+6. docs/PRIMEWAVE_MARKET_DATA_INTERFACE.md
+
+7. docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+
+8. docs/PRIMEWAVE_INFRASTRUCTURE.md
+
+9. docs/PRIMEWAVE_GENESIS_SPEC.md
+
+10. docs/PRIMEWAVE_DEPENDENCY_MAP.md
+
+11. docs/PRIMEWAVE_OPEN_QUESTIONS.md
+
+12. docs/PW-C00-REPORT.md
+
+These are design documents only at this stage.
+
+============================================================
+13. PW-C00 ACCEPTANCE CRITERIA
+============================================================
+
+Sprint PW-C00 is complete ONLY when:
+
+[ ] Avalanche L1 architecture has been researched and validated.
+
+[ ] The exact Avalanche implementation/version being targeted is identified.
+
+[ ] Validator Manager architecture is documented.
+
+[ ] Initial 15-validator architecture is documented.
+
+[ ] Initial-validator → staking/delegation transition is documented.
+
+[ ] Staking/delegation architecture is documented.
+
+[ ] 15M PW validator/staking reserve mechanism is technically resolved OR a clearly documented unresolved conflict is presented.
+
+[ ] The 100M PW maximum supply invariant is formally defined.
+
+[ ] No hidden PW inflation mechanism exists.
+
+[ ] 70/20/10 gas economics architecture is validated.
+
+[ ] PWUSD authority separation is documented.
+
+[ ] PWSwap integration boundary is documented.
+
+[ ] PrimeWave Dex/indexer integration boundary is documented.
+
+[ ] Governance architecture is documented.
+
+[ ] Treasury security is documented.
+
+[ ] Emergency architecture is documented.
+
+[ ] Security threat model is completed.
+
+[ ] Repository structure is proposed.
+
+[ ] Technology choices are justified.
+
+[ ] Preliminary genesis architecture is documented.
+
+[ ] Chain ID selection process is documented.
+
+[ ] Testnet requirements are documented.
+
+[ ] Mainnet prerequisites are documented.
+
+[ ] Cost-control strategy is documented.
+
+[ ] All unresolved questions are explicitly listed.
+
+[ ] No production blockchain has been deployed.
+
+[ ] No production genesis has been created.
+
+[ ] No production validator keys have been generated.
+
+[ ] No production contracts have been deployed.
+
+============================================================
+14. HARD RULES
+============================================================
+
+DO NOT:
+
+- Change the 100M PW supply.
+- Add a PW mint function.
+- Add inflation.
+- Change the 70/20/10 gas economics.
+- Remove the 15M validator allocation.
+- Add a BEP-20 bridge.
+- Add an external bridge.
+- Add unnecessary blockchain components.
+- Copy the existing PrimeWave application into this project.
+- Generate production private keys.
+- Deploy mainnet.
+- Proceed to Sprint PW-C01 automatically.
+
+If something is technically incompatible:
+
+STOP.
+
+Explain the incompatibility.
+
+Provide alternatives.
+
+Wait for approval.
+
+============================================================
+15. FINAL REPORT
+============================================================
+
+At completion, provide:
+
+A. Executive summary.
+
+B. Avalanche architecture selected.
+
+C. Fixed-supply/staking-reward solution.
+
+D. Validator architecture.
+
+E. Genesis architecture.
+
+F. PW supply invariant.
+
+G. Gas architecture.
+
+H. PWUSD architecture boundary.
+
+I. PWSwap integration boundary.
+
+J. PrimeWave Dex/indexer boundary.
+
+K. Security threat model summary.
+
+L. Repository structure.
+
+M. Technology stack.
+
+N. Cost-control recommendations.
+
+O. Dependency graph.
+
+P. Unresolved questions.
+
+Q. Exact prerequisites for PW-C01.
+
+R. Files created/modified.
+
+S. Commands/tools used.
+
+T. Tests/research performed and results.
+
+U. Assumptions.
+
+============================================================
+16. STOP CONDITION
+============================================================
+
+When PW-C00 is complete:
+
+STOP.
+
+Do NOT start PW-C01.
+
+Do NOT create production blockchain infrastructure.
+
+Do NOT deploy anything.
+
+Wait for explicit approval from the project owner.

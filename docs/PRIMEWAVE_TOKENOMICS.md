@@ -1,0 +1,179 @@
+# PrimeWave Chain — Tokenomics Specification
+**Sprint PW-C00 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
+
+---
+
+## 1. Native Asset: PW
+
+| Parameter | Value |
+|---|---|
+| Name | PrimeWave |
+| Ticker | PW |
+| Maximum Supply | 100,000,000 PW (LOCKED — cannot be changed) |
+| Denomination | 18 decimals (standard EVM wei) |
+| Mint Function | NONE — no arbitrary post-genesis minting |
+| Burn | YES — 10% of gas fees burned |
+| BEP-20 Relationship | None — PrimeWave Chain PW is independent of BNB Chain BEP-20 PW |
+
+> ⚠️ **HARD RULE:** The `NativeMinter` precompile MUST NOT be activated. No PW can be created after genesis.
+
+---
+
+## 2. Token Distribution
+
+Total: **100,000,000 PW**
+
+| Allocation | Amount (PW) | % | Notes |
+|---|---|---|---|
+| PWSwap Liquidity | 40,000,000 | 40% | Initial PW/PWUSD liquidity pool, locked 36 months |
+| PrimeWave Treasury | 15,000,000 | 15% | Multisig + timelock governance |
+| Team & Development | 10,000,000 | 10% | Vesting terms TBD by PrimeWave |
+| Validator & Staking Rewards | 15,000,000 | 15% | Pre-funded RewardVault contract |
+| Presale Phase 1 | 5,000,000 | 5% | $0.01/PW — no vesting (LOCKED decision) |
+| Presale Phase 2 | 7,500,000 | 7.5% | $0.025/PW — no vesting (LOCKED decision) |
+| Presale Phase 3 | 7,500,000 | 7.5% | $0.04/PW — no vesting (LOCKED decision) |
+| **TOTAL** | **100,000,000** | **100%** | |
+
+All allocations are seeded at genesis in the `alloc` block of the genesis file. No PW is minted after block 0.
+
+### 2.1 Presale Parameters
+
+| Phase | Allocation | Price | Raise (if sold out) |
+|---|---|---|---|
+| Phase 1 | 5,000,000 PW | $0.01 | $50,000 |
+| Phase 2 | 7,500,000 PW | $0.025 | $187,500 |
+| Phase 3 | 7,500,000 PW | $0.04 | $300,000 |
+
+No vesting applies to presale allocations (locked decision).
+
+---
+
+## 3. Supply Invariant (Formal Definition)
+
+The following invariant MUST hold at all times:
+
+```
+∀ block B:
+  genesis_allocation(PW)
+  + sum(rewards_paid_from_RewardVault)
+  ≤ 100,000,000 PW × 10^18 wei
+```
+
+More precisely:
+```
+TOTAL_PW_SUPPLY = 100,000,000 PW (fixed at genesis, never increases)
+
+At any point in time:
+  circulating(PW)
+  + locked_in_RewardVault(PW)
+  + burned(PW)
+  = 100,000,000 PW
+
+Where:
+  circulating  = all non-burned, non-vault PW
+  locked       = 15,000,000 PW initial vault minus distributed rewards
+  burned       = cumulative gas burns
+```
+
+### 3.1 Invariant Enforcement
+
+The invariant is enforced by:
+
+1. **Genesis:** All 100M PW allocated in genesis `alloc` block. No `NativeMinter` enabled.
+2. **Protocol level:** `NativeMinter` precompile not activated → physically impossible to mint new PW.
+3. **RewardVault contract:** Rewards can only be paid out from vault balance — the vault can never pay more than it holds.
+4. **RewardVault test specification:**
+   ```
+   INVARIANT: RewardVault.totalDistributed() + RewardVault.balance() == 15_000_000e18
+   INVARIANT: RewardVault.balance() >= 0
+   INVARIANT: RewardVault.totalDistributed() <= 15_000_000e18
+   ```
+5. **Automated verification:** Foundry invariant tests (fuzz) must verify these conditions continuously. See `/testing/invariants/SupplyInvariant.t.sol`.
+
+---
+
+## 4. Gas Economics
+
+### 4.1 70/20/10 Fee Model (LOCKED)
+
+| Destination | Share | Mechanism |
+|---|---|---|
+| Validators | 70% | Validator claims via FeeDistributor |
+| PrimeWave Treasury | 20% | Auto-forwarded by FeeDistributor |
+| Burn | 10% | Sent to burn address by FeeDistributor |
+
+### 4.2 Implementation Architecture
+
+Subnet-EVM's built-in `RewardManager` precompile supports three modes:
+- `allowFeeRecipients: true` — validators collect their coinbase fees directly
+- `rewardAddress` — all fees go to one address
+- Burn — fees are burned
+
+**None of these natively support a three-way percentage split.**
+
+**Recommended implementation:**
+
+```
+RewardManager → allowFeeRecipients: false
+              → rewardAddress: FeeDistributor contract address
+
+FeeDistributor.distribute():
+  1. Receives accumulated fees
+  2. Calculates: validator_share = balance × 70 / 100
+                 treasury_share = balance × 20 / 100
+                 burn_share     = balance - validator_share - treasury_share
+  3. Transfers validator_share to active validator set (weighted by stake/uptime)
+  4. Transfers treasury_share to PrimeWaveTreasury multisig
+  5. Burns burn_share (transfer to 0x000...dead or selfdestruct equivalent)
+```
+
+> **Open Question:** Validator fee distribution within the 70% share — does it use equal split among active validators, or weighted by stake amount? This must be resolved in PW-C01. See `PRIMEWAVE_OPEN_QUESTIONS.md`.
+
+### 4.3 Gas Parameters (Preliminary — to be benchmarked on testnet)
+
+| Parameter | Preliminary Value | Notes |
+|---|---|---|
+| Target block gas limit | 15,000,000 | Standard Subnet-EVM default, tune on testnet |
+| Min base fee | 1 gwei (1,000,000,000 wei) | Tune on testnet |
+| Target block rate | 2 seconds | ACP-224 compatible |
+| Gas price | EIP-1559 dynamic | Standard Subnet-EVM |
+
+> These values MUST be benchmarked and validated on testnet before mainnet genesis is finalized.
+
+---
+
+## 5. PWUSD — PrimeWave USD
+
+PWUSD is a separate ERC-20 token on PrimeWave Chain. It is NOT the native gas asset.
+
+| Parameter | Value |
+|---|---|
+| Name | PrimeWave USD |
+| Ticker | PWUSD |
+| Standard | ERC-20 on PrimeWave Chain |
+| Max Supply | None (fixed max supply not set at launch) |
+| Mint Authority | One designated Monetary Authority role (narrowly scoped) |
+| Burn Authority | Monetary Authority (narrowly scoped) |
+
+For full PWUSD architecture, see `PRIMEWAVE_PWUSD_ARCHITECTURE.md`.
+
+---
+
+## 6. PW Inflation: Formal Statement
+
+**PrimeWave Chain has zero PW inflation.**
+
+All PW that will ever exist is created at genesis. Staking rewards come from the pre-allocated 15,000,000 PW in the `RewardVault` contract. As rewards are paid:
+- Total circulating PW increases (from vault to validator/delegator)
+- Total PW in existence does not change
+- Burns from gas fees permanently reduce total circulating PW
+
+The supply curve over time:
+```
+t=0:       100,000,000 PW (genesis)
+t=1..N:    100,000,000 PW minus cumulative burns (deflationary over time)
+```
+
+---
+
+*This document is a PW-C00 design specification. No production deployment has occurred.*
