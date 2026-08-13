@@ -138,7 +138,7 @@ The contract then propagates the validator set change to P-Chain via Warp — id
 | Maximum stake | TBD | Testnet benchmark |
 | Delegation fee (commission) | 5–10% | Set per-validator in basis points |
 | Minimum stake duration | TBD | Testnet benchmark |
-| Unbonding period | 14–21 days | Exact value: governance decision before Phase 2 |
+| Unbonding period | **14 days** (LOCKED August 13, 2026) | Applies to validators and delegators |
 | Uptime threshold | ≥80% | Exact threshold: testnet benchmark |
 | Maximum stake multiplier | TBD | Caps delegation relative to validator self-stake |
 | Weight-to-value factor | TBD | Converts PW amount to P-Chain validator weight |
@@ -162,9 +162,9 @@ delegatorReward = epochReward × (delegationWeight / totalValidatorWeight)
 ### 3.6 Unbonding
 
 - Validator initiates removal: calls `initiateValidatorRemoval(validationID)`
-- Unbonding period begins (14–21 days target)
+- Unbonding period begins: **14 days** (locked)
 - Rewards continue accruing during unbonding
-- After unbonding: stake returned, validator deregistered from P-Chain
+- After 14 days: stake returned, validator deregistered from P-Chain
 - Delegators must also unbond (or redelegate) if their validator removes
 
 Forced removal (slashing):
@@ -216,7 +216,7 @@ Phase 2 deployment may proceed when ALL of the following are met:
 - [ ] `PrimeWaveStakingManager` contract has been written and audited
 - [ ] Audit report is public with all critical/high findings resolved
 - [ ] Testnet has validated Phase 2 staking for minimum 4 weeks
-- [ ] All Phase 2 parameters (min stake, unbonding, etc.) are finalized
+- [ ] All Phase 2 parameters (min stake, etc.) are finalized — unbonding: 14 days (already locked)
 - [ ] Explicit PrimeWave leadership approval
 - [ ] Community announcement made ≥7 days before activation
 
@@ -238,7 +238,7 @@ If Phase 2 encounters a critical issue:
 - Emergency multisig can pause `PrimeWaveStakingManager`
 - ValidatorManager ownership can be transferred back to PoAManager via governance
 - Existing staked positions are frozen (not lost) during a pause
-- Full rollback requires unbonding period to complete for all stakers
+- Full rollback requires 14-day unbonding period to complete for all stakers
 - Governance vote required for any rollback that affects staker funds
 
 ---
@@ -261,7 +261,7 @@ If Phase 2 encounters a critical issue:
 
 `PrimeWaveStakingManager` must be compatible with the `StakingManager` abstract contract from `ava-labs/icm-services`. Before implementation, the following must be confirmed:
 
-- [ ] `StakingManager` version in `icm-services` exposes `_reward()` as `internal virtual`
+- [x] ~~`StakingManager` exposes `_reward()` as `internal virtual`~~ → **Substantively confirmed** (OQ-019): `NativeTokenStakingManager` overrides `_reward()`, proving `internal virtual` in base. Final source review at commit `40e1c89` in PW-C01.
 - [ ] `StakingManager._lock()` and `_unlock()` are overridable for native PW handling
 - [ ] Warp message format for validator registration/removal has not changed between icm-contracts and icm-services
 - [ ] No new interface requirements have been added in icm-services that affect the extension model

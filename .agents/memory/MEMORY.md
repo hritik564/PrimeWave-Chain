@@ -1,1 +1,2 @@
-- [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Architecture/research sprint complete; critical NativeMinter conflict found; fixed-supply PoA+RewardVault solution designed; 12 docs in docs/
+- [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Full design sprint + decision resolution complete; 20 docs in docs/; gate passed; awaiting PW-C01 approval
+- [Avalanche dependency surprises](avalanche-dep-surprises.md) — Both subnet-evm AND icm-contracts archived late 2025; successors confirmed; do not use archived repos

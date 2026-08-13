@@ -1,0 +1,133 @@
+PRIMEWAVE CHAIN
+FINAL PW-C00 PRE-C01 GATE
+
+Do NOT begin PW-C01 yet.
+
+Resolve the remaining implementation prerequisites and update the documentation.
+
+1. OQ-011 — UNBONDING
+
+Lock:
+
+14 days
+
+Document the rationale and update all affected validator/staking documents.
+
+2. OQ-013 — EMERGENCY MULTISIG
+
+Lock:
+
+3-of-5 multisig
+
+Emergency authority must be narrowly scoped.
+
+It MUST NOT be able to:
+
+- arbitrarily transfer Treasury funds
+- modify user balances
+- mint PW
+- change PW supply
+- bypass normal governance
+- arbitrarily modify validators
+
+Document exact emergency powers.
+
+3. OQ-015 — PRESALE VESTING
+
+Lock:
+
+NO PRESALE VESTING.
+
+This was previously approved by PrimeWave leadership.
+
+Update tokenomics and open questions accordingly.
+
+4. OQ-016 — TIMELOCK
+
+Lock:
+
+48-hour timelock for ordinary protocol/treasury administrative changes.
+
+Emergency actions may bypass the ordinary timelock only where explicitly authorized by the emergency-security policy.
+
+Document the exact actions subject to timelock.
+
+5. GOVERNANCE KEY SECURITY
+
+Create:
+
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+
+Define:
+
+- hardware-backed signing
+- multisig signer requirements
+- key generation
+- key backup
+- key recovery
+- key rotation
+- signer separation
+- geographic separation
+- emergency recovery
+- testnet rehearsal
+- production deployment ceremony
+
+Absolutely no production private keys may be generated or stored during PW-C00/PW-C01 development.
+
+6. DEPENDENCY COMPATIBILITY
+
+Perform one final compatibility verification for the exact stack:
+
+- AvalancheGo
+- Subnet-EVM
+- ICM Services
+- ICM Contracts
+- Solidity
+- OpenZeppelin
+
+For every dependency record:
+
+- exact version/tag
+- exact commit where appropriate
+- official source
+- compatibility evidence
+- whether it is pinned
+
+Do NOT use floating versions.
+
+Do NOT use latest/main/master for production dependencies.
+
+If exact compatibility cannot be proven, document the uncertainty and STOP.
+
+7. FINAL PRE-C01 CHECK
+
+Verify:
+
+- 100M PW cap
+- no PW minting
+- 15M finite RewardVault
+- 3M/year maximum staking emissions
+- 70/20/10 gas economics
+- separate ValidatorFeeVault
+- 14-day unbonding
+- 3-of-5 emergency multisig
+- no presale vesting
+- 48-hour timelock
+- single PWUSD Monetary Authority
+- 15 initial validators
+- Phase 1 PoA
+- Phase 2 custom PoS architecture
+- no V1 bridge
+- no BEP-20 PW bridge
+
+Do not code the production implementation.
+
+Do not generate keys.
+
+Do not deploy anything.
+
+At completion produce:
+
+docs/PW-C00-FINAL-GATE.md
+
+Then STOP and wait for explicit approval to begin PW-C01.

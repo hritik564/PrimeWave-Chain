@@ -129,6 +129,26 @@ Risk ratings: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
   - Smart contract audit required
   - Role assignment verified post-deploy
 
+### 4.1B Emergency Multisig Security (OQ-013 Resolved)
+
+**Configuration (locked August 13, 2026):** 3-of-5 multisig.
+
+**Critical design property:** The Emergency Multisig has deliberately narrow powers. It CANNOT transfer Treasury funds, modify balances, mint PW, change supply, bypass governance timelock, modify validators, upgrade contracts, or redirect user funds. It may ONLY pause/unpause specific contracts and freeze specific PWUSD accounts.
+
+**Threat: Emergency Multisig key compromise (1–2 signers)**
+- **Impact:** Low — threshold is 3-of-5; fewer than 3 compromised keys cannot act unilaterally
+- **Mitigation:** Hardware wallets required for all 5 signers; geographic separation across ≥ 3 locations; no signer holds other governance roles
+- **Response:** Rotate compromised signer(s) via Protocol Admin multisig + 48h timelock
+
+**Threat: Emergency Multisig threshold compromise (3+ signers coordinating maliciously)**
+- **Impact:** Medium — can pause all protocol contracts simultaneously, disrupting operations
+- **Impact ceiling:** Cannot drain funds, cannot upgrade contracts, cannot mint — damage is limited to denial-of-service on contract operations
+- **Mitigation:** Organizational and geographic separation of signers; ≥ 2 independent signers; Protocol Admin can unpause if Emergency Multisig acts maliciously (via timelock process); community monitoring of on-chain pause events
+
+Full Emergency Multisig specification: `PRIMEWAVE_GOVERNANCE_POLICY.md` Section 4.
+
+---
+
 ### 4.2 Monetary Authority Compromise
 **Rating:** 🔴 Critical
 - **Threat:** Monetary Authority signing key is compromised

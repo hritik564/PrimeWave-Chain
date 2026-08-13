@@ -173,10 +173,10 @@ PrimeWave Chain uses the following confirmed official dependencies (OQ-001 resol
 |---|---|---|
 | **Validator Manager contracts** | `ava-labs/icm-services` tag `icm-relayer-v1.7.5` commit `40e1c89` | Replaces archived `ava-labs/icm-contracts`. Solidity 0.8.30, EVM: shanghai. Released Jan 26, 2026. Compatible with AvalancheGo v1.14.0–v1.14.2. |
 | **AvalancheGo node** | `ava-labs/avalanchego` | Current: v1.14.2. Lock exact version at testnet initiation. |
-| **Subnet-EVM** | `ava-labs/subnet-evm` | Lock exact version at testnet initiation. |
+| **Subnet-EVM** | ⛔ **ARCHIVED Dec 16, 2025** — EVM merged into AvalancheGo v1.14.1 | Not a separate dependency. AvalancheGo v1.14.2 includes the EVM plugin. Do NOT reference `ava-labs/subnet-evm`. |
 | **Avalanche CLI** | `ava-labs/avalanche-cli` | Used for L1 creation / conversion. Lock at testnet initiation. |
-| **OpenZeppelin Contracts** | `OpenZeppelin/openzeppelin-contracts` v5.x | ERC-20, AccessControl, TimelockController. |
-| **OpenZeppelin Upgradeable** | `OpenZeppelin/openzeppelin-contracts-upgradeable` v5.x | Proxy/upgradeable pattern for contracts. |
+| **OpenZeppelin Contracts** | `OpenZeppelin/openzeppelin-contracts` **v5.6.1** | ERC-20, AccessControl, TimelockController. Latest stable (npm `latest`, Feb 27, 2026). MIT. |
+| **OpenZeppelin Upgradeable** | `OpenZeppelin/openzeppelin-contracts-upgradeable` **v5.6.1** | Proxy/upgradeable pattern. Synchronized with OZ Contracts v5.6.1. MIT. |
 | **Foundry** | `foundry-rs/foundry` | Build, test, deploy tooling. Pin commit in CI. |
 | **ACP-77** | Activated on Avalanche mainnet | Standard used. |
 | **ACP-99** | Activated on Avalanche mainnet | Standard used. |
@@ -193,7 +193,7 @@ PrimeWave Chain uses the following confirmed official dependencies (OQ-001 resol
 |---|---|
 | `ava-labs/icm-services` | LicenseRef-Ecosystem (Ava Labs proprietary for commercial use — verify terms for PrimeWave's use case) |
 | `ava-labs/avalanchego` | BSD-3-Clause |
-| `ava-labs/subnet-evm` | LGPL-3.0 |
+| `ava-labs/subnet-evm` | ⛔ ARCHIVED — not a dependency |
 | `OpenZeppelin/*` | MIT |
 | `foundry-rs/foundry` | MIT |
 

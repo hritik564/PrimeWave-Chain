@@ -174,10 +174,16 @@ See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
 
 ---
 
-### OQ-011 — Unbonding Period
-**Status:** 🟡 UNRESOLVED
-**Question:** Exact unbonding period — 14 days or 21 days?
-**Decision required from:** PrimeWave leadership.
+### ✅ OQ-011 — Unbonding Period (RESOLVED)
+
+**Resolution (locked August 13, 2026):** **14-day unbonding period.**
+
+- Applies to both validator exits and delegator exits in Phase 2 PoS
+- Rewards continue to accrue during the unbonding window
+- After the period ends: stake returned, validator deregistered from P-Chain
+- Emergency forced-removal path does not bypass unbonding for non-slashed funds
+
+**Documents updated:** `PRIMEWAVE_VALIDATOR_SPEC.md`, `PRIMEWAVE_POS_TRANSITION_SPEC.md`
 
 ---
 
@@ -188,10 +194,21 @@ See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
 
 ---
 
-### OQ-013 — Emergency Multisig Composition and Powers
-**Status:** 🟡 UNRESOLVED
-**Question:** Who are the emergency multisig signers? Exact pause/unpause scope?
-**Decision required from:** PrimeWave leadership.
+### ✅ OQ-013 — Emergency Multisig (RESOLVED)
+
+**Resolution (locked August 13, 2026):** **3-of-5 multisig with narrowly scoped emergency powers.**
+
+Configuration:
+- Threshold: 3-of-5 (any 3 of 5 signers must approve)
+- Hardware wallet required for all signers
+- Signers in ≥ 3 different geographic locations
+- No signer may also hold Protocol Admin, Treasury Admin, or Monetary Authority keys
+
+**Authorized powers (exhaustive):** Pause/unpause `PrimeWaveStakingManager`, `RewardVault`, `ValidatorFeeVault`, `FeeDistributor`, `PWUSD`. Freeze specific PWUSD accounts (AML/sanctions only). Nothing else.
+
+**Strictly cannot:** Transfer Treasury funds, modify balances, mint PW, change supply, bypass governance timelock, arbitrarily modify validators, upgrade contracts, or recover/redirect user funds.
+
+**Full specification:** `PRIMEWAVE_GOVERNANCE_POLICY.md` Section 4.
 
 ---
 
@@ -202,18 +219,34 @@ See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
 
 ---
 
-### OQ-015 — Team & Development Allocation Vesting
-**Status:** 🟡 UNRESOLVED
-**Question:** Does the 10M PW team allocation vest? If so, over what schedule?
-**Decision required from:** PrimeWave leadership.
+### ✅ OQ-015 — Presale Vesting (RESOLVED)
+
+**Resolution (locked August 13, 2026 — previously approved by PrimeWave leadership):** **NO PRESALE VESTING.**
+
+The three presale allocations have no vesting schedules:
+- Presale Phase 1: 5,000,000 PW ($0.01/PW) — no vesting
+- Presale Phase 2: 7,500,000 PW ($0.025/PW) — no vesting
+- Presale Phase 3: 7,500,000 PW ($0.04/PW) — no vesting
+
+Presale buyers receive their PW allocation without a lock-up or vesting schedule.
+
+**Note:** The team & development allocation (10,000,000 PW) vesting question is separate and remains to be decided. See OQ-023 below.
+
+**Documents updated:** `PRIMEWAVE_TOKENOMICS.md`
 
 ---
 
-### OQ-016 — Governance Timelock Durations
-**Status:** 🟡 UNRESOLVED
-**Question:** Minimum timelock durations for: normal governance / protocol upgrades / emergency?
-**Recommendation:** 48h normal / 7d upgrades / no timelock for emergency pause.
-**Decision required from:** PrimeWave leadership for final values.
+### ✅ OQ-016 — Governance Timelock Durations (RESOLVED)
+
+**Resolution (locked August 13, 2026):** **48-hour timelock** for all ordinary protocol and treasury administrative changes.
+
+- Emergency actions (pause/freeze by Emergency Multisig) bypass the timelock
+- All other governance actions (upgrades, parameter changes, treasury disbursements, validator changes) require the full 48h timelock
+- The timelock minimum delay cannot be shortened below 48h without a timelock-gated governance change
+
+**Full specification of which exact actions are subject to the timelock:** `PRIMEWAVE_GOVERNANCE_POLICY.md` Section 3.
+
+**Documents updated:** `PRIMEWAVE_GOVERNANCE_POLICY.md`
 
 ---
 
@@ -246,13 +279,15 @@ See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
 
 ---
 
-### OQ-019 — StakingManager Interface Compatibility (Phase 2 Pre-req)
-**Status:** 🟠 UNRESOLVED — MUST VERIFY BEFORE PHASE 2 IMPLEMENTATION
-**Question:** In the current `ava-labs/icm-services` version, confirm:
-- `StakingManager._reward()` is `internal virtual` (overridable)
-- `StakingManager._lock()` and `_unlock()` are overridable for native PW handling
-- No new mandatory interface requirements that affect the extension model
-**Action:** Source code review at Phase 2 implementation sprint.
+### 🔵 OQ-019 — StakingManager Interface Compatibility (PARTIALLY VERIFIED)
+
+**Status:** Substantively confirmed; final source review deferred to PW-C01.
+
+**Evidence:** The Avalanche Builder Hub documents `StakingManager` as an abstract contract. `NativeTokenStakingManager` overrides `_reward()` to call `NATIVE_MINTER.mintNativeCoin()` — this can only compile if `_reward()` is `internal virtual` in the base. This confirms the extension point exists by design.
+
+**Remaining action (PW-C01):** Direct source review of `StakingManager.sol` at commit `40e1c89` to confirm `_lock()`, `_unlock()` are also overridable, and that no new mandatory interface has been added.
+
+See `PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md` Section 2.3 for the full verification table.
 
 ---
 
@@ -274,13 +309,21 @@ Long-term objective; requires separate design, legal review, and custodial arran
 
 ---
 
+### OQ-023 — Team & Development Allocation Vesting
+**Status:** 🟡 UNRESOLVED (separated from OQ-015 which covered presale vesting)
+**Question:** Does the 10,000,000 PW team & development allocation vest? If so, over what schedule (e.g., 4-year linear vest with 1-year cliff)?
+**Decision required from:** PrimeWave leadership.
+**Note:** This is distinct from OQ-015 (presale vesting = no vesting, locked). Team vesting is a separate governance decision that does not block Phase 1 launch.
+
+---
+
 ## Summary
 
 | Priority | Count | Status |
 |---|---|---|
-| ✅ Resolved (OQ-001 to OQ-006, OQ-017, OQ-018) | 8 | Resolved in PW-C00 Decision Resolution |
-| 🟠 High (OQ-019) | 1 | Must verify before Phase 2 |
-| 🟡 Medium (OQ-007 to OQ-016) | 10 | Resolve before testnet/mainnet |
+| ✅ Resolved (OQ-001 to OQ-006, OQ-011, OQ-013, OQ-015 to OQ-018) | 12 | Resolved in PW-C00 |
+| ✅ Partially verified (OQ-019) | 1 | `_reward()` is `internal virtual` — final source review in PW-C01 |
+| 🟡 Medium (OQ-007 to OQ-010, OQ-012, OQ-014, OQ-023) | 7 | Resolve before testnet/mainnet |
 | 🟢 Deferred (OQ-020 to OQ-022) | 3 | Later sprints |
 
 ---

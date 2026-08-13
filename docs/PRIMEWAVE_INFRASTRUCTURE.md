@@ -219,13 +219,15 @@ The following table documents the current official Avalanche dependencies confir
 |---|---|---|---|
 | Validator Manager Contracts (PoAManager, StakingManager, etc.) | `ava-labs/icm-services` tag `icm-relayer-v1.7.5` / commit `40e1c89` | ✅ **Pinned** | Successor to archived `icm-contracts`. Released Jan 26, 2026. Contracts in `icm-contracts/` subdir. Solidity 0.8.30. Compatible with AvalancheGo v1.14.0–v1.14.2. |
 | AvalancheGo | `ava-labs/avalanchego` | ✅ Active | v1.14.2 current. Pin at testnet. |
-| Subnet-EVM | `ava-labs/subnet-evm` | ✅ Active | Pin at testnet. |
+| Subnet-EVM | ⛔ **ARCHIVED Dec 16, 2025** — merged into AvalancheGo v1.14.1 | ✅ N/A | Not a separate dependency. EVM included in AvalancheGo ≥ v1.14.1. DO NOT reference `ava-labs/subnet-evm`. |
 | Avalanche CLI | `ava-labs/avalanche-cli` | ✅ Active | Used for L1 create/convert. Pin at testnet. |
-| OpenZeppelin Contracts | `OpenZeppelin/openzeppelin-contracts` v5.x | ✅ Active | Audited. Pin exact version. |
-| OpenZeppelin Upgradeable | `OpenZeppelin/openzeppelin-contracts-upgradeable` v5.x | ✅ Active | Audited. Pin exact version. |
+| OpenZeppelin Contracts | `OpenZeppelin/openzeppelin-contracts` **v5.6.1** | ✅ **Pinned** | MIT. Latest stable (npm `latest`, Feb 27, 2026). Pin in Foundry config. |
+| OpenZeppelin Upgradeable | `OpenZeppelin/openzeppelin-contracts-upgradeable` **v5.6.1** | ✅ **Pinned** | MIT. Synchronized with OZ Contracts v5.6.1. npm `latest`. |
 | Foundry | `foundry-rs/foundry` | ✅ Active | Pin commit hash in CI. |
 
-**Archive warning:** `ava-labs/icm-contracts` (archived Dec 3, 2025) must NOT be used. All contract references must use `ava-labs/icm-services`.
+**Archive warnings:**
+- `ava-labs/icm-contracts` (archived Dec 3, 2025) must NOT be used. Use `ava-labs/icm-services` exclusively.
+- `ava-labs/subnet-evm` (archived Dec 16, 2025) must NOT be used. EVM is now part of AvalancheGo ≥ v1.14.1.
 
 **License review required:** The `LicenseRef-Ecosystem` license on `icm-services` contracts may require a commercial arrangement with Ava Labs. Legal review needed before mainnet deployment.
 

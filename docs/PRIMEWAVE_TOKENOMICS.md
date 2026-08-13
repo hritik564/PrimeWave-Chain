@@ -27,7 +27,7 @@ Total: **100,000,000 PW**
 |---|---|---|---|
 | PWSwap Liquidity | 40,000,000 | 40% | Initial PW/PWUSD liquidity pool, locked 36 months |
 | PrimeWave Treasury | 15,000,000 | 15% | Multisig + timelock governance |
-| Team & Development | 10,000,000 | 10% | Vesting terms TBD by PrimeWave |
+| Team & Development | 10,000,000 | 10% | Vesting terms TBD — see OQ-023 |
 | Validator & Staking Rewards | 15,000,000 | 15% | Pre-funded RewardVault contract |
 | Presale Phase 1 | 5,000,000 | 5% | $0.01/PW — no vesting (LOCKED decision) |
 | Presale Phase 2 | 7,500,000 | 7.5% | $0.025/PW — no vesting (LOCKED decision) |
@@ -44,7 +44,9 @@ All allocations are seeded at genesis in the `alloc` block of the genesis file. 
 | Phase 2 | 7,500,000 PW | $0.025 | $187,500 |
 | Phase 3 | 7,500,000 PW | $0.04 | $300,000 |
 
-No vesting applies to presale allocations (locked decision).
+No vesting applies to presale allocations (OQ-015 — locked decision, previously approved by PrimeWave leadership). Presale buyers receive their PW allocation immediately at TGE with no lock-up.
+
+> **Team allocation vesting** (10M PW) is a separate question — see OQ-023 in `PRIMEWAVE_OPEN_QUESTIONS.md`. This does not block Phase 1 launch.
 
 ---
 

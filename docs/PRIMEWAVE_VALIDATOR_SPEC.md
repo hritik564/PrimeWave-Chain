@@ -124,7 +124,7 @@ Full specification, Solidity constants, and epoch calculation: `PRIMEWAVE_REWARD
 | Maximum stake (Phase 2) | TBD | Must be set on testnet |
 | Delegation | YES (Phase 2) | Not available in Phase 1 PoA |
 | Validator commission | 5–10% | Range — individual validators set their own |
-| Unbonding period | 14–21 days | Exact value set on testnet |
+| Unbonding period | **14 days** (LOCKED) | Applies to validators and delegators |
 | Uptime requirement | ≥80% (target) | Exact threshold TBD through testnet |
 | Slashing | YES — provable violations only | Ordinary downtime: moderate penalty |
 
@@ -157,7 +157,7 @@ Avalanche imposes churn limits on validator set changes (maximum weight change p
 | Delegation supported | YES | Via PrimeWaveStakingManager |
 | Minimum delegation | TBD | Testnet benchmarking |
 | Delegation commission | 5–10% of delegator rewards to validator | Set per-validator |
-| Unbonding | Same as validator (14–21 days) | |
+| Unbonding | **14 days** (LOCKED — same as validator) | |
 | Reward eligibility | Must maintain validator uptime | |
 
 ---
