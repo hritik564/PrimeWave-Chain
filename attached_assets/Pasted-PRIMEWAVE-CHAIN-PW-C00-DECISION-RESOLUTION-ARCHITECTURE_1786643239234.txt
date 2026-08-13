@@ -1,0 +1,551 @@
+PRIMEWAVE CHAIN
+PW-C00 — DECISION RESOLUTION & ARCHITECTURE UPDATE
+
+PW-C00 research and documentation are complete.
+
+Do NOT start PW-C01.
+
+Do NOT build production blockchain infrastructure.
+Do NOT create production genesis.
+Do NOT generate production validator keys.
+Do NOT deploy contracts.
+Do NOT deploy a network.
+
+Your task is ONLY to update the PW-C00 architecture based on the decisions below, validate the technical consistency of those decisions, and close/update the relevant open questions and documentation.
+
+============================================================
+1. DECISION OQ-001 — AVALANCHE DEPENDENCIES
+============================================================
+
+Identify the CURRENT official Avalanche-maintained repositories, packages and exact versions/commits that PrimeWave Chain should use for:
+
+- Validator Manager
+- PoA Validator Manager
+- Staking Manager
+- Native Token Staking Manager
+- ICM/Warp/validator-management components where applicable
+- P-Chain/L1 conversion tooling
+- Avalanche CLI/tooling
+- Required Solidity dependencies
+
+Do NOT use an archived repository merely because older documentation references it.
+
+For every critical dependency document:
+
+- Official repository
+- Package name
+- Version/commit
+- Why it is required
+- License
+- Whether it is production-ready
+- Whether it should be pinned
+- Whether it should be forked
+- Whether PrimeWave should extend it or use it directly
+
+If an official successor cannot be confidently established:
+
+STOP and identify the uncertainty.
+
+Do not guess.
+
+Update:
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_OPEN_QUESTIONS.md
+
+============================================================
+2. DECISION OQ-002 — GENESIS / BOOTSTRAP
+============================================================
+
+LOCKED DECISION:
+
+Use Avalanche's standard L1 creation / conversion / Validator Manager initialization architecture.
+
+Document the intended sequence at a high level:
+
+L1 creation
+→ L1 conversion/bootstrap
+→ Validator Manager initialization
+→ initial validator set
+→ network activation
+
+The initial validator set will contain:
+
+15 validators.
+
+Do NOT invent a custom genesis/bootstrap mechanism.
+
+Document exactly which parts are:
+
+- Avalanche standard
+- PrimeWave configuration
+- PrimeWave custom code
+
+Update:
+docs/PRIMEWAVE_GENESIS_SPEC.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+
+============================================================
+3. DECISION OQ-003 — FINITE 15M PW REWARD VAULT
+============================================================
+
+LOCKED DECISION:
+
+The 15,000,000 PW validator/staking allocation will be treated as a FINITE PRE-FUNDED REWARD RESERVE.
+
+PrimeWave MUST NOT use unrestricted native-token inflation for staking rewards.
+
+The reward reserve must exist as existing PW.
+
+Conceptual architecture:
+
+15M PW RewardVault
+        │
+        ▼
+PrimeWave reward accounting
+        │
+        ├── Validator rewards
+        └── Delegator rewards
+
+When the RewardVault reaches zero:
+
+staking rewards stop.
+
+No new PW is minted.
+
+Maximum total PW supply remains:
+
+100,000,000 PW
+
+============================================================
+4. REWARD DISTRIBUTION MODEL
+============================================================
+
+Use an ON-CHAIN reward accounting model.
+
+Do NOT send a transaction to every validator for every reward event.
+
+Instead, design an accrual/claim model.
+
+The system should maintain claimable reward balances.
+
+Conceptually:
+
+RewardVault
+→ reward accounting
+→ validator/delegator entitlement
+→ claim
+→ PW transfer from existing reserve
+
+The exact accounting algorithm must be specified.
+
+Evaluate whether the recommended implementation should use:
+
+- reward index
+- accumulated reward per share
+- validator weight
+- delegation weight
+- uptime eligibility
+- epoch-based accounting
+
+Choose the simplest secure architecture that is compatible with Avalanche's validator model.
+
+IMPORTANT:
+
+Do not implement the custom staking manager yet.
+
+Only specify the architecture.
+
+The reward accounting MUST preserve:
+
+total distributed rewards <= 15,000,000 PW
+
+and:
+
+RewardVault balance >= 0
+
+and:
+
+total PW supply <= 100,000,000
+
+Create formal invariants.
+
+============================================================
+5. DECISION OQ-004 — 70% VALIDATOR FEE DISTRIBUTION
+============================================================
+
+LOCKED ECONOMIC RULE:
+
+70% of applicable gas/fee economics → validators.
+
+20% → PrimeWave Treasury.
+
+10% → burn.
+
+The 70% validator allocation must NOT be confused with the 15M staking reward reserve.
+
+They are two separate mechanisms.
+
+Architecture:
+
+Gas/fees
+    │
+    ├── 70% → Validator Fee Vault
+    │
+    ├── 20% → PrimeWave Treasury
+    │
+    └── 10% → Burn
+
+Validator Fee Vault:
+
+Accumulates ongoing transaction-fee revenue.
+
+The validator fee pool should be distributed according to validator eligibility/weight rather than simply giving the entire amount to the block producer.
+
+The recommended model is:
+
+validator fee entitlement ∝ effective validator weight × eligibility/uptime
+
+Delegators should receive the appropriate portion according to the finalized staking/delegation model.
+
+For the initial 15 validators, if all have equal weight and equal eligibility, their entitlement should be approximately equal.
+
+The exact implementation must be documented before coding.
+
+IMPORTANT:
+
+Do not mix:
+
+A. Validator Fee Vault
+B. 15M PW RewardVault
+
+They must remain separate.
+
+Update:
+docs/PRIMEWAVE_TOKENOMICS.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+
+============================================================
+6. DECISION OQ-005 — PWUSD MONETARY AUTHORITY
+============================================================
+
+LOCKED DECISION:
+
+PWUSD has ONE designated Monetary Authority.
+
+This authority may:
+
+- Mint PWUSD
+- Perform permitted PWUSD monetary operations
+
+This authority MUST NOT automatically have permission to:
+
+- Withdraw Treasury funds
+- Transfer arbitrary user funds
+- Modify arbitrary user balances
+- Manage validators
+- Upgrade the blockchain
+- Control emergency security
+- Modify PWSwap reserves
+- Execute arbitrary governance actions
+
+The Monetary Authority is a separate role.
+
+Treasury:
+
+Multisig + timelock.
+
+Protocol administration:
+
+Multisig + timelock.
+
+Emergency security:
+
+Separate emergency multisig.
+
+DO NOT convert PWUSD mint authority into a multisig unless explicitly instructed.
+
+The actual identity/signing key of the Monetary Authority will be configured later during secure deployment.
+
+For now define:
+
+MONETARY_AUTHORITY_ADDRESS = PLACEHOLDER
+
+Do NOT generate a real key.
+
+Update:
+docs/PRIMEWAVE_PWUSD_ARCHITECTURE.md
+docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+docs/PRIMEWAVE_OPEN_QUESTIONS.md
+
+============================================================
+7. DECISION OQ-006 — PHASE 2 CUSTOM POS ARCHITECTURE
+============================================================
+
+APPROVED IN PRINCIPLE:
+
+PrimeWave may use a custom Phase 2 staking architecture in order to preserve:
+
+- 100M PW maximum supply
+- No PW inflation
+- Finite 15M PW reward reserve
+- Validator staking
+- Delegation
+- Validator rewards
+- Delegator rewards
+
+However:
+
+THIS IS ARCHITECTURE APPROVAL ONLY.
+
+DO NOT IMPLEMENT THE CUSTOM STAKING MANAGER IN THIS TASK.
+
+The architecture must preserve the required Avalanche validator-management and P-Chain semantics.
+
+The proposed design should conceptually be:
+
+Avalanche Validator Manager
+        │
+        ▼
+PrimeWave Staking Manager
+        │
+        ├── Validator accounting
+        ├── Delegator accounting
+        ├── Eligibility/uptime
+        └── Reward accounting
+                 │
+                 ▼
+          Finite RewardVault
+
+The custom PrimeWave staking manager must NOT:
+
+- mint PW
+- bypass Validator Manager security
+- bypass P-Chain validator operations
+- create arbitrary validator balances
+- create hidden inflation
+
+Before implementation, the exact Avalanche interfaces/inheritance/extension points must be documented.
+
+If the proposed custom manager cannot safely preserve Avalanche's required validator-management semantics:
+
+STOP and report the conflict.
+
+Do not improvise.
+
+Update:
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+
+============================================================
+8. CRITICAL TECHNICAL REVIEW
+============================================================
+
+After incorporating these decisions, perform a consistency review.
+
+Specifically verify:
+
+A. Can the RewardVault hold native PW?
+
+B. Can rewards be transferred from the finite reserve without minting?
+
+C. Can validator/delegator reward accounting work without Native Minter inflation?
+
+D. Can the 70% fee vault operate independently from the 15M reward reserve?
+
+E. Can the initial 15 validators operate under Phase 1 PoA?
+
+F. Can Phase 2 transition to the proposed custom staking model?
+
+G. Can the 100M PW supply invariant be proven?
+
+H. Does any Avalanche component still require native-token minting?
+
+I. Are there any hidden dependencies on the Native Minter?
+
+J. Does the custom staking architecture require functionality that Avalanche does not expose?
+
+K. Are the proposed reward accounting mechanisms gas-efficient?
+
+L. Are the proposed contracts auditable?
+
+M. Are there any circular dependencies?
+
+N. Are there any security assumptions that need explicit validation?
+
+============================================================
+9. COST OPTIMIZATION REVIEW
+============================================================
+
+Perform a cost review.
+
+Identify anything in the current architecture that can be simplified without compromising:
+
+- Security
+- Correctness
+- Decentralization roadmap
+- Auditability
+- Future scalability
+
+Look specifically for:
+
+- unnecessary microservices
+- unnecessary databases
+- duplicate indexers
+- duplicate APIs
+- unnecessary custom infrastructure
+- unnecessary contracts
+- unnecessary third-party services
+
+Do NOT remove a component simply because it costs money if it is necessary for security or correctness.
+
+============================================================
+10. UPDATE OPEN QUESTIONS
+============================================================
+
+Update:
+
+docs/PRIMEWAVE_OPEN_QUESTIONS.md
+
+Mark the six questions as:
+
+OQ-001:
+Resolved / dependency validation documented
+
+OQ-002:
+Resolved / standard Avalanche bootstrap selected
+
+OQ-003:
+Resolved / finite on-chain RewardVault
+
+OQ-004:
+Resolved / Validator Fee Vault
+
+OQ-005:
+Resolved / single Monetary Authority role
+
+OQ-006:
+Approved in principle / implementation subject to detailed technical specification and testing
+
+Any newly discovered technical questions MUST remain open.
+
+Do not artificially mark unresolved issues as resolved.
+
+============================================================
+11. REQUIRED NEW DOCUMENT
+============================================================
+
+Create:
+
+docs/PRIMEWAVE_REWARD_ECONOMICS.md
+
+It must clearly separate:
+
+A. 15M PW staking reward reserve
+
+B. 70% ongoing validator fee allocation
+
+C. 20% Treasury fee allocation
+
+D. 10% burn
+
+Include diagrams, accounting flow and invariants.
+
+============================================================
+12. REQUIRED NEW DOCUMENT
+============================================================
+
+Create:
+
+docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+
+Document:
+
+Phase 1:
+PoA launch
+
+Phase 2:
+PrimeWave staking/delegation architecture
+
+Include:
+
+- transition trigger
+- validator registration
+- validator weight
+- delegation
+- commission
+- unbonding
+- uptime
+- reward eligibility
+- slashing
+- RewardVault
+- Validator Fee Vault
+- security controls
+- rollback considerations
+
+Do NOT implement it yet.
+
+============================================================
+13. REQUIRED FINAL REPORT
+============================================================
+
+Update:
+
+docs/PW-C00-REPORT.md
+
+Add a section:
+
+"Decision Resolution — PW-C00"
+
+Include:
+
+1. OQ-001 resolution
+2. OQ-002 resolution
+3. OQ-003 resolution
+4. OQ-004 resolution
+5. OQ-005 resolution
+6. OQ-006 resolution
+
+Then include:
+
+A. Final architecture
+B. Remaining technical risks
+C. Remaining open questions
+D. Exact prerequisites for PW-C01
+E. Files changed
+F. Research performed
+G. Tests/validation performed
+H. Assumptions
+
+============================================================
+14. NO IMPLEMENTATION
+============================================================
+
+This task is DOCUMENTATION AND ARCHITECTURE ONLY.
+
+DO NOT:
+
+- create production contracts
+- deploy contracts
+- create genesis
+- deploy nodes
+- generate validator keys
+- generate production wallets
+- configure mainnet
+- start PW-C01
+
+============================================================
+15. FINAL STOP CONDITION
+============================================================
+
+When the documentation and consistency review are complete:
+
+STOP.
+
+Do NOT automatically continue to PW-C01.
+
+Report completion and wait for explicit approval.

@@ -211,6 +211,26 @@ Cost optimization strategies:
 
 ---
 
+## 9B. Confirmed Dependency Registry (OQ-001 Resolved)
+
+The following table documents the current official Avalanche dependencies confirmed for PrimeWave Chain:
+
+| Component | Official Repository | Status | Notes |
+|---|---|---|---|
+| Validator Manager Contracts (PoAManager, StakingManager, etc.) | `ava-labs/icm-services` | ✅ Active (last commit Aug 2026) | Successor to archived `icm-contracts`. Contracts in `icm-contracts/` subdir. Solidity 0.8.30. |
+| AvalancheGo | `ava-labs/avalanchego` | ✅ Active | v1.14.2 current. Pin at testnet. |
+| Subnet-EVM | `ava-labs/subnet-evm` | ✅ Active | Pin at testnet. |
+| Avalanche CLI | `ava-labs/avalanche-cli` | ✅ Active | Used for L1 create/convert. Pin at testnet. |
+| OpenZeppelin Contracts | `OpenZeppelin/openzeppelin-contracts` v5.x | ✅ Active | Audited. Pin exact version. |
+| OpenZeppelin Upgradeable | `OpenZeppelin/openzeppelin-contracts-upgradeable` v5.x | ✅ Active | Audited. Pin exact version. |
+| Foundry | `foundry-rs/foundry` | ✅ Active | Pin commit hash in CI. |
+
+**Archive warning:** `ava-labs/icm-contracts` (archived Dec 3, 2025) must NOT be used. All contract references must use `ava-labs/icm-services`.
+
+**License review required:** The `LicenseRef-Ecosystem` license on `icm-services` contracts may require a commercial arrangement with Ava Labs. Legal review needed before mainnet deployment.
+
+---
+
 ## 10. Testnet Requirements
 
 Before mainnet launch, testnet MUST validate:

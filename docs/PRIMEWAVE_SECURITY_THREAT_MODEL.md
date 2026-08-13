@@ -131,12 +131,15 @@ Risk ratings: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
 
 ### 4.2 Monetary Authority Compromise
 **Rating:** 🔴 Critical
-- **Threat:** Monetary Authority multisig key(s) stolen
-- **Impact:** Unlimited PWUSD minting
+- **Threat:** Monetary Authority signing key is compromised
+- **Impact:** Unlimited PWUSD minting by attacker
+- **Architecture note (OQ-005 resolved):** The Monetary Authority is a **single designated role** — not automatically a multisig. The actual key configuration is determined during secure deployment.
 - **Mitigations:**
-  - Monetary Authority MUST be a multisig (minimum 3-of-5)
-  - Signers on separate hardware wallets, different geographic locations
-  - Alert threshold: if PWUSD total supply increases by >X% in 24h, trigger investigation
+  - Authority key stored in hardware wallet (Ledger or equivalent) — never in software / hot wallet
+  - Key generated in an air-gapped environment
+  - Alert threshold: if PWUSD total supply increases by >X% in 24h, trigger immediate investigation and potential emergency pause
+  - Emergency multisig can pause PWUSD contract if authority key is suspected compromised
+  - Role can be revoked and reassigned via Protocol Admin multisig + timelock
 
 ### 4.3 Excessive Minting
 **Rating:** 🟠 High

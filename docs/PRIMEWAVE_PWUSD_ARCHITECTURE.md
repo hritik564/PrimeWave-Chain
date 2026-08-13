@@ -42,6 +42,16 @@ PWUSD is NOT and MUST NOT be represented as:
 
 One designated **Monetary Authority** address holds the sole authority to mint and burn PWUSD.
 
+The Monetary Authority is a **single designated role** — it is NOT automatically a multisig. The actual signing key / address will be configured during the secure deployment process. A multisig structure will only be adopted if explicitly instructed by PrimeWave leadership at that time.
+
+During architecture and development, the authority address is:
+
+```
+MONETARY_AUTHORITY_ADDRESS = PLACEHOLDER
+```
+
+> **Do NOT generate a real key. Do NOT deploy with a real address until the secure deployment process.**
+
 The Monetary Authority is a dedicated role with narrowly scoped permissions:
 
 ```solidity

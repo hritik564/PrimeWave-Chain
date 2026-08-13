@@ -94,13 +94,24 @@ The invariant is enforced by:
 
 ## 4. Gas Economics
 
+### 4.0 Important: Two Separate Mechanisms
+
+Gas fee economics and staking rewards are **completely separate mechanisms** that must never be conflated:
+
+| Mechanism | Source | Amount | Exhaustible? |
+|---|---|---|---|
+| **ValidatorFeeVault** | Ongoing gas/tx fees → 70% share | Unlimited (function of chain activity) | NO |
+| **RewardVault** | Genesis pre-allocation | 15,000,000 PW (finite) | YES |
+
+See `PRIMEWAVE_REWARD_ECONOMICS.md` for the full dual-mechanism specification with invariants.
+
 ### 4.1 70/20/10 Fee Model (LOCKED)
 
 | Destination | Share | Mechanism |
 |---|---|---|
-| Validators | 70% | Validator claims via FeeDistributor |
+| ValidatorFeeVault | 70% | Accumulates; distributed to validators by weight × uptime |
 | PrimeWave Treasury | 20% | Auto-forwarded by FeeDistributor |
-| Burn | 10% | Sent to burn address by FeeDistributor |
+| Burn | 10% | Sent to 0x000...dead by FeeDistributor |
 
 ### 4.2 Implementation Architecture
 
@@ -111,23 +122,23 @@ Subnet-EVM's built-in `RewardManager` precompile supports three modes:
 
 **None of these natively support a three-way percentage split.**
 
-**Recommended implementation:**
+**Resolved implementation (OQ-004):**
 
 ```
-RewardManager → allowFeeRecipients: false
-              → rewardAddress: FeeDistributor contract address
+RewardManager → rewardAddress: FeeDistributor contract address
 
-FeeDistributor.distribute():
-  1. Receives accumulated fees
-  2. Calculates: validator_share = balance × 70 / 100
-                 treasury_share = balance × 20 / 100
-                 burn_share     = balance - validator_share - treasury_share
-  3. Transfers validator_share to active validator set (weighted by stake/uptime)
-  4. Transfers treasury_share to PrimeWaveTreasury multisig
-  5. Burns burn_share (transfer to 0x000...dead or selfdestruct equivalent)
+FeeDistributor.distribute() (called periodically):
+  totalFees = FeeDistributor.balance
+
+  validatorShare = totalFees × 70 / 100  → ValidatorFeeVault contract
+  treasuryShare  = totalFees × 20 / 100  → PrimeWaveTreasury multisig
+  burnShare      = totalFees - validatorShare - treasuryShare  → 0x000...dead
+
+ValidatorFeeVault distributes to validators:
+  each validator's share ∝ validator_weight × uptime_eligibility_factor
+  Phase 1: equal weight, equal uptime → approximately equal split (1/15 each)
+  Phase 2: proportional to PoS stake weight
 ```
-
-> **Open Question:** Validator fee distribution within the 70% share — does it use equal split among active validators, or weighted by stake amount? This must be resolved in PW-C01. See `PRIMEWAVE_OPEN_QUESTIONS.md`.
 
 ### 4.3 Gas Parameters (Preliminary — to be benchmarked on testnet)
 

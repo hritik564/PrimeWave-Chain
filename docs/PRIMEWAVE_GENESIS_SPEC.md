@@ -214,19 +214,62 @@ The following contracts must be deployed at genesis or immediately post-genesis 
 
 ---
 
-## 7. Initial Validator Structure
+## 7. Initial Validator Structure and Bootstrap Sequence (OQ-002 Resolved)
 
-In ACP-77 / ACP-99 architecture, the initial validator set is established through the `PoAValidatorManager` contract AFTER the chain is running, not in the genesis block directly.
+PrimeWave Chain uses the **standard Avalanche L1 creation and bootstrap sequence** — no custom mechanism.
 
-Sequence:
-1. Genesis block is created (no validators in genesis EVM state)
-2. Chain starts with a bootstrap validator set (AvalancheGo configuration)
-3. Core contracts are deployed in first few blocks
-4. `PoAValidatorManager.initiateValidatorRegistration()` is called for each of 15 validators
-5. Warp messages are sent/received with P-Chain
-6. All 15 validators are active
+### 7.1 Standard Bootstrap Sequence
 
-> **Open Question:** Exact bootstrap validator mechanism for ACP-77 L1 launch (who produces the first blocks before the PoAValidatorManager is initialized?). This must be clarified with Avalanche documentation/team before testnet launch. See `PRIMEWAVE_OPEN_QUESTIONS.md`.
+```
+Step 1: L1 Creation
+  Avalanche CLI: avalanche subnet create primewave-chain
+  → Issues CreateSubnetTx on P-Chain
+  → Produces subnetID (permanent identifier)
+
+Step 2: Genesis and Chain Creation
+  → Genesis file reviewed and verified (supply = 100,000,000 PW)
+  → Avalanche CLI: avalanche subnet deploy (testnet) or equivalent
+  → Issues CreateChainTx on P-Chain with genesis file
+  → Produces blockchainID (PrimeWave Chain's EVM chainID)
+  → Subnet-EVM starts from genesis alloc block
+
+Step 3: L1 Conversion (ACP-77 — ConvertSubnetToL1Tx)
+  → PoAManager contract deployed at this point
+  → Issues ConvertSubnetToL1Tx on P-Chain referencing:
+      - PoAManager contract address
+      - Initial bootstrap validator set (15 validators, specified in conversion tx)
+  → Chain becomes sovereign (ACP-77 L1 status)
+  → No AVAX stake required for validators
+
+Step 4: Validator Manager Initialization
+  → PoAManager.initializeValidatorSet() called on EVM
+  → Warp confirmations received from P-Chain for each initial validator
+  → All 15 validators registered in ValidatorManager state
+
+Step 5: Network Activation
+  → All 15 validators confirmed active
+  → Block production under Snowman++ BFT
+  → Core contracts deployed: RewardVault, FeeDistributor, PWUSD, Treasury
+  → RPC endpoints operational
+  → Network open for transactions
+```
+
+### 7.2 What Is Standard vs. PrimeWave Custom
+
+| Step | Classification | Notes |
+|---|---|---|
+| CreateSubnetTx | ✅ Standard Avalanche | No customization |
+| CreateChainTx | ✅ Standard + PrimeWave genesis file | Genesis alloc is PrimeWave-specific |
+| ConvertSubnetToL1Tx | ✅ Standard Avalanche + PrimeWave PoAManager address | |
+| PoAManager contract | ✅ Standard ACP-99 (from `ava-labs/icm-services`) | Used as-is, no modification |
+| Genesis alloc (100M PW distribution) | 🔵 PrimeWave custom configuration | Specific to PrimeWave tokenomics |
+| RewardVault contract | 🔵 PrimeWave custom contract | Not part of Avalanche standard |
+| FeeDistributor contract | 🔵 PrimeWave custom contract | Not part of Avalanche standard |
+| PWUSD contract | 🔵 PrimeWave custom contract | Not part of Avalanche standard |
+
+### 7.3 The Bootstrap Validator Question (Resolved)
+
+The initial bootstrap validators are specified directly in `ConvertSubnetToL1Tx`. This is the standard ACP-77 mechanism — the conversion transaction itself sets the initial validator set on the P-Chain. The EVM `initializeValidatorSet()` call then mirrors this state. There is no ambiguity about who produces the first blocks: they are produced by the 15 validators specified in the conversion transaction from the moment the chain is sovereign.
 
 ---
 

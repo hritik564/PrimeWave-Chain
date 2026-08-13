@@ -33,28 +33,30 @@ The `ERC20TokenStakingManager` similarly requires an `IERC20Mintable` token inte
 
 | Option | Mechanism | Fixed Supply Compatible | Complexity | Decentralization |
 |---|---|---|---|---|
-| **A. PoA + Custom RewardVault** | Admin-controlled validators; 15M PW locked in vault; rewards distributed from vault | ✅ YES | Low | Low (Phase 1) |
-| **B. Custom PoS + RewardVault** | Custom fork/extension of StakingManager; overrides `_reward()` to draw from vault instead of minting | ✅ YES | High | High |
-| **C. PoA Only (No Rewards)** | Permissioned validators; no staking rewards from 15M reserve | ✅ YES | Very Low | Very Low |
-| **D. Off-chain Reward Distribution** | Rewards calculated off-chain by a trusted service, sent from vault manually | ✅ YES | Low (initially) | None (centralized) |
+| **A. PoA + RewardVault** | Admin-controlled validators; 15M PW locked in vault; rewards distributed from vault | ✅ YES | Low | Low (Phase 1) |
+| **B. Custom PoS + RewardVault** ✅ SELECTED | Custom extension of StakingManager; overrides `_reward()` to draw from vault instead of minting | ✅ YES | High | High |
+| **C. PoA Only (No Rewards)** | Permissioned validators; no staking rewards | ✅ YES | Very Low | Very Low |
+| **D. Off-chain Distribution** | Rewards calculated off-chain, sent from vault manually | ✅ YES | Low | None (centralized) |
 
-### 1.4 Recommended Architecture
+### 1.4 Recommended Architecture (Updated — OQ-006 Approved)
 
-**Phase 1 (Launch): Option A — PoAValidatorManager + RewardVault**
+**Phase 1 (Launch): PoAManager + RewardVault**
 
-- Deploy `PoAValidatorManager` (standard ACP-99, no minting, admin-controlled validator set)
-- At genesis, lock 15,000,000 PW in a `RewardVault` contract
-- Rewards are distributed periodically from the vault to validators/delegators
-- Reward amounts are determined by an on-chain `IRewardCalculator` or off-chain calculation with on-chain claim
+- Deploy `PoAManager` from `ava-labs/icm-services` (standard ACP-99, no minting, admin-controlled)
+- At genesis, 15,000,000 PW locked in `RewardVault` contract
+- On-chain reward accrual/claim model (reward-index algorithm) — see `PRIMEWAVE_REWARD_ECONOMICS.md`
+- Separate `ValidatorFeeVault` accumulates 70% of gas fees for distribution to validators
 
-**Phase 2 (PoS Transition): Option B — Custom StakingManager**
+**Phase 2 (PoS Transition): Custom PrimeWaveStakingManager — APPROVED IN PRINCIPLE**
 
-- Override `_reward()` in a custom `PrimeWaveStakingManager` to call `RewardVault.distribute(account, amount)` instead of `NATIVE_MINTER.mintNativeCoin(account, amount)`
-- The vault enforces: `require(balance >= amount)` — physically impossible to overpay
-- When vault is exhausted, `_reward()` is a no-op (or emits a `RewardsExhausted` event)
-- Full PoS semantics (staking, delegation, unbonding, slashing) without inflation
+- Extends `StakingManager` from `ava-labs/icm-services`
+- Overrides ONLY `_reward()`: calls `RewardVault.distribute(account, amount)` instead of `NATIVE_MINTER.mintNativeCoin()`
+- Vault enforces `require(balance >= amount)` — physically impossible to overpay
+- When vault exhausted: `_reward()` is no-op, `RewardsExhausted` event emitted; validators continue earning from `ValidatorFeeVault`
+- Full PoS semantics (staking, delegation, unbonding, slashing) — zero inflation
 
-> **This approach requires explicit PrimeWave approval before implementation (Phase 2).** The Phase 2 design must be a separate sprint with detailed technical review.
+**Full Phase 1 and Phase 2 specification:** `PRIMEWAVE_POS_TRANSITION_SPEC.md`
+**Full reward economics:** `PRIMEWAVE_REWARD_ECONOMICS.md`
 
 ---
 
@@ -63,18 +65,18 @@ The `ERC20TokenStakingManager` similarly requires an `IERC20Mintable` token inte
 ### 2.1 Initial Validator Set
 
 - **Count:** 15 validators at mainnet launch
-- **Type:** Permissioned (PoA) via `PoAValidatorManager`
+- **Type:** Permissioned (PoA) via `PoAManager` (from `ava-labs/icm-services`)
 - **Operators:** PrimeWave + vetted independent operators
 
-### 2.2 PoAValidatorManager Mechanics
+### 2.2 PoAManager Mechanics
 
-The `PoAValidatorManager` (ACP-99 reference implementation):
-- A single admin (or multisig) controls validator additions and removals
+The `PoAManager` contract (from `ava-labs/icm-services`, ACP-99 compliant, Solidity 0.8.30):
+- A single admin (owner — multisig) controls validator additions and removals
 - No staking deposit required from validators in PoA mode
 - Validators are identified by NodeID + BLS public key
 - Validator set changes are propagated to P-Chain via Warp messaging
 
-**Recommended:** Deploy behind a `TimelockController` + multisig so validator set changes have a minimum delay and multi-party approval.
+**Deployment:** Behind a `TimelockController` + multisig so validator set changes have a minimum delay and multi-party approval.
 
 ### 2.3 Initial Validator Registration Process
 
@@ -82,7 +84,7 @@ The `PoAValidatorManager` (ACP-99 reference implementation):
    a. Runs an AvalancheGo node with Subnet-EVM
    b. Generates a NodeID and BLS keypair (node-local, never shared)
    c. Provides NodeID + BLS public key to PrimeWave
-2. PrimeWave admin calls `PoAValidatorManager.initiateValidatorRegistration(nodeID, blsPublicKey, ...)`
+2. PrimeWave admin calls `PoAManager.initiateValidatorRegistration(nodeID, blsPublicKey, ...)`
 3. Contract emits a Warp message to P-Chain
 4. Node picks up and confirms validator registration via Warp callback
 5. Validator is active and begins participating in consensus
@@ -126,7 +128,7 @@ The transition from permissioned PoA to permissionless PoS requires:
 
 1. **Governance approval** from PrimeWave leadership
 2. **Custom PrimeWaveStakingManager** contract audited and deployed
-3. **Upgrade path:** `PoAValidatorManager` → `PrimeWaveStakingManager`
+3. **Upgrade path:** `PoAManager` → `PrimeWaveStakingManager`
    - New contract deployed
    - Current validators migrated (re-registered under new manager)
    - Admin role transferred to new manager's internal logic
@@ -181,7 +183,7 @@ Slashing mechanics (Phase 2):
 ## 8. Validator Removal and Replacement
 
 **Phase 1 (PoA):**
-- Admin calls `PoAValidatorManager.initiateValidatorRemoval(validationID)`
+- Admin calls `PoAManager.initiateValidatorRemoval(validationID)`
 - Warp message sent to P-Chain
 - Validator is deregistered after P-Chain confirmation
 - Replacement validator can be added independently

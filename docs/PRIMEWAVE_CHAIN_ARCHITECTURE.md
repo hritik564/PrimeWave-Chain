@@ -165,16 +165,39 @@ PrimeWave Chain MUST NOT import or embed logic from the existing PrimeWave web a
 
 ---
 
-## 7. Avalanche Version Targeting
+## 7. Avalanche Version Targeting and Dependency Registry
 
-PrimeWave Chain targets:
-- **AvalancheGo:** Latest stable release at testnet launch (to be locked at testnet initiation)
-- **Subnet-EVM:** Latest stable release at testnet launch (to be locked at testnet initiation)
-- **ICM Contracts / ACP-99:** Current reference implementation (note: `icm-contracts` was archived Dec 2025 — successor repo must be identified before PW-C01; see `PRIMEWAVE_OPEN_QUESTIONS.md`)
-- **ACP-77:** Activated on Avalanche mainnet
-- **ACP-99:** Activated on Avalanche mainnet
+PrimeWave Chain uses the following confirmed official dependencies (OQ-001 resolved):
 
-> **Action required before PW-C01:** Identify the successor to `ava-labs/icm-contracts` (archived December 3, 2025) and confirm the current reference ValidatorManager implementation.
+| Dependency | Repository | Version / Notes |
+|---|---|---|
+| **Validator Manager contracts** | `ava-labs/icm-services` (main branch → pin to release tag) | Replaces archived `ava-labs/icm-contracts`. Solidity 0.8.30, EVM: shanghai. Actively maintained (last commit Aug 10, 2026). |
+| **AvalancheGo node** | `ava-labs/avalanchego` | Current: v1.14.2. Lock exact version at testnet initiation. |
+| **Subnet-EVM** | `ava-labs/subnet-evm` | Lock exact version at testnet initiation. |
+| **Avalanche CLI** | `ava-labs/avalanche-cli` | Used for L1 creation / conversion. Lock at testnet initiation. |
+| **OpenZeppelin Contracts** | `OpenZeppelin/openzeppelin-contracts` v5.x | ERC-20, AccessControl, TimelockController. |
+| **OpenZeppelin Upgradeable** | `OpenZeppelin/openzeppelin-contracts-upgradeable` v5.x | Proxy/upgradeable pattern for contracts. |
+| **Foundry** | `foundry-rs/foundry` | Build, test, deploy tooling. Pin commit in CI. |
+| **ACP-77** | Activated on Avalanche mainnet | Standard used. |
+| **ACP-99** | Activated on Avalanche mainnet | Standard used. |
+
+### Key Dependency Notes
+
+- `ava-labs/icm-services` is **not** an NPM package; it is a Go/Solidity monorepo. PrimeWave will use the Solidity contracts from the `icm-contracts/` subdirectory, compiled with Foundry.
+- Pin to a **specific release tag** of `icm-services`, not the `main` branch, for production stability. See OQ-018.
+- `ava-labs/icm-contracts` (archived Dec 3, 2025) must **not** be used as a dependency — use `ava-labs/icm-services` exclusively.
+
+### License Notes
+
+| Repository | License |
+|---|---|
+| `ava-labs/icm-services` | LicenseRef-Ecosystem (Ava Labs proprietary for commercial use — verify terms for PrimeWave's use case) |
+| `ava-labs/avalanchego` | BSD-3-Clause |
+| `ava-labs/subnet-evm` | LGPL-3.0 |
+| `OpenZeppelin/*` | MIT |
+| `foundry-rs/foundry` | MIT |
+
+> ⚠️ **License Action Required:** The `LicenseRef-Ecosystem` license on `icm-services` contracts should be reviewed by PrimeWave's legal counsel before production deployment. Clarify whether deploying these contracts on PrimeWave Chain requires a commercial license from Ava Labs.
 
 ---
 

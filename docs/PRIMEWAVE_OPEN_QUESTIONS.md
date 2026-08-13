@@ -1,247 +1,280 @@
 # PrimeWave Chain — Open Questions
-**Sprint PW-C00 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
+**Sprint PW-C00 Decision Resolution | Updated: August 13, 2026**
 
 ---
 
-This document lists all unresolved technical and architectural questions that MUST be answered before or during the sprint in which they are relevant. No question here may be silently assumed away.
+## RESOLVED QUESTIONS (PW-C00 Decision Resolution)
+
+### ✅ OQ-001 — Avalanche Dependencies (RESOLVED)
+
+**Resolution:** The `ava-labs/icm-contracts` repository (archived December 3, 2025) has a confirmed official successor: **`ava-labs/icm-services`**.
+
+The validator manager contracts now live at `icm-services/icm-contracts/` (same contract code, new home). The official Avalanche documentation at `build.avax.network` now sources from this repository (confirmed via edit URL in docs). The repo is actively maintained — last commit August 10, 2026.
+
+**Confirmed dependency registry:**
+
+| Component | Repository | Notes |
+|---|---|---|
+| PoAManager, ValidatorManager, StakingManager | `ava-labs/icm-services` (main branch) | Solidity 0.8.30, EVM: shanghai |
+| AvalancheGo node | `ava-labs/avalanchego` v1.14.2 | Lock version at testnet initiation |
+| Subnet-EVM | `ava-labs/subnet-evm` (latest stable) | Lock version at testnet initiation |
+| Avalanche CLI | `ava-labs/avalanche-cli` (latest stable) | Used for L1 creation / bootstrap |
+| OpenZeppelin Contracts | `openzeppelin/openzeppelin-contracts` v5.x | Audited; required for ERC-20, AccessControl, TimelockController |
+| OpenZeppelin Upgradeable | `openzeppelin/openzeppelin-contracts-upgradeable` v5.x | Required for upgradeable proxy pattern |
+| Foundry | `foundry-rs/foundry` | Build, test, deploy tooling |
+
+**Pinning strategy:**
+- `icm-services`: Pin to a specific release tag (not `main`). Do not use icm-contracts.
+- `avalanchego`: Pin exact version at testnet; verify upgrade path before mainnet.
+- `subnet-evm`: Pin exact version at testnet.
+- OpenZeppelin: Pin to a specific version tag.
+- Foundry: Pin to a specific commit hash in CI.
+
+See `PRIMEWAVE_INFRASTRUCTURE.md` for full dependency registry with versions.
 
 ---
 
-## CRITICAL — Must Resolve Before PW-C01
+### ✅ OQ-002 — Genesis / Bootstrap (RESOLVED)
 
-### OQ-001: icm-contracts Repository Succession
-**Status:** 🔴 UNRESOLVED
+**Resolution:** Use the **standard Avalanche L1 creation and bootstrap sequence**. No custom genesis mechanism.
 
-The `ava-labs/icm-contracts` repository (which contains the ACP-99 ValidatorManager reference implementations: `PoAValidatorManager`, `NativeTokenStakingManager`, `ERC20TokenStakingManager`, `StakingManager`) was **archived on December 3, 2025** and is now read-only.
+High-level sequence (all standard Avalanche tooling):
 
-**Question:** What is the successor repository? Where is the current, maintained ACP-99 ValidatorManager implementation?
+```
+1. L1 Creation
+   CreateSubnetTx on P-Chain (via Avalanche CLI)
+   → produces subnetID
 
-**Research needed:**
-- Check Ava Labs GitHub for successor repos
-- Check Avalanche Foundation ACPs for updated implementation references
-- Check `avalanche-starter-kit` or similar for current recommended contracts
+2. Genesis & Chain Creation
+   CreateChainTx on P-Chain with genesis file
+   → produces blockchainID (chainID on EVM)
+   → Subnet-EVM starts with genesis alloc (100M PW distributed)
 
-**Blocker for:** All contract development (Phase 1 PoAValidatorManager deployment)
+3. L1 Conversion (ACP-77)
+   ConvertSubnetToL1Tx on P-Chain
+   → references PoAManager contract address
+   → initial bootstrap validators specified in conversion tx
+   → L1 is now sovereign (no AVAX stake requirement)
 
----
+4. Validator Manager Initialization
+   PoAManager.initializeValidatorSet() on EVM
+   → sets initial validator registration records
+   → Warp confirmations from P-Chain for each initial validator
 
-### OQ-002: Genesis Bootstrap — Who Produces the First Blocks?
-**Status:** 🔴 UNRESOLVED
+5. Network Activation
+   All 15 validators confirmed and active
+   → Block production under Snowman++ BFT
+   → RPC endpoints operational
+```
 
-In ACP-77, validators are registered via the `PoAValidatorManager` contract AFTER the chain is running. But the chain needs validators to produce blocks from block 0.
+**What is standard Avalanche vs. PrimeWave custom:**
 
-**Question:** What is the exact mechanism for bootstrapping an ACP-77 L1 from zero? How are the initial blocks produced before `PoAValidatorManager` is initialized? Is there a pre-P-Chain genesis validator configuration in AvalancheGo? Does the L1 node config specify initial validators separately from the contract?
+| Step | Type |
+|---|---|
+| CreateSubnetTx | Standard Avalanche |
+| CreateChainTx | Standard Avalanche + PrimeWave genesis file |
+| ConvertSubnetToL1Tx | Standard Avalanche + PrimeWave PoAManager address |
+| Genesis file (alloc block) | **PrimeWave custom** — 100M PW distribution |
+| PoAManager deployment | Standard ACP-99 contract (from icm-services) |
+| PoAManager initialization | **PrimeWave configuration** — 15 validator identities |
+| RewardVault, FeeDistributor | **PrimeWave custom contracts** — deployed at launch |
 
-**Research needed:**
-- Avalanche L1 launch tutorials/documentation
-- AvalancheGo L1 configuration options
-- avalanche-starter-kit examples for initial launch
-
-**Blocker for:** PW-C01 testnet launch
-
----
-
-### OQ-003: RewardVault — On-chain vs Off-chain Distribution
-**Status:** 🟠 UNRESOLVED
-
-**Question:** Should the 15M PW validator reward vault distribute rewards:
-- **On-chain automatically** (via a permissioned keeper/bot calling `distribute()` on schedule), OR
-- **On-chain via validator claim** (validators call `claim()` after each epoch), OR
-- **Off-chain calculated, on-chain settled** (governance signs and submits rewards)?
-
-Each option has different security, decentralization, and complexity tradeoffs.
-
-**Decision required from:** PrimeWave project leadership
-
-**Blocker for:** RewardVault contract design (PW-C01+)
-
----
-
-### OQ-004: Validator Fee Distribution (70% Share)
-**Status:** 🟠 UNRESOLVED
-
-**Question:** Within the 70% validator share of gas fees collected by `FeeDistributor`, how are fees split among the 15 validators?
-- Equal split (each validator gets 70% / 15)?
-- Weighted by uptime?
-- Weighted by stake weight?
-- Validators collect their own coinbase fees (different model)?
-
-**Decision required from:** PrimeWave project leadership
-
-**Blocker for:** FeeDistributor contract design
+See updated `PRIMEWAVE_GENESIS_SPEC.md` for full genesis sequence.
 
 ---
 
-### OQ-005: Monetary Authority — Multisig Composition
-**Status:** 🟠 UNRESOLVED
+### ✅ OQ-003 — Finite 15M PW Reward Reserve (RESOLVED)
 
-**Question:** Who are the signers on the Monetary Authority multisig? What is the threshold (e.g., 3-of-5)?
+**Resolution:** The 15,000,000 PW validator/staking allocation is a **finite pre-funded RewardVault**. On-chain accrual/claim model using reward-index (accumulated reward per share) algorithm.
 
-**Decision required from:** PrimeWave leadership (operational/organizational decision)
+Key decisions:
+- Rewards paid from existing PW — NO minting
+- On-chain accrual (not per-validator push transactions)
+- Validator/delegator claim model (pull, not push)
+- When vault exhausted → rewards stop; no new PW created
+- RewardVault and ValidatorFeeVault are **strictly separate**
 
-**Blocker for:** PWUSD contract deployment
-
----
-
-### OQ-006: Phase 2 PoS Transition — Explicit Approval Required
-**Status:** 🟠 AWAITING APPROVAL
-
-The Phase 2 transition from `PoAValidatorManager` to a custom `PrimeWaveStakingManager` (with RewardVault-funded rewards) is the recommended architecture for permissionless PoS.
-
-**Question:** Does PrimeWave approve:
-1. The Phase 2 architecture (custom StakingManager + RewardVault)?
-2. The timeline for Phase 2 (which sprint)?
-3. The requirement for a security audit of the custom StakingManager before deployment?
-
-**Blocker for:** Phase 2 sprint planning
+See `PRIMEWAVE_REWARD_ECONOMICS.md` for full specification including invariants and algorithm.
 
 ---
 
-## HIGH PRIORITY — Must Resolve Before Testnet
+### ✅ OQ-004 — 70% Validator Fee Distribution (RESOLVED)
 
-### OQ-007: AvalancheGo Version Lock
-**Status:** 🟡 UNRESOLVED
+**Resolution:** Validator Fee Vault model. Distribution is proportional to validator weight × uptime eligibility. Strictly separate from the 15M RewardVault.
 
-**Question:** Which exact version of AvalancheGo and Subnet-EVM should be used for testnet? Is there a current stable release that includes full ACP-77 support?
+Key decisions:
+- `FeeDistributor` contract routes all gas fees: 70% ValidatorFeeVault / 20% Treasury / 10% Burn
+- `ValidatorFeeVault` distributes to validators proportionally: `weight × uptime_factor`
+- Phase 1 (15 equal-weight validators): approximately equal split
+- Phase 2 (weighted PoS): proportional to stake weight
+- Delegators receive proportional share minus validator commission
 
-**Action:** Check `ava-labs/avalanchego` releases at testnet initiation time and lock to a specific version.
+See `PRIMEWAVE_REWARD_ECONOMICS.md` Section 3 for full specification.
 
 ---
 
-### OQ-008: Chain ID Selection
+### ✅ OQ-005 — PWUSD Monetary Authority (RESOLVED)
+
+**Resolution:** PWUSD has **one designated Monetary Authority** — a single role (not automatically a multisig). The actual identity/signing key will be configured during secure deployment.
+
+Key decisions:
+- `MONETARY_AUTHORITY_ROLE` is a single designated role
+- **NOT automatically a multisig** — multisig will only be used if explicitly instructed later
+- Actual authority address = **PLACEHOLDER** until secure deployment configuration
+- Monetary Authority scope: ONLY PWUSD mint/burn operations
+- All other governance roles remain strictly separate
+
+See updated `PRIMEWAVE_PWUSD_ARCHITECTURE.md` for full specification.
+
+---
+
+### ✅ OQ-006 — Phase 2 Custom PoS Architecture (APPROVED IN PRINCIPLE)
+
+**Resolution:** Phase 2 custom PoS staking architecture is approved in principle. Implementation is subject to:
+- Detailed technical specification (complete — see `PRIMEWAVE_POS_TRANSITION_SPEC.md`)
+- A separate implementation sprint
+- Security audit of `PrimeWaveStakingManager` before deployment
+- Testnet validation
+- Explicit PrimeWave approval before each implementation step
+
+The architecture: `PrimeWaveStakingManager` extends `StakingManager` from `ava-labs/icm-services`, overrides only `_reward()` to draw from `RewardVault` instead of minting. Full PoS semantics preserved. No inflation.
+
+See `PRIMEWAVE_POS_TRANSITION_SPEC.md` for full specification.
+
+---
+
+## OPEN QUESTIONS — Still Unresolved
+
+### OQ-007 — AvalancheGo / Subnet-EVM Version Lock
+**Status:** 🟡 UNRESOLVED (deferred to testnet initiation)
+**Question:** Which exact version of AvalancheGo and Subnet-EVM for testnet? Current latest: AvalancheGo v1.14.2. Must be locked at testnet launch.
+**Action:** Lock versions at testnet initiation sprint.
+
+---
+
+### OQ-008 — Chain ID Selection
 **Status:** 🟡 UNRESOLVED (intentionally deferred)
-
-**Question:** What Chain ID will PrimeWave Chain use?
-
-**Process:** 
-1. At testnet initiation: pick a temporary testnet Chain ID
-2. At mainnet preparation: select a unique, unregistered mainnet Chain ID
-3. Register at `ethereum-lists/chains` before launch
-
-See `PRIMEWAVE_GENESIS_SPEC.md` Section 3 for full process.
+**Question:** What Chain IDs for testnet and mainnet?
+**Process:** See `PRIMEWAVE_GENESIS_SPEC.md` Section 3.
+**Action:** Select testnet Chain ID at testnet initiation sprint; mainnet Chain ID at mainnet prep sprint.
 
 ---
 
-### OQ-009: Minimum Stake (Phase 2)
+### OQ-009 — Minimum Stake Amount (Phase 2)
 **Status:** 🟡 UNRESOLVED (deferred to testnet)
-
-**Question:** What is the minimum stake amount for a Phase 2 PoS validator?
-
-**Approach:** Determine through testnet benchmarking. Consider economic factors (barrier to entry vs. security).
+**Question:** Minimum PW stake for a Phase 2 validator?
+**Action:** Testnet benchmark + economic modeling.
 
 ---
 
-### OQ-010: Gas Parameters
+### OQ-010 — Gas Parameters
 **Status:** 🟡 UNRESOLVED (deferred to testnet)
-
-**Question:** What are the final gas parameters for mainnet?
-- gasLimit per block
-- minBaseFee
-- targetGas
-- Other EIP-1559 parameters
-
-**Approach:** Benchmark on testnet with realistic transaction load.
+**Question:** Final gasLimit, minBaseFee, targetGas for mainnet?
+**Action:** Testnet benchmarking with realistic load.
 
 ---
 
-### OQ-011: Unbonding Period (Phase 2)
+### OQ-011 — Unbonding Period
 **Status:** 🟡 UNRESOLVED
-
-**Question:** What is the exact unbonding period — 14 days or 21 days?
-
-**Decision required from:** PrimeWave leadership (economic policy decision)
+**Question:** Exact unbonding period — 14 days or 21 days?
+**Decision required from:** PrimeWave leadership.
 
 ---
 
-## MEDIUM PRIORITY — Resolve Before Mainnet
-
-### OQ-012: Smart Contract Audit Firm
+### OQ-012 — Smart Contract Audit Firm
 **Status:** 🟡 UNRESOLVED
-
-**Question:** Which security audit firm(s) will audit PrimeWave Chain contracts before mainnet?
-
-**Requirements:** Firm must have EVM/Solidity experience and preferably Avalanche L1 experience.
+**Question:** Which security audit firm(s) for PrimeWave Chain contracts?
+**Action:** RFP process; require EVM/Solidity experience + Avalanche L1 familiarity.
 
 ---
 
-### OQ-013: Emergency Multisig Composition and Powers
+### OQ-013 — Emergency Multisig Composition and Powers
 **Status:** 🟡 UNRESOLVED
-
-**Question:** Who are the emergency multisig signers? What exact powers does it have (which contracts can it pause, what is the auto-expiry on pauses)?
-
-**Decision required from:** PrimeWave leadership
+**Question:** Who are the emergency multisig signers? Exact pause/unpause scope?
+**Decision required from:** PrimeWave leadership.
 
 ---
 
-### OQ-014: PWUSD Supply Cap
+### OQ-014 — PWUSD Supply Cap
 **Status:** 🟡 UNRESOLVED
-
-**Question:** Should a governance-controlled PWUSD mint cap per period be implemented in V1, or is operational policy sufficient?
-
-**Tradeoff:** On-chain cap = stronger guarantee but less operational flexibility. Policy-only = simpler but weaker guarantee.
-
-**Decision required from:** PrimeWave leadership
+**Question:** Should a governance-controlled PWUSD mint cap per period be implemented in V1?
+**Decision required from:** PrimeWave leadership.
 
 ---
 
-### OQ-015: Team & Development Allocation Vesting
+### OQ-015 — Team & Development Allocation Vesting
 **Status:** 🟡 UNRESOLVED
-
-**Question:** The 10,000,000 PW Team & Development allocation — does it vest? If so, over what schedule?
-
-The sprint doc states "NO presale vesting" (LOCKED for presale allocations), but team vesting was not explicitly addressed.
-
-**Decision required from:** PrimeWave leadership
+**Question:** Does the 10M PW team allocation vest? If so, over what schedule?
+**Decision required from:** PrimeWave leadership.
 
 ---
 
-### OQ-016: Governance Timelock Durations
+### OQ-016 — Governance Timelock Durations
 **Status:** 🟡 UNRESOLVED
-
-**Question:** What are the minimum timelock durations for:
-- Normal governance operations (treasury spending, parameter changes)?
-- Protocol upgrades?
-- Emergency actions?
-
-**Recommendation:** 48h normal / 7 days upgrades / no timelock for emergency pause-only.
-
+**Question:** Minimum timelock durations for: normal governance / protocol upgrades / emergency?
+**Recommendation:** 48h normal / 7d upgrades / no timelock for emergency pause.
 **Decision required from:** PrimeWave leadership for final values.
 
 ---
 
-## LOWER PRIORITY — Resolve Before Phase 2 / Later Sprints
+### OQ-017 — RewardVault Reward Schedule (Emission Rate)
+**Status:** 🔴 NEW — MUST RESOLVE BEFORE PHASE 1 DEPLOYMENT
+**Question:** What is the daily/epoch emission rate from the 15M PW RewardVault?
+- How many PW per day / per epoch?
+- Over what expected duration (e.g., 3 years = ~13,700 PW/day)?
+- Who can adjust the rate via governance?
+**Decision required from:** PrimeWave leadership.
+**Blocker for:** RewardVault contract implementation.
 
-### OQ-017: PWSwap Fee Governance
-**Status:** 🟢 DEFERRED (PW-Swap sprints)
+---
 
-Should the 0.30% PWSwap swap fee be changeable via governance? If so, with what constraints (min/max)?
+### OQ-018 — icm-services Release Tag / Version Pin
+**Status:** 🔴 NEW — MUST RESOLVE BEFORE DEVELOPMENT
+**Question:** Which specific release tag of `ava-labs/icm-services` should PrimeWave use?
+- Must be a tagged release, not `main` branch
+- Tags must be verified for production readiness
+**Action:** Check `ava-labs/icm-services` tags at development start; pin to latest stable release.
 
-### OQ-018: PWUSD → USDT Redemption Architecture
-**Status:** 🟢 DEFERRED (future)
+---
 
-The long-term objective for PWUSD ↔ USDT redemption requires a separate design. Not a PW-C00 item.
+### OQ-019 — StakingManager Interface Compatibility (Phase 2 Pre-req)
+**Status:** 🟠 UNRESOLVED — MUST VERIFY BEFORE PHASE 2 IMPLEMENTATION
+**Question:** In the current `ava-labs/icm-services` version, confirm:
+- `StakingManager._reward()` is `internal virtual` (overridable)
+- `StakingManager._lock()` and `_unlock()` are overridable for native PW handling
+- No new mandatory interface requirements that affect the extension model
+**Action:** Source code review at Phase 2 implementation sprint.
 
-### OQ-019: PrimeWave Dex — DexScreener Integration Strategy
-**Status:** 🟢 DEFERRED (PrimeWave Dex sprints)
+---
 
-Should PrimeWave Dex also list on external aggregators (DexScreener, CoinGecko, etc.) for discoverability? If so, which and when?
-
-### OQ-020: Slashing Mechanics Implementation
+### OQ-020 — Slashing Mechanics Implementation
 **Status:** 🟢 DEFERRED (Phase 2)
+Exact slashing percentages, governance process for slash proposals, and appeal mechanism — to be designed in Phase 2 sprint.
 
-Exact slashing percentages, governance process for slash proposals, and appeal mechanism — to be designed in Phase 2.
+---
+
+### OQ-021 — PWSwap Fee Governance
+**Status:** 🟢 DEFERRED (PW-Swap sprints)
+Should the 0.30% swap fee be changeable via governance? What constraints (min/max)?
+
+---
+
+### OQ-022 — PWUSD → USDT Redemption Architecture
+**Status:** 🟢 DEFERRED (future)
+Long-term objective; requires separate design, legal review, and custodial arrangement.
 
 ---
 
 ## Summary
 
-| Priority | Count | Must Resolve By |
+| Priority | Count | Status |
 |---|---|---|
-| 🔴 Critical | 2 (OQ-001, OQ-002) | Before PW-C01 |
-| 🟠 High | 4 (OQ-003 to OQ-006) | Before PW-C01 |
-| 🟡 Medium | 10 (OQ-007 to OQ-016) | Before testnet/mainnet |
-| 🟢 Lower | 4 (OQ-017 to OQ-020) | Later sprints |
+| ✅ Resolved (OQ-001 to OQ-006) | 6 | Resolved in PW-C00 Decision Resolution |
+| 🔴 Critical new (OQ-017, OQ-018) | 2 | Must resolve before Phase 1 deployment |
+| 🟠 High (OQ-019) | 1 | Must verify before Phase 2 |
+| 🟡 Medium (OQ-007 to OQ-016) | 10 | Resolve before testnet/mainnet |
+| 🟢 Deferred (OQ-020 to OQ-022) | 3 | Later sprints |
 
 ---
 
-*This document is a PW-C00 design specification. No production deployment has occurred.*
+*Updated during PW-C00 Decision Resolution. No production deployment has occurred.*
