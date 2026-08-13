@@ -1,2 +1,3 @@
-- [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Full design sprint + decision resolution complete; 20 docs in docs/; gate passed; awaiting PW-C01 approval
-- [Avalanche dependency surprises](avalanche-dep-surprises.md) — Both subnet-evm AND icm-contracts archived late 2025; successors confirmed; do not use archived repos
+- [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Full design sprint; 20 docs in docs/; gate passed; locked forever
+- [PrimeWave Chain PW-C01](primewave-pw-c01.md) — Local dev env complete; 10/10 tests pass; network IDs, arch, flags, script map
+- [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source

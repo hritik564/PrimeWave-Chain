@@ -1,0 +1,922 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C01 — LOCAL AVALANCHE L1 DEVELOPMENT ENVIRONMENT
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 has been completed and formally passed.
+
+PW-C00 FINAL GATE:
+PASSED
+
+Do NOT revisit or redesign locked economic decisions unless a genuine technical incompatibility is discovered.
+
+This sprint is:
+
+PW-C01 — LOCAL AVALANCHE L1 DEVELOPMENT ENVIRONMENT
+
+OBJECTIVE:
+
+Build a completely reproducible LOCAL PrimeWave Chain development environment based on the architecture and dependency decisions established during PW-C00.
+
+The result must allow the development team to:
+
+1. Build the required Avalanche software stack.
+2. Create a local PrimeWave L1.
+3. Start local validator/node infrastructure.
+4. Connect to the chain through RPC.
+5. Execute EVM transactions.
+6. Verify the chain's native PW asset.
+7. Verify block production and basic network operation.
+8. Reproduce the environment from a clean checkout.
+
+This is a LOCAL DEVELOPMENT ENVIRONMENT ONLY.
+
+============================================================
+1. ABSOLUTE SCOPE BOUNDARY
+============================================================
+
+DO NOT implement:
+
+- Production mainnet
+- Public testnet
+- Production validators
+- Production validator keys
+- Production genesis
+- PWUSD production contract
+- PWSwap
+- PrimeWave Dex
+- PrimeWave application integration
+- MLM income logic
+- ROI logic
+- Binary Matching
+- Binary Orbit
+- Salary
+- Level income
+- P2P
+- Bridges
+- BEP-20 PW migration
+- Custom wallet
+- Governance frontend
+- Production monitoring infrastructure
+
+Do NOT implement Phase 2 custom PrimeWaveStakingManager yet.
+
+Do NOT implement RewardVault yet.
+
+Do NOT implement ValidatorFeeVault yet.
+
+Those belong to later sprints.
+
+PW-C01 is ONLY the local blockchain foundation.
+
+============================================================
+2. SOURCE OF TRUTH
+============================================================
+
+The following existing documentation in /docs is the authoritative architectural source:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_GENESIS_SPEC.md
+- docs/PRIMEWAVE_INFRASTRUCTURE.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PRIMEWAVE_DEPENDENCY_MAP.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_OQ017_OQ018_RESOLUTION.md
+- docs/PW-C00-FINAL-GATE.md
+
+READ THESE DOCUMENTS BEFORE WRITING IMPLEMENTATION CODE.
+
+Do not replace their locked decisions with assumptions.
+
+============================================================
+3. PINNED DEVELOPMENT BASELINE
+============================================================
+
+Use the exact dependency baseline approved during PW-C00.
+
+Current approved baseline includes:
+
+AvalancheGo:
+v1.14.2
+
+ICM Services:
+icm-relayer-v1.7.5
+
+ICM Services commit:
+40e1c89
+
+Solidity:
+0.8.30
+
+OpenZeppelin:
+v5.6.1
+
+IMPORTANT:
+
+Do not silently upgrade or downgrade these versions.
+
+Do not use:
+
+- latest
+- main
+- master
+- floating semver ranges
+- unpinned git dependencies
+
+If an exact dependency is missing from the repository or the pinned version is technically incompatible with the current environment:
+
+STOP.
+
+Document the incompatibility.
+
+Do not silently substitute another version.
+
+============================================================
+4. SUBNET-EVM ARCHITECTURE
+============================================================
+
+Do NOT attempt to install the archived standalone subnet-evm repository.
+
+PW-C00 established that the EVM implementation is integrated into AvalancheGo.
+
+Follow the approved AvalancheGo architecture.
+
+Verify the actual repository structure before writing scripts.
+
+Do not assume old Subnet-EVM commands or paths still exist.
+
+============================================================
+5. LOCAL NETWORK DESIGN
+============================================================
+
+Create a local PrimeWave L1 development network.
+
+The local environment should contain a minimum of:
+
+3 validator/node instances.
+
+Recommended topology:
+
+Node 1:
+Validator
+
+Node 2:
+Validator
+
+Node 3:
+Validator
+
+A separate RPC endpoint may be provided if technically useful.
+
+The purpose is to prove that PrimeWave Chain is not simply a single-node simulation.
+
+The local nodes must communicate and participate in the network.
+
+Document:
+
+- node roles
+- ports
+- networking
+- RPC ports
+- WebSocket ports
+- data directories
+- configuration files
+- startup order
+- shutdown procedure
+
+============================================================
+6. LOCAL DEVELOPMENT MODE
+============================================================
+
+Use a reproducible local development configuration.
+
+Do NOT use production credentials.
+
+Do NOT generate production validator keys.
+
+Local development keys are permitted ONLY for disposable local testing.
+
+Clearly label them:
+
+DEVELOPMENT ONLY
+NOT FOR TESTNET
+NOT FOR MAINNET
+
+If the Avalanche tooling provides temporary/local validator identities, prefer those mechanisms over manually inventing cryptographic infrastructure.
+
+============================================================
+7. CHAIN ID
+============================================================
+
+Do NOT finalize the production PrimeWave Chain ID.
+
+Use a clearly marked development-only Chain ID.
+
+Example:
+
+PRIMEWAVE_DEV_CHAIN_ID
+
+Choose an appropriate non-production value and document it.
+
+The configuration must make it obvious that this Chain ID is:
+
+LOCAL DEVELOPMENT ONLY
+
+Production Chain ID will be selected during the testnet/mainnet preparation process.
+
+============================================================
+8. NATIVE PW ASSET
+============================================================
+
+PrimeWave's native asset:
+
+PW
+
+Maximum eventual supply:
+
+100,000,000 PW
+
+However, PW-C01 must NOT attempt to implement the final production token allocation system.
+
+The objective is only to verify that:
+
+- PW is the native asset
+- PW is the gas asset
+- EVM accounts can hold PW
+- PW can be transferred
+- PW can pay gas
+- PW balances can be queried
+- total supply behavior is observable
+
+DO NOT add a PW smart-contract token.
+
+PW is the native asset of the chain.
+
+DO NOT add a mint function.
+
+DO NOT introduce an arbitrary native mint mechanism.
+
+============================================================
+9. GAS
+============================================================
+
+PW is the native gas asset.
+
+The final economic split is:
+
+70% → Validators
+20% → Treasury
+10% → Burn
+
+This is LOCKED.
+
+However:
+
+DO NOT implement the final ValidatorFeeVault/Treasury/Burn accounting during PW-C01 unless it is strictly required by the Avalanche local network bootstrap.
+
+Those mechanisms belong to later implementation.
+
+For C01, prove:
+
+- transactions consume gas
+- gas is denominated in PW
+- EVM execution works
+- gas configuration is functional
+
+Document the exact current local fee behavior.
+
+Do NOT claim that the final 70/20/10 production distribution is implemented unless it actually is.
+
+============================================================
+10. BLOCK PRODUCTION
+============================================================
+
+Target block time:
+
+Approximately 2 seconds.
+
+For local development, configure a reasonable value that allows rapid testing.
+
+Do not optimize prematurely.
+
+Demonstrate:
+
+- blocks are produced
+- block numbers increase
+- timestamps progress
+- transactions are included
+- multiple nodes observe the same chain
+
+Record measured local block-production behavior.
+
+============================================================
+11. RPC
+============================================================
+
+Provide a working local JSON-RPC endpoint.
+
+At minimum verify:
+
+eth_chainId
+eth_blockNumber
+eth_getBlockByNumber
+eth_getBalance
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_sendRawTransaction
+eth_gasPrice
+eth_estimateGas
+net_version
+web3_clientVersion
+
+Also verify WebSocket connectivity if configured.
+
+Document:
+
+RPC URL
+WebSocket URL
+Chain ID
+network ID
+supported methods
+
+============================================================
+12. WALLET COMPATIBILITY
+============================================================
+
+Verify that a standard EVM wallet can connect to the local chain.
+
+Prefer MetaMask-compatible configuration.
+
+Verify:
+
+- Add custom network
+- Chain ID
+- Native currency symbol = PW
+- RPC URL
+- Balance display
+- Send PW
+- Receive PW
+- Transaction confirmation
+- Gas payment
+
+DO NOT build a custom wallet.
+
+============================================================
+13. BASIC EVM TEST
+============================================================
+
+Create a reproducible test sequence:
+
+Account A
+→ sends PW
+→ to Account B
+→ transaction pays gas in PW
+→ transaction is mined
+→ receipt is confirmed
+→ balances update.
+
+The test must be automated where practical.
+
+Record:
+
+- transaction hash
+- block number
+- sender
+- receiver
+- value
+- gas used
+- receipt status
+
+============================================================
+14. LOCAL NODE REPRODUCIBILITY
+============================================================
+
+The environment must be reproducible from a clean checkout.
+
+A new developer should be able to:
+
+1. Clone/open the project.
+2. Install dependencies.
+3. Run one documented setup command.
+4. Start the local PrimeWave network.
+5. Obtain RPC access.
+6. Run the automated smoke tests.
+
+Do NOT require undocumented manual steps.
+
+Create scripts where appropriate.
+
+For example:
+
+scripts/
+
+setup-local.sh
+start-local.sh
+stop-local.sh
+reset-local.sh
+status-local.sh
+test-local.sh
+
+Use names appropriate to the actual implementation.
+
+Do not create scripts that merely wrap commands without adding value.
+
+============================================================
+15. CONFIGURATION MANAGEMENT
+============================================================
+
+Separate:
+
+Development configuration
+Testnet configuration
+Production configuration
+
+For C01 only development configuration should exist.
+
+Use explicit environment/configuration files.
+
+Never store secrets in:
+
+- source control
+- Git
+- documentation
+- frontend
+- committed .env files
+
+Local disposable development credentials may be generated automatically.
+
+============================================================
+16. DOCKER / CONTAINERIZATION
+============================================================
+
+Evaluate whether Docker/containers are the most cost-effective way to make the local network reproducible.
+
+If yes:
+
+Create a clean containerized local environment.
+
+If no:
+
+Use native local execution with scripts.
+
+Do NOT add Docker merely because it is fashionable.
+
+The criterion is:
+
+REPRODUCIBILITY + SIMPLICITY + LOW MAINTENANCE.
+
+If containers are used, document:
+
+- images
+- versions
+- ports
+- volumes
+- startup dependencies
+- health checks
+
+============================================================
+17. PROJECT STRUCTURE
+============================================================
+
+Establish a clean structure such as:
+
+/chain
+/genesis
+/config
+/scripts
+/tests
+/infrastructure
+/docs
+
+You may improve this structure if technically justified.
+
+Do not create directories for later projects unless necessary.
+
+Do not create:
+
+/swap
+/dex
+/mlm
+/roi
+/binary
+/etc.
+
+Those belong to other projects.
+
+============================================================
+18. AUTOMATED TESTING
+============================================================
+
+Create local smoke/integration tests covering:
+
+TEST 1:
+Network starts.
+
+TEST 2:
+All local nodes become healthy.
+
+TEST 3:
+RPC responds.
+
+TEST 4:
+Chain ID is correct for development.
+
+TEST 5:
+Blocks are produced.
+
+TEST 6:
+Multiple nodes agree on latest block.
+
+TEST 7:
+Account balances can be queried.
+
+TEST 8:
+PW transfer succeeds.
+
+TEST 9:
+Gas is paid in PW.
+
+TEST 10:
+Transaction receipt succeeds.
+
+TEST 11:
+Restarting the network works.
+
+TEST 12:
+Resetting the local environment produces a clean chain.
+
+TEST 13:
+A clean checkout can reproduce the environment.
+
+Where practical, automate these tests.
+
+============================================================
+19. CONSENSUS / NODE FAILURE TEST
+============================================================
+
+Because we have multiple local nodes, perform a basic failure test.
+
+Procedure:
+
+1. Start all nodes.
+2. Verify network health.
+3. Stop one validator/node.
+4. Verify behavior.
+5. Restart the node.
+6. Verify it reconnects and catches up.
+
+Do NOT perform destructive or unsafe experiments beyond the local environment.
+
+The objective is only to establish basic multi-node behavior.
+
+Document observations.
+
+============================================================
+20. NO PRODUCTION KEYS
+============================================================
+
+ABSOLUTE RULE:
+
+DO NOT generate:
+
+- production validator keys
+- production treasury keys
+- production multisig keys
+- production emergency keys
+- production PWUSD Monetary Authority keys
+
+Local disposable keys are allowed only for local testing.
+
+Clearly label them.
+
+============================================================
+21. SECURITY BASELINE
+============================================================
+
+Implement basic secure development practices:
+
+- dependency lock files
+- deterministic configuration
+- no secrets in repository
+- no production endpoints
+- no production keys
+- no arbitrary download-and-execute scripts
+- verify downloaded binaries/checksums where applicable
+- pin dependencies
+- document tool versions
+
+Do not claim the local environment is "secure" merely because it works.
+
+============================================================
+22. DOCUMENTATION
+============================================================
+
+Create/update:
+
+docs/PW-C01-LOCAL-DEVELOPMENT.md
+
+It must contain:
+
+1. Requirements
+2. Software versions
+3. Installation
+4. Repository structure
+5. Local network architecture
+6. Node topology
+7. Port map
+8. Chain configuration
+9. RPC configuration
+10. Wallet configuration
+11. Starting the network
+12. Stopping the network
+13. Resetting the network
+14. Running tests
+15. Troubleshooting
+16. Known limitations
+17. Security warnings
+18. Next sprint dependencies
+
+Also create:
+
+docs/PW-C01-TEST-REPORT.md
+
+Record:
+
+- tests performed
+- commands used
+- expected results
+- actual results
+- failures
+- fixes
+- final status
+
+============================================================
+23. COST CONTROL
+============================================================
+
+This is a major requirement.
+
+Do NOT:
+
+- deploy cloud infrastructure
+- purchase RPC services
+- purchase domains
+- run paid validators
+- use paid monitoring
+- use paid databases
+- deploy public infrastructure
+- build unnecessary UI
+- build PWSwap
+- build PrimeWave Dex
+
+Everything in C01 should run locally.
+
+The objective is to prove the chain foundation with minimal cost.
+
+============================================================
+24. DO NOT OVER-ENGINEER
+============================================================
+
+Do not implement future features early.
+
+Do not create placeholder systems that pretend to be production implementations.
+
+If a later sprint requires a component, document the interface/dependency instead of implementing the component prematurely.
+
+Examples:
+
+PWUSD:
+DOCUMENT INTERFACE ONLY.
+
+RewardVault:
+DOCUMENT DEPENDENCY ONLY.
+
+ValidatorFeeVault:
+DOCUMENT DEPENDENCY ONLY.
+
+PWSwap:
+DOCUMENT DEPENDENCY ONLY.
+
+PrimeWave Dex:
+DOCUMENT DEPENDENCY ONLY.
+
+Governance:
+DOCUMENT DEPENDENCY ONLY.
+
+Production treasury:
+DO NOT CREATE.
+
+============================================================
+25. REQUIRED DELIVERABLES
+============================================================
+
+At completion, the project must contain:
+
+1. Reproducible local PrimeWave L1 setup.
+
+2. Multi-node local network.
+
+3. Working EVM execution.
+
+4. Working native PW.
+
+5. Working PW transfers.
+
+6. Working PW gas payments.
+
+7. Working RPC.
+
+8. Working WebSocket if configured.
+
+9. Automated smoke/integration tests.
+
+10. Node restart/catch-up test.
+
+11. Clean reset/rebuild procedure.
+
+12. Documentation.
+
+13. Test report.
+
+14. Dependency/version record.
+
+============================================================
+26. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C01 is COMPLETE only when:
+
+[ ] Clean project setup succeeds.
+
+[ ] Required dependencies are pinned.
+
+[ ] Local Avalanche L1 starts successfully.
+
+[ ] At least 3 local nodes/validators operate.
+
+[ ] Nodes communicate successfully.
+
+[ ] Blocks are produced.
+
+[ ] Nodes agree on chain state.
+
+[ ] Development Chain ID is correct.
+
+[ ] Native currency is PW.
+
+[ ] PW can be transferred.
+
+[ ] PW pays transaction gas.
+
+[ ] JSON-RPC works.
+
+[ ] WebSocket works if configured.
+
+[ ] MetaMask can connect.
+
+[ ] MetaMask can display PW.
+
+[ ] MetaMask can send PW.
+
+[ ] Transaction receipts work.
+
+[ ] Local network can be stopped.
+
+[ ] Local network can restart.
+
+[ ] Nodes can catch up after restart.
+
+[ ] Network can be reset.
+
+[ ] Automated tests pass.
+
+[ ] Clean checkout reproduces the environment.
+
+[ ] No production keys exist.
+
+[ ] No production infrastructure exists.
+
+[ ] No production contracts are deployed.
+
+[ ] No PWSwap implementation exists.
+
+[ ] No PrimeWave Dex implementation exists.
+
+[ ] No PWUSD production implementation exists.
+
+[ ] No RewardVault implementation exists.
+
+[ ] No ValidatorFeeVault implementation exists.
+
+[ ] Documentation is complete.
+
+[ ] Test report is complete.
+
+============================================================
+27. FAILURE POLICY
+============================================================
+
+If any requirement cannot be completed because of:
+
+- AvalancheGo limitations
+- missing tooling
+- dependency incompatibility
+- Replit environment limitations
+- operating-system limitations
+- unexpected Avalanche behavior
+
+DO NOT silently work around the problem with an unapproved architecture.
+
+Instead:
+
+1. Document the failure.
+2. Explain the root cause.
+3. Explain possible solutions.
+4. Identify whether the solution affects a locked decision.
+5. Stop if architectural approval is required.
+
+============================================================
+28. FINAL REPORT
+============================================================
+
+At the end of PW-C01, provide:
+
+A. Executive summary
+
+B. Exact AvalancheGo version
+
+C. Exact ICM Services version
+
+D. Exact Solidity version
+
+E. Exact OpenZeppelin version
+
+F. Local node topology
+
+G. Local Chain ID
+
+H. RPC endpoints
+
+I. WebSocket endpoint
+
+J. Block-time measurements
+
+K. Native PW verification
+
+L. Multi-node consensus verification
+
+M. Transaction test results
+
+N. Restart/catch-up results
+
+O. Automated test results
+
+P. Repository structure
+
+Q. Commands required to reproduce the environment
+
+R. Known limitations
+
+S. Security limitations
+
+T. Cost incurred
+
+U. Files created/modified
+
+V. Exact prerequisites for PW-C02
+
+============================================================
+29. FINAL STOP CONDITION
+============================================================
+
+When PW-C01 is complete:
+
+STOP.
+
+Do NOT begin PW-C02.
+
+Do NOT deploy a public testnet.
+
+Do NOT deploy mainnet.
+
+Do NOT generate production keys.
+
+Do NOT implement PWUSD.
+
+Do NOT implement PWSwap.
+
+Do NOT implement PrimeWave Dex.
+
+Wait for explicit approval from the project owner.
+
+============================================================
+END OF PW-C01
+============================================================

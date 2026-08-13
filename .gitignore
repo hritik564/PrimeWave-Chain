@@ -47,3 +47,26 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# PrimeWave Chain — local development artifacts
+# Binaries (downloaded by scripts/setup-local.sh — do not commit)
+local-bin/avalanchego
+local-bin/avalanche
+local-bin/*.tar.gz
+
+# Runtime state (generated — do not commit)
+local-data/
+
+# Avalanche CLI local network state
+# (~/.avalanche-cli/ is user-level and outside the repo)
+
+# Foundry artifacts (PW-C02+)
+out/
+cache/
+broadcast/
+
+# Development secrets (should never exist — but extra safety)
+.env.local
+.env.production
+*.pem
+*.key

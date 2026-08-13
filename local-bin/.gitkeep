@@ -1,0 +1,3 @@
+# This directory holds downloaded AvalancheGo and Avalanche CLI binaries.
+# Binaries are NOT committed to Git (see .gitignore).
+# Run: bash scripts/setup-local.sh  to download them.
