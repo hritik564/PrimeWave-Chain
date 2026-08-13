@@ -1,0 +1,9 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "OemavZ6pED-AJR8yQyK_b"
+uri = "file://PW-C00-Documents.zip"
+type = "unspecified"
+title = "PW-C00 Design Documents"
+description = "All 12 PrimeWave Chain Sprint PW-C00 architecture and specification documents as a ZIP archive."
