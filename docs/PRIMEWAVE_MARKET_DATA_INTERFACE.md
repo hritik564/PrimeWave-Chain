@@ -1,5 +1,5 @@
 # PrimeWave Chain — Market Data Interface (PrimeWave Dex)
-**Sprint PW-C00 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
+**Updated: PW-C12 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
 
 ---
 

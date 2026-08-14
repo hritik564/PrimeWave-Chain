@@ -1,0 +1,1245 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C12 — RPC + INDEXING + CHAIN DATA LAYER
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 through PW-C11 are LOCKED.
+
+Current verified baseline:
+
+C00 — Architecture / Decisions
+C01 — Avalanche L1 Foundation
+C02 — Native PW / Gas / Fee Architecture
+C03 — FeeDistributor
+C04 — ValidatorFeeVault
+C05 — ValidatorManager Integration
+C06 — RewardVault
+C07 — Governance
+C08 — Integrated Architecture / Security
+C09 — Phase-2 PoS + PrimeWaveStakingManager
+C10 — PoS Hardening / Phase Transition / Security Audit
+C11 — Production Infrastructure / Keeper / Genesis
+
+C10:
+745/745 PASS
+
+C11:
+792 Forge PASS
+20 Keeper PASS
+
+C11 total:
+812 PASS
+
+============================================================
+0. C12 OBJECTIVE
+============================================================
+
+C12 builds the REAL CHAIN DATA LAYER that PWCScan will consume in C13.
+
+The architecture should be:
+
+PrimeWave Chain
+       │
+       ├── JSON-RPC
+       ├── WebSocket / subscriptions where supported
+       │
+       ▼
+Chain Data Ingestion
+       │
+       ├── Blocks
+       ├── Transactions
+       ├── Receipts
+       ├── Logs / Events
+       ├── Addresses
+       ├── Native PW balances
+       ├── Validators
+       ├── Fee distribution
+       ├── Staking
+       ├── RewardVault
+       └── Governance
+              │
+              ▼
+        Indexed Database
+              │
+              ▼
+        Query/API Layer
+              │
+              ▼
+            C13
+          PWCScan
+
+C12 MUST NOT build the PWCScan frontend.
+
+C12 MUST NOT build PWSwap.
+
+C12 MUST NOT build PrimeWave Dex.
+
+C12 MUST NOT implement MLM software.
+
+C12 MUST NOT modify locked protocol economics.
+
+C12 MUST NOT deploy mainnet.
+
+C12 MUST use real PrimeWave chain data, not permanent mocks.
+
+============================================================
+1. READ EXISTING DOCUMENTATION FIRST
+============================================================
+
+Read:
+
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_GENESIS_SPEC.md
+docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+docs/PRIMEWAVE_MARKET_DATA_INTERFACE.md
+docs/PRIMEWAVE_PWSWAP_INTERFACE.md
+docs/PRIMEWAVE_DEPENDENCY_MAP.md
+
+C05:
+docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+docs/PW-C05-FINAL-REPORT.md
+
+C06:
+docs/PW-C06-REWARDVAULT-SPEC.md
+docs/PW-C06-FINAL-REPORT.md
+
+C07:
+docs/PW-C07-GOVERNANCE-INTEGRATION-SPEC.md
+docs/PW-C07-FINAL-REPORT.md
+
+C08:
+docs/PW-C08-PRODUCTION-CONFIG-CHECKLIST.md
+docs/PW-C08-FINAL-REPORT.md
+
+C09:
+docs/PW-C09-STAKING-SPEC.md
+docs/PW-C09-FINAL-REPORT.md
+
+C10:
+docs/PW-C10-SECURITY-AUDIT.md
+docs/PW-C10-ECONOMIC-AUDIT.md
+docs/PW-C10-PHASE-TRANSITION-AUDIT.md
+docs/PW-C10-FINAL-REPORT.md
+
+C11:
+docs/PW-C11-PRODUCTION-INFRASTRUCTURE.md
+docs/PW-C11-KEEPER-SPEC.md
+docs/PW-C11-GENESIS-FINALIZATION.md
+docs/PW-C11-FINAL-REPORT.md
+
+Also inspect the ACTUAL deployed contract ABIs/events and current
+source code.
+
+Do not invent event names or contract interfaces.
+
+============================================================
+2. COST CONTROL
+============================================================
+
+This is a HARD requirement.
+
+Use one consolidated implementation.
+
+Reuse:
+
+- existing AvalancheGo setup
+- existing local PrimeWave chain
+- existing Foundry configuration
+- existing deployment scripts
+- existing contract addresses/config
+- existing C11 infrastructure
+- existing RPC endpoints
+
+Do NOT:
+
+- introduce Kubernetes
+- introduce Kafka
+- introduce Redis unless demonstrably necessary
+- introduce Elasticsearch unless demonstrably necessary
+- introduce multiple databases
+- create unnecessary microservices
+- build a separate analytics backend
+- duplicate RPC infrastructure
+- rebuild previous chain infrastructure
+
+For the MVP, prefer a simple architecture:
+
+Indexer
++
+PostgreSQL
++
+API
+
+A single TypeScript/Node.js service is acceptable if it is cleanly
+modularized.
+
+============================================================
+3. ARCHITECTURE DECISION
+============================================================
+
+Before implementation, inspect the repository and choose the simplest
+production-capable architecture.
+
+Preferred:
+
+                PrimeWave RPC
+                     │
+             ┌───────▼────────┐
+             │    Indexer      │
+             └───────┬────────┘
+                     │
+                PostgreSQL
+                     │
+             ┌───────▼────────┐
+             │   Query API     │
+             └───────┬────────┘
+                     │
+                   C13
+                 PWCScan
+
+The indexer and API MAY be separate processes if useful, but do not
+split them merely for architectural aesthetics.
+
+Document the final decision.
+
+============================================================
+4. DATABASE
+============================================================
+
+Use PostgreSQL unless the existing architecture establishes a better
+choice.
+
+Design schema for at least:
+
+blocks
+transactions
+transaction_receipts
+transaction_logs
+addresses
+native_balance_snapshots or equivalent
+contracts
+contract_events
+validators
+validator_events
+staking_positions
+staking_events
+reward_vault_state
+reward_events
+fee_distribution
+governance_events
+sync_state
+
+Do not create redundant tables if the same information can be derived
+efficiently.
+
+Every table must have appropriate:
+
+- primary key
+- unique constraints
+- indexes
+- foreign keys where appropriate
+- timestamps
+- chain identifiers where needed
+
+============================================================
+5. BLOCK INDEXING
+============================================================
+
+Index every PrimeWave block.
+
+Minimum fields:
+
+- block number
+- block hash
+- parent hash
+- timestamp
+- gas limit
+- gas used
+- base fee where available
+- transaction count
+- miner/coinbase where applicable
+- state root where available
+- receipts root where available
+
+Do not assume Ethereum-specific fields exist identically on Avalanche.
+
+Use actual RPC responses.
+
+============================================================
+6. TRANSACTION INDEXING
+============================================================
+
+Index:
+
+- transaction hash
+- block number
+- block hash
+- transaction index
+- from
+- to
+- value
+- gas limit
+- gas price
+- max fee where applicable
+- priority fee where applicable
+- nonce
+- input/calldata
+- chain ID
+- transaction type where available
+
+Support native PW transactions.
+
+Do not decode arbitrary calldata unless the ABI is known.
+
+============================================================
+7. RECEIPT INDEXING
+============================================================
+
+Index:
+
+- transaction hash
+- status
+- gas used
+- cumulative gas used
+- effective gas price
+- contract address
+- logs
+- block information
+
+Calculate:
+
+transaction fee = gasUsed × effectiveGasPrice
+
+where the RPC provides sufficient data.
+
+Do not fabricate fee values.
+
+============================================================
+8. LOG / EVENT INDEXING
+============================================================
+
+Index all EVM logs.
+
+Minimum:
+
+- block number
+- block hash
+- transaction hash
+- transaction index
+- log index
+- contract address
+- topics
+- data
+
+Preserve raw event data.
+
+Then decode known PrimeWave events where ABIs are available.
+
+Unknown events must NOT break indexing.
+
+============================================================
+9. PRIMEWAVE CONTRACT EVENTS
+============================================================
+
+Inspect actual ABIs and index known events from:
+
+FeeDistributor
+ValidatorFeeVault
+RewardVault
+PrimeWaveValidatorRegistry
+PrimeWaveStakingManager
+EmergencyMultisig
+PrimeWaveTimelock
+other deployed protocol contracts
+
+Do not invent events.
+
+For every known event document:
+
+- contract
+- event signature
+- indexed fields
+- decoded fields
+- database destination
+
+============================================================
+10. VALIDATOR DATA
+============================================================
+
+PWCScan will need validator information.
+
+Index what is actually available from:
+
+ValidatorManager
+PrimeWaveValidatorRegistry
+ValidatorFeeVault
+
+At minimum expose:
+
+- validator ID
+- status
+- weight
+- reward recipient where available
+- registration state
+- activation/deactivation events
+- synchronization state
+- fee entitlement/claim history where available
+
+CRITICAL:
+
+The indexer is NOT the validator authority.
+
+It mirrors chain state.
+
+Never allow the API to mutate validator state.
+
+============================================================
+11. STAKING DATA
+============================================================
+
+Index actual staking events/state.
+
+At minimum support:
+
+- staking participant
+- staking amount
+- stake increases
+- unbond requests
+- withdrawal
+- reward claims
+- claimable reward where safely derivable
+- staking manager state
+
+Do not calculate financial values from assumptions.
+
+Prefer on-chain state over reconstructed state when possible.
+
+If a value cannot be reliably derived, document it rather than inventing
+it.
+
+============================================================
+12. REWARDVAULT DATA
+============================================================
+
+Index:
+
+- total funded
+- total emitted
+- remaining balance
+- emission rate
+- recipient state
+- reward claims
+- recipient activation/deactivation
+- rate changes
+
+Expose enough data for PWCScan to later show:
+
+RewardVault balance
+Annual emission rate
+Total emitted
+Remaining reserve
+Reward claims
+
+Any derived metric must have a clear formula.
+
+============================================================
+13. FEE DISTRIBUTION DATA
+============================================================
+
+Index PrimeWave's fee architecture.
+
+The explorer must eventually be able to show:
+
+Transaction fee
+     │
+     ├── 70% ValidatorFeeVault
+     ├── 20% DevTreasury
+     └── 10% Burn / inaccessible
+
+Use actual FeeDistributor events/state.
+
+Do NOT calculate the 70/20/10 split solely from transaction fees if
+on-chain distribution events provide authoritative values.
+
+Prefer actual on-chain accounting.
+
+============================================================
+14. ADDRESS INDEXING
+============================================================
+
+Track addresses observed in:
+
+- transaction sender
+- transaction recipient
+- contract creation
+- event emitter
+- known protocol contracts
+
+At minimum store:
+
+- address
+- first seen block
+- last seen block
+- transaction count
+- sent count
+- received count
+- contract flag
+
+Do not attempt to calculate every historical token balance in C12.
+
+Native PW balance lookup may use RPC where appropriate.
+
+============================================================
+15. CONTRACT DETECTION
+============================================================
+
+Identify contract addresses through:
+
+- transaction receipt contractAddress
+- bytecode/code lookup
+
+Store:
+
+- address
+- creation transaction
+- creation block
+- bytecode hash where useful
+- verified/unverified state
+
+Do NOT build full source-code verification in C12.
+
+That belongs to a later scope unless it is trivial.
+
+============================================================
+16. SYNC ENGINE
+============================================================
+
+The indexer must support:
+
+initial sync:
+
+block 0
+→ latest
+
+and:
+
+incremental sync:
+
+last indexed block
+→ new blocks
+
+Store durable sync state.
+
+The indexer MUST be restart-safe.
+
+If process dies at block N:
+
+restart
+→ resume safely
+
+No duplicate records.
+
+No missing blocks.
+
+============================================================
+17. REORG / CONSISTENCY HANDLING
+============================================================
+
+Even though PrimeWave is an Avalanche-based chain, the indexer must
+still handle consistency safely.
+
+At minimum:
+
+- verify parent hash
+- detect unexpected block replacement
+- detect sync mismatch
+- avoid blindly trusting local state
+- support rollback/reindex of recent blocks if required
+
+Do not implement an unnecessarily complicated Ethereum-style
+deep-reorg engine.
+
+Document the actual consistency model appropriate for PrimeWave.
+
+============================================================
+18. RPC FAILURE HANDLING
+============================================================
+
+Test:
+
+- RPC unavailable
+- timeout
+- malformed response
+- rate limit
+- connection reset
+- node restart
+- temporary block lag
+
+Indexer must:
+
+- retry
+- back off
+- not duplicate data
+- not silently skip blocks
+- expose sync health
+
+============================================================
+19. INDEXER IDEMPOTENCY
+============================================================
+
+This is mandatory.
+
+Run the same block range twice.
+
+Result must be identical.
+
+Test:
+
+- same block
+- same transaction
+- same receipt
+- same log
+- same event
+
+No duplicate database records.
+
+Use deterministic unique keys.
+
+============================================================
+20. API LAYER
+============================================================
+
+Build a lightweight read-only API for C13.
+
+Suggested endpoints:
+
+GET /health
+
+GET /stats
+
+GET /blocks
+GET /blocks/:number
+GET /blocks/hash/:hash
+
+GET /transactions/:hash
+
+GET /addresses/:address
+GET /addresses/:address/transactions
+
+GET /validators
+GET /validators/:id
+
+GET /staking/:address
+
+GET /rewards
+GET /rewards/:address
+
+GET /fees
+
+GET /contracts
+GET /contracts/:address
+
+Do not expose mutation endpoints.
+
+Do not expose private infrastructure operations.
+
+============================================================
+21. API RESPONSE CONTRACT
+============================================================
+
+Define stable JSON response shapes.
+
+Every endpoint should provide predictable:
+
+- success
+- data
+- pagination where relevant
+- error
+
+Use consistent HTTP status codes.
+
+Document the API.
+
+Do not overbuild the API.
+
+C13 will build the frontend against this contract.
+
+============================================================
+22. PAGINATION
+============================================================
+
+Large datasets MUST NOT be returned unbounded.
+
+Implement pagination for:
+
+- transactions
+- blocks
+- logs
+- address activity
+- validators
+- events
+
+Prefer cursor-based pagination where practical.
+
+Document pagination semantics.
+
+============================================================
+23. SEARCH FOUNDATION
+============================================================
+
+C13 needs global explorer search.
+
+C12 must provide server-side lookup for:
+
+- transaction hash
+- block number
+- block hash
+- address
+- contract address
+- validator ID
+
+The API should return a clear:
+
+found / not found / invalid format
+
+response.
+
+Do not build the visual search interface.
+
+============================================================
+24. NETWORK STATISTICS
+============================================================
+
+Expose reliable network metrics:
+
+- current block
+- latest block timestamp
+- transaction count
+- transactions in latest block
+- gas used
+- gas limit
+- active validators where available
+- RewardVault balance
+- RewardVault total emitted
+- ValidatorFeeVault balance
+- total fees where derivable
+- sync status
+
+Do not fabricate TPS.
+
+If calculating TPS, document the exact calculation window.
+
+============================================================
+25. REAL-TIME DATA
+============================================================
+
+Evaluate available PrimeWave RPC subscriptions.
+
+If WebSocket subscriptions are supported reliably:
+
+support:
+
+- new blocks
+- logs/events
+- pending transactions only if genuinely available
+
+If subscriptions are not appropriate, use efficient polling.
+
+Do NOT create a fragile real-time system simply for UI appearance.
+
+C13 can consume polling endpoints.
+
+============================================================
+26. DATABASE PERFORMANCE
+============================================================
+
+Create appropriate indexes for:
+
+blocks:
+number
+hash
+
+transactions:
+hash
+block_number
+from
+to
+
+logs:
+address
+topic0
+block_number
+transaction_hash
+
+addresses:
+address
+
+validators:
+validator_id
+status
+
+events:
+contract_address
+event_signature
+block_number
+
+Do not blindly index every column.
+
+Measure basic query performance on the local dataset.
+
+============================================================
+27. SECURITY
+============================================================
+
+The API is READ-ONLY.
+
+Must prevent:
+
+- SQL injection
+- arbitrary SQL
+- path traversal
+- uncontrolled query limits
+- unbounded pagination
+- excessive request sizes
+- accidental write endpoints
+
+Validate:
+
+addresses
+hashes
+block numbers
+validator IDs
+pagination parameters
+
+Rate limiting may be lightweight for local development.
+
+Document production recommendations.
+
+============================================================
+28. DATA INTEGRITY CHECKS
+============================================================
+
+Create automated checks:
+
+INDEX-1:
+Indexed latest block exists on chain.
+
+INDEX-2:
+Every indexed block parent matches previous block.
+
+INDEX-3:
+Transaction belongs to indexed block.
+
+INDEX-4:
+Receipt belongs to transaction.
+
+INDEX-5:
+Log belongs to receipt.
+
+INDEX-6:
+No duplicate transaction hashes.
+
+INDEX-7:
+No duplicate logs.
+
+INDEX-8:
+No duplicate blocks.
+
+INDEX-9:
+Sync state matches actual database.
+
+INDEX-10:
+Known contract events decode correctly.
+
+INDEX-11:
+70/20/10 accounting remains consistent with on-chain data.
+
+INDEX-12:
+RewardVault indexed state matches on-chain state.
+
+INDEX-13:
+Validator indexed state matches authoritative contracts.
+
+============================================================
+29. REINDEX TOOL
+============================================================
+
+Create a safe administrative development command:
+
+reindex --from BLOCK --to BLOCK
+
+or equivalent.
+
+It must:
+
+- validate range
+- avoid accidental production usage
+- preserve schema
+- safely replace/rebuild affected data
+- verify resulting state
+
+Do not expose this through the public API.
+
+============================================================
+30. DATABASE MIGRATIONS
+============================================================
+
+Use a real migration system.
+
+Do NOT rely on:
+
+"drop database and recreate"
+
+for normal development.
+
+Include:
+
+- initial migration
+- future migration mechanism
+- schema version
+
+============================================================
+31. LOCAL DEPLOYMENT
+============================================================
+
+Create one local deployment/rehearsal flow:
+
+1. Start PrimeWave local chain
+2. Deploy required contracts
+3. Start PostgreSQL
+4. Run migrations
+5. Start indexer
+6. Index genesis
+7. Generate blocks
+8. Send PW transaction
+9. Generate receipt
+10. Emit known protocol event
+11. Index event
+12. Query API
+13. Restart indexer
+14. Verify resume
+15. Reindex a range
+16. Verify no duplicates
+17. Run integrity checks
+
+============================================================
+32. C12 TESTING
+============================================================
+
+Create tests for:
+
+- database migrations
+- block indexing
+- transaction indexing
+- receipt indexing
+- log indexing
+- event decoding
+- validator indexing
+- staking indexing
+- RewardVault indexing
+- fee indexing
+- address indexing
+- search
+- pagination
+- API responses
+- RPC failure
+- retry
+- restart
+- idempotency
+- reindex
+- integrity checks
+- security validation
+
+Use real local PrimeWave chain data wherever possible.
+
+Mocks may be used for isolated failure tests.
+
+============================================================
+33. TEST DATA
+============================================================
+
+Generate a deterministic local dataset containing:
+
+- multiple blocks
+- native PW transfers
+- contract deployment
+- contract interaction
+- RewardVault activity
+- ValidatorFeeVault activity
+- FeeDistributor activity
+- staking activity
+- validator changes
+- governance events where practical
+
+This dataset becomes the C13 development dataset.
+
+============================================================
+34. PWCScan DATA CONTRACT
+============================================================
+
+Create:
+
+docs/PW-C12-PWCSCAN-DATA-CONTRACT.md
+
+Define exactly what C13 can consume.
+
+Include:
+
+- endpoint
+- method
+- request parameters
+- response
+- pagination
+- errors
+- update frequency
+- authoritative source
+- derived fields
+
+C13 should NOT need to inspect blockchain internals just to render
+normal explorer pages.
+
+============================================================
+35. INDEXER DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C12-INDEXER-SPEC.md
+docs/PW-C12-DATABASE-SCHEMA.md
+docs/PW-C12-API-SPEC.md
+docs/PW-C12-TEST-REPORT.md
+docs/PW-C12-FINAL-REPORT.md
+
+Update:
+
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_MARKET_DATA_INTERFACE.md
+
+Do not modify the PWSwap interface to add unrelated features.
+
+============================================================
+36. MARKET DATA BOUNDARY
+============================================================
+
+Important:
+
+PWCScan is a blockchain explorer.
+
+PrimeWave Dex is a separate application.
+
+Do NOT build DEX charting/indexing in C12.
+
+However, expose clean chain primitives that a future PrimeWave Dex
+indexer can consume:
+
+- blocks
+- transactions
+- logs
+- contract events
+- timestamps
+
+Do not implement:
+
+- OHLCV
+- liquidity charts
+- trading pairs
+- swaps analytics
+- token price engine
+
+Those belong to PrimeWave Dex.
+
+============================================================
+37. PWSWAP BOUNDARY
+============================================================
+
+Do not implement PWSwap.
+
+Only ensure the generic event/log indexing architecture can support
+future PWSwap contracts.
+
+No PWSwap-specific business logic unless already required by the
+locked chain interface.
+
+============================================================
+38. PERFORMANCE
+============================================================
+
+Measure:
+
+- blocks indexed per second
+- transactions indexed per second
+- API response time
+- database query time
+- restart recovery time
+
+Use the local development dataset.
+
+Do not fabricate production benchmarks.
+
+Document the test environment.
+
+============================================================
+39. COST CONTROL
+============================================================
+
+Use:
+
+- one PostgreSQL database
+- one indexer
+- one API service where practical
+- existing RPC
+- existing local infrastructure
+
+Do NOT add:
+
+Kafka
+Redis
+Elasticsearch
+Kubernetes
+GraphQL
+multiple databases
+
+unless there is concrete evidence the simple architecture cannot meet
+C13 requirements.
+
+If a heavier dependency is proposed:
+
+STOP and explain why before adding it.
+
+============================================================
+40. REGRESSION
+============================================================
+
+C12 must NOT modify protocol contracts unless absolutely required for
+a demonstrated interface defect.
+
+Run:
+
+C00-C11 regression.
+
+Minimum baseline:
+
+C10:
+745/745
+
+C11 Forge:
+792
+
+C11 Keeper:
+20
+
+Any protocol regression is a C12 failure.
+
+============================================================
+41. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP and report if:
+
+1. Real chain data cannot be indexed reliably.
+2. Indexer loses blocks after restart.
+3. Duplicate records occur after replay.
+4. Validator data contradicts authoritative contracts.
+5. RewardVault data cannot be reconciled with chain state.
+6. Fee distribution cannot be reconciled.
+7. API exposes mutation of protocol state.
+8. Database requires an unnecessarily complex architecture.
+9. PWCScan requires mocked chain data to function.
+10. A protocol contract must be modified to make indexing work.
+11. A new dependency creates a significant security/maintenance risk.
+12. C00-C11 regression fails.
+13. Indexer can silently skip blocks.
+14. Reindex produces inconsistent state.
+15. Search returns incorrect chain objects.
+
+Do NOT silently work around these.
+
+============================================================
+42. C12 ACCEPTANCE CRITERIA
+============================================================
+
+[ ] Architecture documented
+[ ] PostgreSQL schema complete
+[ ] Migrations implemented
+[ ] Block indexing works
+[ ] Transaction indexing works
+[ ] Receipt indexing works
+[ ] Log indexing works
+[ ] Protocol event decoding works
+[ ] Address indexing works
+[ ] Validator indexing works
+[ ] Staking indexing works
+[ ] RewardVault indexing works
+[ ] Fee distribution indexing works
+[ ] Governance event indexing works
+[ ] Durable sync state works
+[ ] Restart recovery works
+[ ] Idempotency proven
+[ ] Reindex works
+[ ] Parent-hash consistency verified
+[ ] Data integrity checks implemented
+[ ] Search backend works
+[ ] Pagination works
+[ ] Read-only API works
+[ ] API contract documented
+[ ] Network statistics implemented
+[ ] Real-time strategy documented
+[ ] RPC failure handling works
+[ ] Database performance measured
+[ ] Security validation implemented
+[ ] Local production-style rehearsal passes
+[ ] PWCScan data contract complete
+[ ] No PWSwap implementation
+[ ] No PrimeWave Dex implementation
+[ ] No explorer frontend implementation
+[ ] C00-C11 regression passes
+[ ] No Critical/High unresolved data integrity issue
+
+============================================================
+43. FINAL OUTPUT
+============================================================
+
+When complete:
+
+STOP.
+
+Do NOT start C13.
+
+Return:
+
+PW-C12 COMPLETE
+
+with:
+
+1. Architecture chosen
+2. Database technology
+3. Table count
+4. Indexer implementation status
+5. Blocks indexed
+6. Transactions indexed
+7. Events indexed
+8. Validator indexing status
+9. Staking indexing status
+10. RewardVault indexing status
+11. Fee indexing status
+12. API endpoint count
+13. Search result
+14. Pagination result
+15. Restart/recovery result
+16. Reindex result
+17. Integrity test result
+18. Performance measurements
+19. Security findings
+20. C00-C11 regression
+21. Total C12 tests
+22. Remaining limitations
+23. C13 prerequisites
+
+Do not start C13 automatically.
+
+============================================================
+END PW-C12
+============================================================

@@ -1,5 +1,5 @@
 # PrimeWave Chain — Infrastructure Specification
-**Sprint PW-C00 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
+**Updated: PW-C12 | Status: DESIGN DOCUMENT — NOT FOR PRODUCTION**
 
 ---
 
@@ -318,4 +318,70 @@ Keeper is deployed on a **separate host from validators** with internal network 
 
 ---
 
-*Updated C11: Keeper topology and deployment section added.*
+---
+
+## 11. Indexer Service (C12)
+
+The Indexer is a TypeScript/Node.js service that indexes PrimeWave Chain into PostgreSQL and exposes a read-only REST API for PWCScan (C13) and other consumers.
+
+### 11.1 Architecture
+
+```
+PrimeWave Chain (JSON-RPC)
+    │
+    ▼
+IndexerEngine (poll-based, 2s interval)
+    │  Writes blocks, txs, receipts, logs, decoded events, domain state
+    ▼
+PostgreSQL (17-table schema)
+    │
+    ▼
+REST API (read-only, 20+ GET endpoints, port INDEXER_API_PORT)
+    │
+    ▼
+C13 PWCScan
+```
+
+### 11.2 Deployment
+
+**Runtime:** Node.js 22+, single process  
+**Location:** `indexer/` directory (standalone npm package)  
+**Database:** PostgreSQL (separate instance recommended)  
+**Health:** `GET /health` on `INDEXER_API_PORT` (default 4000)
+
+```bash
+cd indexer
+npm install
+INDEXER_RPC_URL=http://localhost:9650/ext/bc/<chain-id>/rpc \
+INDEXER_CHAIN_ID=73571 \
+INDEXER_DB_URL=postgresql://... \
+ADDR_FEE_DISTRIBUTOR=<address> \
+ADDR_REWARD_VAULT=<address> \
+# ... remaining ADDR_* vars
+npm start
+```
+
+### 11.3 Key Properties
+
+- **Idempotent:** Running the same block range twice produces identical results (ON CONFLICT DO NOTHING)
+- **Restart-safe:** `sync_state.latest_block` updated atomically inside each block's DB transaction
+- **No precision loss:** All amounts stored as decimal strings; BigInt-safe
+- **13 integrity checks:** Run via `ts-node src/integrity/runner.ts`
+- **Reindex tool:** `bin/reindex.ts --from N --to M [--verify]` (requires `PRIMEWAVE_ALLOW_REINDEX=yes`)
+
+### 11.4 Network Topology Update (C12)
+
+| Node Role | Count | Purpose |
+|---|---|---|
+| Validator nodes | 15 | Block production (private network) |
+| Public RPC nodes | 3+ | External access (round-robin LB) |
+| Keeper host | 1 | Validator sync service (internal) |
+| Indexer host | 1 | Indexer + API (internal network, archive node access) |
+| Monitoring host | 1 | Prometheus + Grafana + Alertmanager |
+| Archive node | 1 | Full historical state — indexer connects here |
+
+See `docs/PW-C12-INDEXER-SPEC.md` for the full configuration reference and `docs/PW-C12-API-SPEC.md` for the complete API reference.
+
+---
+
+*Updated C12: Indexer service topology and deployment section added.*
