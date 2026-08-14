@@ -181,7 +181,20 @@ contract RewardVault {
         _;
     }
 
+    // ── C09 Staking Manager integration ──────────────────────────────────────
+
+    /// @notice Address of PrimeWaveStakingManager authorized to call distribute().
+    ///         Set once by admin via setStakingManager(). Zero = not yet configured.
+    address public stakingManager;
+
     // ── Events ────────────────────────────────────────────────────────────────
+
+    /// @notice PrimeWaveStakingManager was registered.
+    event StakingManagerSet(address indexed stakingManager);
+
+    /// @notice A staking reward was distributed directly to a validator reward recipient.
+    ///         Distinct from RewardClaimed (which uses the recipient-ID model from C06).
+    event StakingRewardDistributed(address indexed to, uint256 amount);
 
     /// @notice Reward claims are paused.
     event Paused(address indexed by);
@@ -235,6 +248,56 @@ contract RewardVault {
         admin                = _admin;
         emissionRatePerSecond = _initialRate;
         lastUpdateTime       = block.timestamp;
+    }
+
+    // ── C09 Staking Manager functions ────────────────────────────────────────
+
+    /// @notice Register the PrimeWaveStakingManager that is authorized to call distribute().
+    ///         One-time setter — cannot be changed after set (supply invariant protection).
+    ///         Called by admin after deploying PrimeWaveStakingManager in C09.
+    function setStakingManager(address _stakingManager) external onlyAdmin {
+        require(stakingManager == address(0), "RV: staking manager already set");
+        require(_stakingManager != address(0), "RV: zero address");
+        stakingManager = _stakingManager;
+        emit StakingManagerSet(_stakingManager);
+    }
+
+    /// @notice Push staking rewards to a validator reward recipient.
+    ///         Called by PrimeWaveStakingManager._reward() at completeValidatorRemoval().
+    ///
+    ///         Maintains all five RewardVault invariants:
+    ///         1. No minting — sends existing funded PW only.
+    ///         2. totalEmitted += amount  →  totalEmitted <= totalFunded still holds
+    ///            (checked by: amount <= totalFunded - totalEmitted).
+    ///         3. totalClaimed += amount  →  totalClaimed <= totalEmitted still holds
+    ///            (both increase by the same amount atomically).
+    ///         4. Rate cap unchanged (distribute bypasses the time-based rate).
+    ///         5. balance = totalFunded - totalClaimed  →  maintained (ETH leaves, totalClaimed increases).
+    ///
+    ///         Both totalEmitted and totalClaimed are incremented so that the
+    ///         continuous recipient-model correctly sees reduced available capacity,
+    ///         preventing double-distribution between the two reward models.
+    ///
+    /// @param  to      The validator reward recipient address (from _posValidatorInfo.rewardRecipient).
+    /// @param  amount  PW in wei, computed by PrimeWaveRewardCalculator.calculateReward().
+    function distribute(address to, uint256 amount) external nonReentrant whenNotPaused {
+        require(msg.sender == stakingManager, "RV: not staking manager");
+        if (amount == 0) return;
+        require(to != address(0), "RV: zero recipient");
+
+        // Invariant 2 check: amount must not exceed remaining un-emitted reserve
+        uint256 available = totalFunded - totalEmitted;
+        require(amount <= available, "RV: insufficient reserve");
+
+        // Increment both counters atomically (maintain invariant 3 and 5)
+        totalEmitted += amount;
+        totalClaimed += amount;
+
+        // Transfer PW to reward recipient (interaction after effects — CEI)
+        (bool ok,) = to.call{value: amount}("");
+        require(ok, "RV: transfer failed");
+
+        emit StakingRewardDistributed(to, amount);
     }
 
     // ── Pause functions (C07) ─────────────────────────────────────────────────

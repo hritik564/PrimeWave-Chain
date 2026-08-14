@@ -1,0 +1,1724 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C09 — PHASE-2 PoS + PRIMEWAVE STAKING MANAGER
+
+============================================================
+STATUS
+============================================================
+
+COMPLETED AND LOCKED:
+
+PW-C00 — Architecture / decisions
+PW-C01 — Avalanche L1 foundation
+PW-C02 — Native PW + fee validation
+PW-C03 — 70/20/10 FeeDistributor
+PW-C04 — ValidatorFeeVault accounting
+PW-C05 — Avalanche ValidatorManager integration
+PW-C06 — Finite 15M PW RewardVault
+PW-C07 — Phase-1 PoA governance hardening
+PW-C08 — Integrated architecture + production configuration hardening
+
+CURRENT TEST BASELINE:
+
+PW-C03: 40/40
+PW-C04: 113/113
+PW-C05: 190/190
+PW-C06: 282/282
+PW-C07: 391/391
+PW-C08: 535/535
+
+DO NOT REGRESS ANY OF THESE.
+
+============================================================
+0. C09 IS A HIGH-RISK ARCHITECTURAL SPRINT
+============================================================
+
+C09 is the first sprint that implements the previously approved
+Phase-2 PoS architecture.
+
+The architecture was approved in PW-C00:
+
+PrimeWaveStakingManager
+extends / integrates with Avalanche staking architecture
+and replaces native reward minting with RewardVault-funded rewards.
+
+The original locked design was:
+
+Phase 1:
+PoA ValidatorManager
+        ↓
+15 validators
+        ↓
+ValidatorFeeVault
+
+Phase 2:
+PoS / StakingManager
+        ↓
+PrimeWaveStakingManager
+        ↓
+RewardVault
+        ↓
+finite PW rewards
+
+CRITICAL:
+
+Before implementing PrimeWaveStakingManager, inspect the ACTUAL
+Avalanche staking interfaces and the pinned source code.
+
+Do NOT assume interfaces from memory.
+
+Do NOT invent Avalanche APIs.
+
+Do NOT copy an outdated implementation.
+
+Do NOT silently change the architecture.
+
+If the pinned Avalanche implementation differs materially from the
+architecture documented in PW-C00/PW-C08:
+
+STOP and report the exact incompatibility before implementing.
+
+============================================================
+1. READ SOURCE DOCUMENTATION FIRST
+============================================================
+
+Read:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+- docs/PW-C06-REWARDVAULT-SPEC.md
+- docs/PW-C07-GOVERNANCE-INTEGRATION-SPEC.md
+- docs/PW-C08-INTEGRATED-ARCHITECTURE-SPEC.md
+- docs/PW-C08-INTEGRATED-SECURITY-REVIEW.md
+- docs/PW-C08-FINAL-REPORT.md
+
+Also inspect the actual source code of:
+
+- Avalanche ValidatorManager
+- Avalanche StakingManager
+- NativeTokenStakingManager
+- ERC20TokenStakingManager, if present
+- related validator/staking interfaces
+- related reward interfaces
+- pinned icm-services contracts where relevant
+
+Pinned dependencies remain:
+
+- AvalancheGo v1.14.2 / Granite.2 baseline
+- icm-services `icm-relayer-v1.7.5`
+- commit `40e1c89`
+- Solidity 0.8.30
+- OpenZeppelin 5.6.1
+- Foundry v1.7.1
+
+Do not upgrade dependencies.
+
+============================================================
+2. FIRST DELIVERABLE — ARCHITECTURE COMPATIBILITY REPORT
+============================================================
+
+BEFORE writing PrimeWaveStakingManager:
+
+Create:
+
+docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md
+
+Document the actual Avalanche staking architecture.
+
+At minimum:
+
+- StakingManager inheritance
+- constructor / initializer
+- validator registration flow
+- staking entrypoint
+- unstaking entrypoint
+- withdrawal flow
+- reward flow
+- weight calculation
+- validator lifecycle
+- native reward behavior
+- native minting behavior
+- access control
+- timing assumptions
+- hooks available for overriding
+- relevant virtual functions
+- storage layout considerations
+- upgradeability considerations
+- interaction with ValidatorManager
+- interaction with P-Chain / Warp
+- limitations of EVM visibility
+
+Explicitly verify whether `_reward()` is:
+
+- internal
+- virtual
+- safely overridable
+
+Do not rely on the previous C00 statement alone.
+
+Verify it against the pinned source.
+
+============================================================
+3. CRITICAL NO-MINTING REQUIREMENT
+============================================================
+
+PrimeWave has a hard supply invariant:
+
+MAXIMUM SUPPLY:
+100,000,000 PW
+
+PrimeWaveStakingManager MUST NOT mint native PW.
+
+It MUST NOT call:
+
+- NativeMinter
+- mintNativeCoin()
+- any equivalent native minting path
+
+Rewards MUST come from:
+
+RewardVault
+
+The correct architecture is:
+
+RewardVault
+      │
+      │ existing PW
+      ▼
+PrimeWaveStakingManager
+      │
+      ▼
+eligible staker / validator
+
+NOT:
+
+PrimeWaveStakingManager
+      │
+      ▼
+NativeMinter
+      │
+      ▼
+new PW
+
+If Avalanche's native staking implementation requires minting in a
+way that cannot safely be overridden:
+
+STOP.
+
+Do not create a workaround that violates the fixed-supply invariant.
+
+============================================================
+4. REWARDVAULT IS THE ONLY REWARD SOURCE
+============================================================
+
+The C06 RewardVault is already implemented and proven.
+
+Locked:
+
+15,000,000 PW reserve
+
+Maximum:
+
+3,000,000 PW/year
+
+No minting.
+
+Unused rewards remain in the vault.
+
+C09 must integrate with the existing RewardVault.
+
+Do NOT redesign RewardVault unless a genuine interface incompatibility
+is discovered.
+
+Do NOT create another reward vault.
+
+Do NOT create another emission pool.
+
+Do NOT allow PrimeWaveStakingManager to hold a second hidden reward
+reserve.
+
+============================================================
+5. REWARD FLOW
+============================================================
+
+Target:
+
+PrimeWaveStakingManager
+        │
+        │ determines entitlement
+        ▼
+RewardVault
+        │
+        │ pays existing PW
+        ▼
+Reward recipient
+
+The staking manager should NOT become an arbitrary PW treasury.
+
+Define exactly how a reward is claimed.
+
+Preferred architecture:
+
+StakingManager calculates entitlement
+        ↓
+RewardVault records/accrues entitlement
+        ↓
+recipient claims
+
+or, if Avalanche's architecture requires another flow:
+
+document and prove the alternative.
+
+Do not duplicate accounting between StakingManager and RewardVault.
+
+============================================================
+6. IMPORTANT — DO NOT DOUBLE-COUNT VALIDATOR FEES
+============================================================
+
+There are TWO distinct reward systems.
+
+SYSTEM A:
+
+Transaction fees
+      ↓
+FeeDistributor
+      ↓
+70% ValidatorFeeVault
+
+SYSTEM B:
+
+Staking rewards
+      ↓
+RewardVault
+      ↓
+maximum 3M PW/year
+
+C09 MUST NOT merge them.
+
+A validator can potentially receive:
+
+ValidatorFeeVault income
++
+staking rewards
+
+but those must remain independently accounted.
+
+The staking manager MUST NOT redirect the 70% fee allocation.
+
+============================================================
+7. 14-DAY UNBONDING
+============================================================
+
+Locked decision:
+
+UNBONDING PERIOD = 14 DAYS
+
+Use:
+
+14 × 24 × 60 × 60
+=
+1,209,600 seconds
+
+Implement the unbonding mechanism only if the actual Avalanche
+staking architecture supports the required behavior safely.
+
+Define:
+
+stake
+→ active
+→ request unbond
+→ 14-day waiting period
+→ withdraw
+
+Test:
+
+- early withdrawal fails
+- exact boundary works
+- post-boundary withdrawal works
+- duplicate withdrawal fails
+- unauthorized withdrawal fails
+- amount cannot be changed during unbonding
+- unbonding state cannot be bypassed
+
+Use absolute timestamps in Foundry tests.
+
+IMPORTANT:
+
+Because C08 discovered the `via_ir` timestamp caching issue:
+
+DO NOT use repeated relative:
+
+vm.warp(block.timestamp + N)
+
+patterns inside via_ir test functions.
+
+Precompute absolute timestamps:
+
+t0
+t1
+t2
+t3
+
+and use:
+
+vm.warp(t1)
+vm.warp(t2)
+vm.warp(t3)
+
+============================================================
+8. STAKE ACCOUNTING
+============================================================
+
+Define exact accounting for:
+
+- total stake
+- active stake
+- pending unbond
+- withdrawn stake
+- effective weight
+- reward weight
+
+Avoid ambiguous terms.
+
+Create a state transition table:
+
+| State | Can stake? | Can earn? | Can unbond? | Can withdraw? |
+|------|------------|-----------|-------------|---------------|
+
+No stake may disappear.
+
+No stake may be counted twice.
+
+No stake may earn after its eligibility ends unless explicitly defined.
+
+============================================================
+9. WEIGHT MODEL
+============================================================
+
+C05 established validator weight through ValidatorManager.
+
+C09 introduces staking weight.
+
+Do NOT automatically assume:
+
+stake amount = validator weight.
+
+Determine exactly how Avalanche's staking architecture calculates
+validator weight.
+
+If PrimeWave requires:
+
+effectiveWeight
+
+define the exact relationship.
+
+Possible components:
+
+- bonded stake
+- validator weight
+- uptime eligibility
+- activation state
+
+Do not create a second validator-weight authority.
+
+The ValidatorManager remains the authoritative validator state.
+
+============================================================
+10. VALIDATOR IDENTITY
+============================================================
+
+PrimeWaveStakingManager must never create fake validators.
+
+Validator identity must remain anchored to the Avalanche
+ValidatorManager.
+
+Verify:
+
+validator exists
+validator active
+validator weight
+validator lifecycle
+
+Any mismatch must fail safely.
+
+============================================================
+11. STAKE OWNERSHIP
+============================================================
+
+Define who owns staked PW.
+
+The contract must prevent:
+
+- arbitrary third-party withdrawal
+- ownership substitution
+- reward theft
+- double withdrawal
+
+Test:
+
+Alice stakes 100 PW.
+
+Bob cannot withdraw Alice's 100 PW.
+
+Alice can withdraw only Alice's eligible stake.
+
+============================================================
+12. REENTRANCY / CEI
+============================================================
+
+Staking operations may involve:
+
+- native PW transfers
+- RewardVault calls
+- callbacks if any
+
+Use:
+
+Checks
+Effects
+Interactions
+
+and appropriate reentrancy protection.
+
+Review all external calls.
+
+Especially inspect:
+
+stake
+unstake
+withdraw
+claim
+reward update
+
+for reentrancy.
+
+============================================================
+13. REWARD INDEX
+============================================================
+
+Where practical, use O(1) reward accounting.
+
+Do not loop over every validator/staker on every reward update.
+
+Preferred conceptual model:
+
+globalRewardIndex
+       ↓
+individualRewardCheckpoint
+       ↓
+claimable reward
+
+If Avalanche's staking architecture requires a different model:
+
+document it.
+
+The key requirements remain:
+
+- deterministic
+- bounded gas
+- no double claim
+- no overpayment
+- no hidden rounding loss
+- no minting
+
+============================================================
+14. REWARD RATE
+============================================================
+
+The maximum annual emission remains:
+
+3,000,000 PW/year.
+
+The staking manager MUST NOT create a second rate.
+
+RewardVault remains the source of truth for the emission budget.
+
+C09 must verify:
+
+staking rewards paid
+<=
+RewardVault available allocation
+
+and:
+
+annual emission
+<=
+3,000,000 PW
+
+============================================================
+15. RATE REDUCTION
+============================================================
+
+C06 already established rate reduction.
+
+C09 must not introduce another emission-rate control.
+
+If PrimeWaveStakingManager has a reward-rate variable:
+
+STOP and explain why it is required.
+
+Prefer:
+
+RewardVault
+    ↓
+authoritative emission control
+
+PrimeWaveStakingManager
+    ↓
+eligibility/accounting only
+
+============================================================
+16. ZERO-STAKED WEIGHT
+============================================================
+
+Test:
+
+- zero stake
+- one staker
+- multiple stakers
+- equal stake
+- unequal stake
+- all validators inactive
+- all stake unbonding
+
+No division by zero.
+
+No rewards to zero-weight participants.
+
+No reward leakage.
+
+============================================================
+17. STAKE ADDITION
+============================================================
+
+Test:
+
+Alice stakes 100 PW.
+
+Advance time.
+
+Alice stakes another 100 PW.
+
+Verify the second 100 PW does NOT retroactively earn rewards for
+the period before it was staked.
+
+This is critical.
+
+The reward checkpoint must occur before changing stake weight.
+
+============================================================
+18. STAKE REDUCTION
+============================================================
+
+Test:
+
+Alice has 200 PW.
+
+Alice unbonds 100 PW.
+
+Verify:
+
+Rewards accrued before unbond remain valid.
+
+The 100 PW pending withdrawal does not continue earning after the
+eligibility boundary unless explicitly defined.
+
+The remaining 100 PW continues correctly.
+
+============================================================
+19. MULTIPLE STAKERS
+============================================================
+
+Test:
+
+Alice = 100 PW
+Bob = 300 PW
+Charlie = 600 PW
+
+Total = 1,000 PW.
+
+For an eligible reward amount:
+
+Alice:
+10%
+
+Bob:
+30%
+
+Charlie:
+60%
+
+subject to the exact effective-weight model.
+
+Verify rounding conservation.
+
+Any rounding remainder must remain accounted.
+
+============================================================
+20. REWARD CLAIM
+============================================================
+
+Define claim semantics precisely.
+
+Test:
+
+- normal claim
+- zero claim
+- double claim
+- partial claim if supported
+- unauthorized claim
+- claim after unbond
+- claim during pause
+- claim after reactivation
+
+Do not assume claims are allowed during emergency pause.
+
+Follow the locked governance/pause architecture.
+
+============================================================
+21. UNBONDING + REWARD INTERACTION
+============================================================
+
+This is one of the highest-risk areas.
+
+Define:
+
+At time T0:
+stake active
+
+At T1:
+unbond requested
+
+At T1:
+checkpoint rewards
+
+From T1 → T1+14d:
+stake is pending unbond
+
+At T1+14d:
+withdrawal available
+
+Verify whether rewards:
+
+A. stop immediately at T1
+or
+B. continue until withdrawal
+
+Choose only according to the approved staking architecture.
+
+Do NOT invent an economic rule.
+
+If the existing architecture does not define this:
+
+STOP and report the unresolved economic decision.
+
+============================================================
+22. ACTIVATION / DEACTIVATION
+============================================================
+
+Test:
+
+active validator
+→ deactivated
+→ reactivated
+
+Verify:
+
+- rewards checkpoint correctly
+- no retroactive rewards
+- historical rewards preserved
+- future eligibility correct
+
+Validator status must remain anchored to ValidatorManager.
+
+============================================================
+23. SLASHING
+============================================================
+
+DO NOT implement slashing unless the pinned Avalanche architecture
+requires a mechanism that cannot function without it.
+
+PrimeWave C09 does not introduce a custom slashing policy.
+
+If slashing is required for production PoS security:
+
+document it as a separate decision/implementation requirement.
+
+Do not invent percentages or penalties.
+
+============================================================
+24. DELEGATION
+============================================================
+
+DO NOT implement delegation unless explicitly required by the
+actual Avalanche staking architecture.
+
+C09 should first establish direct staking semantics.
+
+If delegation is required by the underlying architecture:
+
+STOP and report the dependency.
+
+Do not silently expand scope.
+
+============================================================
+25. PAUSE / EMERGENCY BEHAVIOR
+============================================================
+
+C07 established:
+
+EmergencyMultisig:
+3-of-5
+
+Emergency authority:
+pause/unpause only
+
+C09 must define the effect of pause on:
+
+- stake
+- unbond
+- withdrawal
+- claim
+- reward accrual
+- validator synchronization
+
+Do not let emergency pause create fund loss.
+
+Existing accrued rewards must remain recoverable.
+
+No pause action may mint PW.
+
+============================================================
+26. GOVERNANCE / STAKING AUTHORITY
+============================================================
+
+C09 must NOT create a new super-admin.
+
+The architecture remains:
+
+ValidatorManager
+→ validator truth
+
+RewardVault
+→ reward reserve
+
+EmergencyMultisig
+→ emergency pause
+
+Timelock
+→ approved governance actions
+
+PrimeWaveStakingManager
+→ staking/reward logic only
+
+No contract should acquire arbitrary access to all PW.
+
+============================================================
+27. UPGRADEABILITY
+============================================================
+
+Determine whether PrimeWaveStakingManager is:
+
+- immutable
+- proxy
+- UUPS
+- Transparent
+- custom upgradeable
+
+Prefer immutable unless upgradeability is explicitly required.
+
+If upgradeable:
+
+document:
+
+- implementation
+- proxy
+- admin
+- timelock
+- upgrade procedure
+- emergency authority
+- storage layout
+
+An upgrade must never provide an unauthorized path to:
+
+- mint PW
+- drain RewardVault
+- drain staked PW
+- bypass unbonding
+- change validator identity
+- change maximum emission
+
+============================================================
+28. STORAGE LAYOUT
+============================================================
+
+If extending Avalanche's StakingManager:
+
+carefully inspect inherited storage.
+
+Do NOT introduce storage collisions.
+
+Document:
+
+- inherited storage
+- PrimeWave storage
+- mapping layout
+- initialization order
+
+If upgradeable:
+
+run storage-layout validation.
+
+============================================================
+29. NATIVE PW TRANSFER ACCOUNTING
+============================================================
+
+C09 must distinguish:
+
+staked principal
+reward funds
+transaction fees
+RewardVault funds
+ValidatorFeeVault funds
+
+A staking contract must not accidentally treat:
+
+gas fees
+or
+validator fee income
+
+as staking principal.
+
+Verify all native PW balances.
+
+============================================================
+30. SUPPLY INVARIANT
+============================================================
+
+Record total native PW supply before C09 operations.
+
+Perform:
+
+- staking
+- additional staking
+- unbonding
+- withdrawal
+- reward accrual
+- reward claims
+
+Verify:
+
+TOTAL SUPPLY DOES NOT INCREASE.
+
+All PW must already exist.
+
+============================================================
+31. STAKE CONSERVATION
+============================================================
+
+At minimum:
+
+total staked principal
++
+pending withdrawals
++
+withdrawn principal
+=
+total principal deposited
+
+subject to the exact architecture.
+
+No stake may disappear.
+
+No stake may be created.
+
+No stake may be withdrawn twice.
+
+============================================================
+32. REWARD CONSERVATION
+============================================================
+
+Verify:
+
+rewards paid
++
+rewards claimable
++
+unallocated RewardVault funds
+<=
+actual RewardVault funded balance
+
+And:
+
+staking rewards
+<=
+RewardVault available reserve.
+
+============================================================
+33. 15M RESERVE PROTECTION
+============================================================
+
+C09 must never allow staking operations to consume more than the
+actual RewardVault reserve.
+
+Test:
+
+RewardVault funded:
+15,000,000 PW
+
+Attempt:
+
+15,000,000 + 1 wei
+
+Must fail safely.
+
+The staking manager must never become insolvent.
+
+============================================================
+34. FIVE-YEAR ECONOMICS
+============================================================
+
+C06 already proved the reserve economics.
+
+C09 should run a theoretical staking simulation:
+
+Year 1 ≤ 3M
+Year 2 ≤ 3M
+Year 3 ≤ 3M
+Year 4 ≤ 3M
+Year 5 ≤ remaining reserve
+
+Verify:
+
+Total staking rewards
+<=
+15M PW.
+
+Do not actually wait five years.
+
+Use Foundry time manipulation with absolute timestamps.
+
+============================================================
+35. PHASE-1 → PHASE-2 TRANSITION
+============================================================
+
+This is critical.
+
+Do NOT simply flip:
+
+PoA → PoS
+
+without a defined transition.
+
+Read:
+
+docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+
+Determine the exact transition mechanism.
+
+At minimum establish:
+
+Phase 1:
+PoA active
+
+Phase 2:
+PoS active
+
+The transition must prevent:
+
+- double validator registration
+- double rewards
+- validator identity conflicts
+- inconsistent weights
+- duplicate fee accounting
+- unauthorized transition
+
+If the transition mechanism is not sufficiently specified:
+
+STOP and report the missing decision.
+
+============================================================
+36. 15 INITIAL VALIDATORS
+============================================================
+
+Phase 1 has:
+
+15 initial PoA validators.
+
+C09 must not accidentally create 15 new validators when Phase 2 starts.
+
+Determine how existing validator identities transition.
+
+Verify:
+
+validator identity continuity.
+
+============================================================
+37. FEE SYSTEM DURING PHASE TRANSITION
+============================================================
+
+The 70% transaction-fee system remains:
+
+70% → ValidatorFeeVault
+
+This does NOT become:
+
+staking reward.
+
+Validators may have both:
+
+- fee income
+- staking rewards
+
+Keep these accounting systems separate.
+
+============================================================
+38. GOVERNANCE DURING TRANSITION
+============================================================
+
+The transition must not bypass:
+
+- 3-of-5 emergency authority
+- 48-hour timelock
+- ValidatorManager authority
+
+If transition requires a governance action:
+
+use the appropriate timelock.
+
+Do not create a secret transition admin.
+
+============================================================
+39. TESTING — UNIT
+============================================================
+
+Create comprehensive unit tests for:
+
+- constructor
+- initialization
+- stake
+- additional stake
+- unbond
+- withdrawal
+- claim
+- reward checkpoint
+- activation
+- deactivation
+- validator synchronization
+- pause
+- unpause
+- governance boundaries
+- RewardVault integration
+- zero stake
+- zero reward
+- maximum stake
+- maximum reward
+
+============================================================
+40. TESTING — FUZZ
+============================================================
+
+Fuzz:
+
+- stake amounts
+- timestamps
+- stake timing
+- unbond timing
+- withdrawal timing
+- reward claims
+- validator weights
+- activation/deactivation
+- rate reductions
+- multiple participants
+- repeated operations
+
+Verify:
+
+- no overpayment
+- no underflow
+- no overflow
+- no double withdrawal
+- no double claim
+- no reward inflation
+- no principal loss
+- no unauthorized access
+
+============================================================
+41. TESTING — INVARIANTS
+============================================================
+
+Implement stateful invariants.
+
+At minimum:
+
+INVARIANT 1:
+No native PW minting.
+
+INVARIANT 2:
+Total supply never increases.
+
+INVARIANT 3:
+Staked principal is conserved.
+
+INVARIANT 4:
+Withdrawals cannot exceed deposits.
+
+INVARIANT 5:
+Rewards cannot exceed RewardVault funding.
+
+INVARIANT 6:
+Annual rewards <=3M PW.
+
+INVARIANT 7:
+Total rewards <=15M PW reserve.
+
+INVARIANT 8:
+No participant can claim another participant's reward.
+
+INVARIANT 9:
+No participant can withdraw another participant's stake.
+
+INVARIANT 10:
+14-day unbonding cannot be bypassed.
+
+INVARIANT 11:
+ValidatorManager remains validator authority.
+
+INVARIANT 12:
+FeeDistributor remains independent.
+
+INVARIANT 13:
+Emergency multisig cannot mint or withdraw stake.
+
+INVARIANT 14:
+Timelock cannot bypass emergency-only pause authority.
+
+============================================================
+42. MULTI-PARTICIPANT TEST
+============================================================
+
+At minimum:
+
+Alice: 100 PW
+Bob: 300 PW
+Charlie: 600 PW
+
+Perform:
+
+- staking
+- reward accrual
+- Alice adds stake
+- Bob unbonds
+- Charlie claims
+- Bob withdraws after 14 days
+
+Verify complete accounting.
+
+============================================================
+43. ATTACK TESTS
+============================================================
+
+Attempt:
+
+- fake validator
+- fake staking participant
+- unauthorized stake withdrawal
+- unauthorized reward claim
+- bypass unbonding
+- double withdrawal
+- double claim
+- reentrancy
+- zero-address recipient
+- malicious RewardVault
+- malicious ValidatorManager
+- unauthorized governance
+- timelock bypass
+- emergency multisig bypass
+- reward-rate manipulation
+- over-emission
+- forced PW transfer confusion
+
+All must fail safely.
+
+============================================================
+44. MALICIOUS CONTRACT TEST
+============================================================
+
+Create development-only malicious contracts where appropriate.
+
+Test malicious:
+
+- reward recipient
+- staking participant
+- RewardVault substitute
+- callback/reentrancy target
+
+Verify PrimeWaveStakingManager does not expose an unintended drain path.
+
+============================================================
+45. GAS REVIEW
+============================================================
+
+Measure:
+
+- stake
+- additional stake
+- unbond
+- withdraw
+- claim
+- reward checkpoint
+- validator sync
+
+Do not optimize prematurely.
+
+Ensure no operation loops over every staker.
+
+============================================================
+46. EVENT MODEL
+============================================================
+
+Create indexer-friendly events.
+
+At minimum consider:
+
+StakeDeposited
+StakeIncreased
+UnbondRequested
+StakeWithdrawn
+RewardAccrued
+RewardClaimed
+ValidatorActivated
+ValidatorDeactivated
+ValidatorSynchronized
+PhaseTransitionInitiated
+PhaseTransitionCompleted
+
+Events must allow a future indexer/explorer to reconstruct:
+
+- stake history
+- unbonding
+- withdrawals
+- reward claims
+- validator state
+- transition state
+
+Do not emit unnecessary duplicate events.
+
+============================================================
+47. EXPLORER DATA COMPATIBILITY
+============================================================
+
+C08 created:
+
+docs/PRIMEWAVE_EXPLORER_DATA_REQUIREMENTS.md
+
+C09 must ensure staking events/interfaces satisfy those requirements.
+
+Do NOT build the explorer.
+
+Only ensure the blockchain emits the necessary data.
+
+============================================================
+48. DEPLOYMENT
+============================================================
+
+Create:
+
+contracts/script/DeployC09.s.sol
+
+Use development-only addresses.
+
+Deployment must verify:
+
+- ValidatorManager
+- PrimeWaveStakingManager
+- RewardVault
+- ValidatorRegistry
+- ValidatorFeeVault
+- EmergencyMultisig
+- Timelock
+
+all point to the correct addresses.
+
+Do not generate production keys.
+
+Do not deploy publicly.
+
+============================================================
+49. LIVE LOCAL INTEGRATION
+============================================================
+
+Create:
+
+contracts/script/IntegrationC09.s.sol
+
+Run:
+
+1. Start local chain.
+
+2. Verify Phase-1 validators.
+
+3. Deploy PrimeWaveStakingManager.
+
+4. Verify RewardVault integration.
+
+5. Stake PW.
+
+6. Verify stake accounting.
+
+7. Advance time.
+
+8. Verify reward accrual.
+
+9. Claim reward.
+
+10. Add stake.
+
+11. Unbond.
+
+12. Attempt early withdrawal → FAIL.
+
+13. Advance 14 days.
+
+14. Withdraw → PASS.
+
+15. Verify principal conservation.
+
+16. Verify reward conservation.
+
+17. Verify total supply unchanged.
+
+18. Verify ValidatorFeeVault remains independent.
+
+19. Verify 70/20/10 remains intact.
+
+20. Verify governance boundaries.
+
+21. Verify Phase transition behavior if implemented in C09.
+
+============================================================
+50. C03-C08 REGRESSION
+============================================================
+
+ALL must remain passing:
+
+C03:
+40/40
+
+C04:
+113/113
+
+C05:
+190/190
+
+C06:
+282/282
+
+C07:
+391/391
+
+C08:
+535/535
+
+If any regression fails:
+
+STOP.
+
+Do not weaken prior tests.
+
+============================================================
+51. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md
+
+Already required before implementation.
+
+Create:
+
+docs/PW-C09-STAKING-SPEC.md
+
+Include:
+
+1. Architecture
+2. Stake lifecycle
+3. Validator relationship
+4. Reward flow
+5. RewardVault integration
+6. Unbonding
+7. Claims
+8. Weight model
+9. Phase transition
+10. Governance
+11. Security
+12. Events
+13. Storage
+14. Gas
+15. Known limitations
+
+Create:
+
+docs/PW-C09-STAKING-TEST-REPORT.md
+
+Include:
+
+- unit
+- fuzz
+- invariants
+- attack tests
+- malicious contracts
+- integration
+- multi-participant
+- 14-day simulation
+- five-year simulation
+- supply conservation
+- reward conservation
+- regression
+
+Create:
+
+docs/PW-C09-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Avalanche compatibility findings
+C. Architecture implemented
+D. Staking lifecycle
+E. RewardVault integration
+F. Validator integration
+G. Phase transition
+H. Governance
+I. Security
+J. Supply economics
+K. Tests
+L. Regression
+M. Known limitations
+N. Unresolved questions
+O. Exact prerequisites for C10
+
+============================================================
+52. COST CONTROL
+============================================================
+
+Reuse:
+
+- Foundry
+- existing local Avalanche infrastructure
+- existing contracts
+- existing deployment scripts
+- existing test helpers
+
+Do NOT:
+
+- deploy public testnet
+- deploy mainnet
+- generate production keys
+- build Explorer
+- build PWSwap
+- build PrimeWave Dex
+- build PWUSD
+- implement MLM software
+- implement unrelated token standards
+
+============================================================
+53. ACCEPTANCE CRITERIA
+============================================================
+
+C09 PASSES only when:
+
+[ ] Actual Avalanche staking architecture verified from pinned source.
+
+[ ] Compatibility report complete.
+
+[ ] PrimeWaveStakingManager implemented only if compatible.
+
+[ ] No native minting.
+
+[ ] RewardVault remains sole staking reward reserve.
+
+[ ] 15M reserve protected.
+
+[ ] 3M/year maximum protected.
+
+[ ] Stake accounting correct.
+
+[ ] Stake conservation proven.
+
+[ ] Unbonding = 14 days.
+
+[ ] Early withdrawal fails.
+
+[ ] Valid withdrawal succeeds.
+
+[ ] Double withdrawal fails.
+
+[ ] Unauthorized withdrawal fails.
+
+[ ] Reward accounting correct.
+
+[ ] No double claim.
+
+[ ] Unauthorized claim fails.
+
+[ ] Weight accounting correct.
+
+[ ] No retroactive reward accrual.
+
+[ ] Zero-weight behavior correct.
+
+[ ] ValidatorManager remains validator authority.
+
+[ ] No fake validator authority.
+
+[ ] Validator lifecycle correct.
+
+[ ] RewardVault and ValidatorFeeVault remain separate.
+
+[ ] 70/20/10 remains intact.
+
+[ ] Governance boundaries remain intact.
+
+[ ] Emergency multisig remains 3-of-5.
+
+[ ] Timelock remains 48 hours.
+
+[ ] No emergency bypass.
+
+[ ] No unauthorized upgrade path.
+
+[ ] Storage layout safe.
+
+[ ] Reentrancy protected.
+
+[ ] Supply never increases.
+
+[ ] Reward emissions <=3M/year.
+
+[ ] Total staking rewards <=15M reserve.
+
+[ ] Five-year simulation passes.
+
+[ ] Phase transition is defined and tested if included.
+
+[ ] Initial 15 validator identity continuity is preserved.
+
+[ ] Multi-participant tests pass.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] Attack tests pass.
+
+[ ] Malicious contract tests pass.
+
+[ ] C03 regression passes.
+
+[ ] C04 regression passes.
+
+[ ] C05 regression passes.
+
+[ ] C06 regression passes.
+
+[ ] C07 regression passes.
+
+[ ] C08 regression passes.
+
+[ ] Local integration passes.
+
+[ ] Events are explorer-compatible.
+
+[ ] Documentation complete.
+
+============================================================
+54. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP immediately if:
+
+1. Avalanche's actual staking architecture requires native minting
+   that cannot be safely replaced.
+
+2. PrimeWaveStakingManager cannot preserve the 100M supply invariant.
+
+3. RewardVault cannot safely fund staking rewards.
+
+4. The 3M PW/year cap cannot be enforced.
+
+5. The 15M reserve can be exceeded.
+
+6. The 14-day unbonding rule cannot be enforced.
+
+7. Stake can be withdrawn by an unauthorized account.
+
+8. Rewards can be claimed by an unauthorized account.
+
+9. ValidatorManager can be bypassed.
+
+10. A second validator authority becomes necessary.
+
+11. Phase-1 and Phase-2 validator identities cannot be reconciled.
+
+12. Phase transition creates double rewards.
+
+13. Fee income and staking rewards become mixed.
+
+14. Governance can bypass the timelock.
+
+15. Emergency multisig gains non-emergency powers.
+
+16. Any C03-C08 regression fails.
+
+17. Storage collision is detected.
+
+18. An upgrade path can bypass the supply invariant.
+
+19. The implementation requires inventing an economic rule not already
+    approved.
+
+20. The underlying Avalanche architecture requires delegation or
+    slashing decisions that PrimeWave has not approved.
+
+DO NOT work around these conditions silently.
+
+STOP and report the exact issue.
+
+============================================================
+55. FINAL STOP
+============================================================
+
+When all acceptance criteria pass:
+
+STOP.
+
+Do NOT begin C10 automatically.
+
+Do NOT implement:
+
+- additional token standards
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- Block Explorer
+- MLM software
+- production deployment
+
+Report:
+
+PW-C09 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C09
+============================================================
