@@ -153,14 +153,15 @@ contract IntegrationC07 is Script {
         vm.startBroadcast(PK0);
         tl = new PrimeWaveTimelock(DEV0);
         console.log("STEP 2: PrimeWaveTimelock deployed at:", address(tl));
-        console.log("        MIN_DELAY:", tl.MIN_DELAY(), "seconds (", tl.MIN_DELAY() / 3600, "hours)");
+        console.log("        MIN_DELAY:", tl.MIN_DELAY(), "seconds");
+        console.log("        MIN_DELAY hours:", tl.MIN_DELAY() / 3600);
         console.log("        Proposer:", tl.proposer());
         vm.stopBroadcast();
 
         // ── Step 3: Wire FeeDistributor pause controller ──────────────────────
         // FeeDistributor was deployed with address(0) pauseController (C03 genesis).
         // But address(0) means no pause controller is set, and setPauseController
-        // requires msg.sender == pauseController (which is address(0) — impossible).
+        // requires msg.sender == pauseController (which is address(0)  -  impossible).
         // FeeDistributor does NOT have an admin, so we CANNOT change the pauseController
         // on the C03 live genesis deployment.
         //
@@ -220,7 +221,7 @@ contract IntegrationC07 is Script {
         vm.broadcast(PK1); // signer 2 (DEV1) approves
         ems.approve(pid);
 
-        vm.broadcast(PK2); // signer 3 (DEV2) approves — threshold reached
+        vm.broadcast(PK2); // signer 3 (DEV2) approves  -  threshold reached
         ems.approve(pid);
 
         console.log("STEP 7b: 3 of 5 signers approved (threshold = 3) -> ready to execute");
@@ -259,7 +260,7 @@ contract IntegrationC07 is Script {
 
         // ── Step 10: Timelock schedules governance action ─────────────────────
         // Action: setPauseController on RewardVault to a different address
-        // (simulating a signer rotation — changes EMS composition, requires 48h TL)
+        // (simulating a signer rotation  -  changes EMS composition, requires 48h TL)
 
         address newCtrl = address(0x9999);
         bytes memory tlData = abi.encodeCall(IRewardVault.setPauseController, (newCtrl));

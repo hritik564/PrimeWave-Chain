@@ -1,0 +1,1269 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C08 — PROTOCOL INTEGRATION + PRODUCTION CONFIGURATION HARDENING
+
+============================================================
+STATUS
+============================================================
+
+COMPLETED:
+
+PW-C00 — Architecture / decisions
+PW-C01 — Avalanche L1 foundation
+PW-C02 — Native PW + fee validation
+PW-C03 — 70/20/10 FeeDistributor
+PW-C04 — ValidatorFeeVault accounting
+PW-C05 — Avalanche ValidatorManager integration
+PW-C06 — Finite 15M PW RewardVault
+PW-C07 — Phase-1 PoA hardening + governance
+
+CURRENT TEST BASELINE:
+
+PW-C03: 40/40
+PW-C04: 113/113
+PW-C05: 190/190
+PW-C06: 282/282
+PW-C07: 391/391
+
+DO NOT REGRESS ANY OF THESE.
+
+============================================================
+1. PRIMARY OBJECTIVE
+============================================================
+
+C08 is the final architectural integration and production-configuration
+hardening sprint before Phase-2 PoS work begins.
+
+The objective is to audit and harden the COMPLETE CURRENT PRIMEWAVE
+CHAIN architecture as one system.
+
+C08 must answer:
+
+"Can all currently implemented components coexist correctly under the
+locked PrimeWave architecture without conflicting authorities,
+economic leaks, upgrade paths, initialization problems, or deployment
+ambiguities?"
+
+The target architecture is:
+
+                    PRIMEWAVE L1
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+ ValidatorManager     Native PW        Governance
+        │                │                │
+        ▼                │                ├── Emergency Multisig
+ ValidatorRegistry      │                └── Timelock
+        │                │
+        ▼                ▼
+ ValidatorFeeVault   FeeDistributor
+        │                │
+        │          ┌─────┼─────┐
+        │          │     │     │
+        │         70%   20%   10%
+        │          │     │     │
+        └──────────┘     │     └── Burn
+                         │
+                      Treasury
+
+Separate system:
+
+15M PW
+   ↓
+RewardVault
+   ↓
+Future Phase-2 staking rewards
+
+C08 must preserve these boundaries.
+
+============================================================
+2. ABSOLUTE SCOPE BOUNDARY
+============================================================
+
+C08 MAY implement:
+
+- cross-contract integration hardening
+- initialization hardening
+- deployment configuration hardening
+- genesis configuration validation
+- immutable configuration validation
+- authority reconciliation
+- cross-contract access-control review
+- pause propagation review
+- timelock integration review
+- emergency control review
+- supply accounting reconciliation
+- fee-flow reconciliation
+- RewardVault reconciliation
+- validator-flow reconciliation
+- upgradeability review
+- deployment-address verification
+- contract dependency verification
+- event/interface consistency
+- local end-to-end testing
+- multi-node testing
+- fuzz testing
+- invariant testing
+- production deployment checklist
+- configuration validation scripts
+- documentation
+
+C08 MUST NOT implement:
+
+- Phase-2 PoS
+- PrimeWaveStakingManager
+- staking
+- delegation
+- unbonding
+- staking rewards integration
+- slashing
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- Block Explorer
+- MLM software
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- Salary
+- P2P
+- bridges
+- production key generation
+- mainnet deployment
+- public testnet deployment
+
+============================================================
+3. READ ALL CURRENT DOCUMENTATION
+============================================================
+
+Read:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_PWUSD_ARCHITECTURE.md
+- docs/PRIMEWAVE_PWSWAP_INTERFACE.md
+- docs/PRIMEWAVE_MARKET_DATA_INTERFACE.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_INFRASTRUCTURE.md
+- docs/PRIMEWAVE_GENESIS_SPEC.md
+- docs/PRIMEWAVE_DEPENDENCY_MAP.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PW-C03-FINAL-REPORT.md
+- docs/PW-C04-FINAL-REPORT.md
+- docs/PW-C05-FINAL-REPORT.md
+- docs/PW-C06-FINAL-REPORT.md
+- docs/PW-C07-FINAL-REPORT.md
+
+Also inspect all current Solidity contracts and deployment scripts.
+
+DO NOT rely only on the documents.
+
+The actual implementation is authoritative for current behavior.
+
+============================================================
+4. ARCHITECTURE RECONCILIATION
+============================================================
+
+Create a complete contract/component dependency map.
+
+At minimum identify:
+
+- Avalanche ValidatorManager
+- PrimeWaveValidatorRegistry
+- ValidatorFeeVault
+- FeeDistributor
+- Treasury
+- RewardVault
+- EmergencyMultisig
+- PrimeWaveTimelock
+- Native PW configuration
+- genesis configuration
+- node configuration
+- deployment scripts
+
+For each component document:
+
+- address source
+- deployer
+- initializer
+- owner/admin
+- pause authority
+- upgrade authority
+- funding source
+- outbound fund authority
+- dependent contracts
+- events
+- immutable configuration
+
+Produce a table:
+
+| Component | Authority | Funding | Dependencies | Upgradeable? | Pause? |
+|-----------|-----------|---------|--------------|--------------|--------|
+
+============================================================
+5. AUTHORITY GRAPH
+============================================================
+
+Build an explicit authority graph.
+
+Example:
+
+EmergencyMultisig
+        │
+        └── pause/unpause
+
+Timelock
+        │
+        └── approved delayed actions
+
+ValidatorManager
+        │
+        └── validator truth
+
+ValidatorRegistry
+        │
+        └── accounting adapter
+
+FeeDistributor
+        │
+        ├── ValidatorFeeVault
+        ├── Treasury
+        └── Burn
+
+RewardVault
+        │
+        └── future staking reward interface
+
+Identify EVERY address/function capable of:
+
+- changing configuration
+- moving PW
+- pausing
+- freezing
+- upgrading
+- registering validators
+- changing reward recipients
+- changing weights
+- changing emission rate
+
+There must be no undocumented authority.
+
+============================================================
+6. SINGLE-SOURCE-OF-TRUTH AUDIT
+============================================================
+
+Verify:
+
+Validator existence/status/weight:
+→ Avalanche ValidatorManager
+
+Validator fee accounting:
+→ ValidatorFeeVault
+
+Transaction fee split:
+→ FeeDistributor
+
+Staking/emission reserve:
+→ RewardVault
+
+Emergency pause:
+→ EmergencyMultisig
+
+Governance configuration:
+→ Timelock
+
+Do not create duplicate authorities.
+
+If two components can independently change the same economic fact:
+
+STOP and report the conflict.
+
+============================================================
+7. FUND FLOW RECONCILIATION
+============================================================
+
+Verify the complete fee flow:
+
+Actual native PW fee
+        ↓
+FeeDistributor
+        ├── 70% → ValidatorFeeVault
+        ├── 20% → Treasury
+        └── 10% → Burn
+
+Run real transactions.
+
+Record:
+
+- actual fee
+- expected 70%
+- actual 70%
+- expected 20%
+- actual 20%
+- expected 10%
+- actual 10%
+
+Verify exact conservation.
+
+No fee may disappear except explicitly documented burn behavior.
+
+============================================================
+8. REWARDVAULT SEPARATION
+============================================================
+
+Verify:
+
+FeeDistributor cannot fund RewardVault.
+
+RewardVault cannot fund ValidatorFeeVault.
+
+ValidatorFeeVault cannot fund RewardVault.
+
+Treasury cannot silently become RewardVault funding.
+
+RewardVault's 15M reserve remains a distinct allocation.
+
+Verify:
+
+MAX annual emission <= 3M PW/year.
+
+No minting.
+
+No cross-pool leakage.
+
+============================================================
+9. SUPPLY RECONCILIATION
+============================================================
+
+PrimeWave maximum supply:
+
+100,000,000 PW
+
+Build a complete supply accounting model.
+
+Identify the allocated balances:
+
+- liquidity allocation
+- team/development reserve
+- treasury
+- RewardVault / validator rewards
+- presale allocations
+
+Use the locked tokenomics document as the source of truth.
+
+Then separately track:
+
+- native PW transfers
+- transaction-fee burn behavior
+- RewardVault distributions
+- validator-fee distributions
+
+Verify no component can increase supply.
+
+If the current deployed local genesis does not contain the final production allocations:
+
+document that explicitly.
+
+Do not fabricate production balances.
+
+============================================================
+10. DEPLOYMENT ADDRESS AUDIT
+============================================================
+
+Every contract address used by another contract must be verified.
+
+For each:
+
+- expected address
+- actual address
+- deployment nonce
+- deployment transaction
+- bytecode existence
+- configuration reference
+
+Especially verify:
+
+FeeDistributor
+ValidatorFeeVault
+RewardVault
+ValidatorRegistry
+EmergencyMultisig
+Timelock
+
+Verify the C03 immutable pause-controller configuration.
+
+The production deployment must initialize:
+
+FeeDistributor.pauseController
+=
+EmergencyMultisig address
+
+if that remains the locked production design.
+
+Because the C03 genesis instance cannot rotate this address,
+production deployment must be correct at initialization/genesis.
+
+============================================================
+11. INITIALIZATION SECURITY
+============================================================
+
+Audit every constructor/initializer.
+
+Check:
+
+- can initializer be called twice?
+- can zero address be supplied?
+- can wrong contract address be supplied?
+- can wrong chain ID be supplied?
+- can deployer retain unintended authority?
+- can a malicious contract be injected?
+- can the contract remain uninitialized?
+- can initialization be front-run?
+
+If any contract is upgradeable:
+
+audit initializer and upgrade authority.
+
+If contracts are intentionally immutable:
+
+document that.
+
+============================================================
+12. ZERO-ADDRESS AUDIT
+============================================================
+
+Test zero addresses for every configuration field:
+
+- Treasury
+- ValidatorFeeVault
+- RewardVault
+- ValidatorRegistry
+- EmergencyMultisig
+- Timelock
+- reward recipients
+- governance authorities
+
+A zero address must either:
+
+- be explicitly valid and documented
+
+or:
+
+- cause deployment/configuration to fail.
+
+No accidental zero-address fund sink.
+
+============================================================
+13. CROSS-CONTRACT PAUSE AUDIT
+============================================================
+
+C07 established EmergencyMultisig as the Phase-1 emergency pause authority.
+
+C08 must determine exactly how pause state propagates.
+
+Test:
+
+Emergency pause
+        ↓
+affected contracts
+
+Determine:
+
+- FeeDistributor
+- ValidatorFeeVault
+- RewardVault
+
+For each component:
+
+- what stops
+- what continues
+- what can still be claimed
+- what can still receive funds
+- how unpause works
+
+Do not create a chain-wide pause.
+
+Do not allow unrelated components to remain vulnerable because they were forgotten.
+
+============================================================
+14. PAUSE SAFETY
+============================================================
+
+When paused:
+
+- no unauthorized fund movement
+- no accounting corruption
+- no bypass through alternate entrypoint
+- no reentrancy path
+- no indirect execution path
+
+When unpaused:
+
+- accounting resumes correctly
+- no retroactive overpayment
+- no duplicated fees
+- no lost rewards
+
+Run actual local transactions around pause boundaries.
+
+============================================================
+15. TIMELOCK AUDIT
+============================================================
+
+Verify every timelocked action from:
+
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+
+For each:
+
+- queue
+- delay
+- execute
+- cancel if applicable
+- replay protection
+
+Test:
+
+before 48h → fail
+
+at/after 48h → correct behavior
+
+Also verify:
+
+EmergencyMultisig cannot bypass the timelock for non-emergency actions.
+
+Timelock cannot invoke emergency-only pause functionality.
+
+============================================================
+16. UPGRADEABILITY AUDIT
+============================================================
+
+This is critical.
+
+Inventory every contract for:
+
+- proxy
+- implementation
+- delegatecall
+- upgradeTo
+- upgrade authority
+- UUPS
+- Transparent Proxy
+- beacon
+- custom upgrade mechanism
+
+Prefer immutable/non-upgradeable architecture unless an upgrade is explicitly required.
+
+For every upgradeable contract document:
+
+- who upgrades
+- whether timelocked
+- whether emergency multisig can upgrade
+- whether upgrade can change token economics
+- whether upgrade can mint PW
+- whether upgrade can redirect funds
+
+If an unauthorized upgrade path exists:
+
+STOP.
+
+============================================================
+17. NATIVE MINTER AUDIT
+============================================================
+
+Search the complete repository.
+
+Confirm:
+
+No application contract can invoke NativeMinter to mint PW.
+
+No governance contract can invoke NativeMinter.
+
+No RewardVault path can invoke NativeMinter.
+
+No emergency path can invoke NativeMinter.
+
+The only acceptable native supply creation should be the genesis allocation according to the locked tokenomics.
+
+If an unexpected mint path exists:
+
+STOP.
+
+============================================================
+18. FEE ROUTING REGRESSION
+============================================================
+
+Run the C03 live integration.
+
+At minimum:
+
+10 real transactions.
+
+Verify exact:
+
+70%
+20%
+10%
+
+Then verify:
+
+ValidatorFeeVault accounting.
+
+Then verify:
+
+validator claims.
+
+Then verify:
+
+Treasury unchanged except for its 20%.
+
+Then verify:
+
+burn behavior.
+
+============================================================
+19. REWARDVAULT REGRESSION
+============================================================
+
+Run C06 tests.
+
+Verify:
+
+- 15M funding
+- <=3M/year
+- rate reduction
+- zero-weight behavior
+- claims
+- exhaustion
+- supply conservation
+
+Do not modify RewardVault logic unless C08 identifies a genuine cross-contract conflict.
+
+============================================================
+20. VALIDATOR REGRESSION
+============================================================
+
+Run C05 tests.
+
+Verify:
+
+- ValidatorManager source of truth
+- registry synchronization
+- weight updates
+- activation/deactivation
+- reward recipient
+- historical accounting
+
+Do not introduce Phase-2 staking.
+
+============================================================
+21. GOVERNANCE REGRESSION
+============================================================
+
+Run C07 tests.
+
+Verify:
+
+- 3-of-5 emergency authority
+- 48-hour timelock
+- pause
+- unpause
+- no freeze in Phase 1
+- no emergency governance escalation
+
+============================================================
+22. MULTI-NODE CONSISTENCY
+============================================================
+
+Use the local multi-node setup.
+
+Run:
+
+- fee transactions
+- validator updates
+- RewardVault operations
+- governance actions
+
+Verify every node agrees on:
+
+- block height
+- balances
+- contract state
+- validator state
+- governance state
+- reward accounting
+
+No divergent application state.
+
+============================================================
+23. END-TO-END ECONOMIC SCENARIO
+============================================================
+
+Create one complete local scenario:
+
+1. Start chain.
+
+2. Verify 15-validator Phase-1 set.
+
+3. Verify governance configuration.
+
+4. Verify contract addresses.
+
+5. Execute PW transactions.
+
+6. Verify 70/20/10.
+
+7. Verify validator fee accounting.
+
+8. Claim validator fee.
+
+9. Fund RewardVault.
+
+10. Accrue RewardVault rewards.
+
+11. Claim RewardVault reward.
+
+12. Reduce RewardVault emission rate through proper governance.
+
+13. Attempt early timelock execution → fail.
+
+14. Wait 48h.
+
+15. Execute → succeed.
+
+16. Trigger emergency pause using 3-of-5.
+
+17. Verify affected operations.
+
+18. Unpause.
+
+19. Verify normal operation.
+
+20. Verify supply conservation.
+
+21. Verify all nodes agree.
+
+============================================================
+24. FAILURE / RECOVERY TESTING
+============================================================
+
+Test:
+
+- validator becomes inactive
+- validator reactivation if supported
+- RewardVault zero-weight period
+- FeeDistributor pause
+- ValidatorFeeVault pause
+- RewardVault pause
+- governance action cancellation
+- stale validator state
+- invalid governance target
+- invalid configuration
+- attempted unauthorized fund withdrawal
+
+Verify recovery does not corrupt accounting.
+
+============================================================
+25. PROPERTY-BASED TESTING
+============================================================
+
+Add cross-contract invariants where practical.
+
+INVARIANT 1:
+No native PW minting.
+
+INVARIANT 2:
+Supply never exceeds 100M.
+
+INVARIANT 3:
+Fee split remains 70/20/10.
+
+INVARIANT 4:
+Validator fee conservation holds.
+
+INVARIANT 5:
+RewardVault cannot distribute more than funded.
+
+INVARIANT 6:
+RewardVault annual emission cap <=3M PW.
+
+INVARIANT 7:
+Governance cannot bypass timelock.
+
+INVARIANT 8:
+Emergency multisig cannot execute non-emergency powers.
+
+INVARIANT 9:
+ValidatorManager remains validator source of truth.
+
+INVARIANT 10:
+No unauthorized contract can withdraw protocol funds.
+
+============================================================
+26. EVENT CONSISTENCY
+============================================================
+
+Audit all major events.
+
+Events must provide enough information for future indexing.
+
+Verify consistency of:
+
+- fee events
+- validator events
+- reward events
+- governance events
+- pause events
+- timelock events
+
+Do not redesign the event system unnecessarily.
+
+Document any missing event that the future Chain Explorer will require.
+
+============================================================
+27. EXPLORER PREPARATION — NOT EXPLORER DEVELOPMENT
+============================================================
+
+Do NOT build the Block Explorer in C08.
+
+Instead, create a list of all data the future explorer will need.
+
+Examples:
+
+- block data
+- transaction data
+- receipt data
+- native PW transfers
+- contract events
+- validator events
+- fee distribution events
+- RewardVault events
+- governance events
+- token metadata
+- network statistics
+
+Identify:
+
+- existing RPC method
+- existing event
+- missing event
+- required indexer field
+
+Create:
+
+docs/PRIMEWAVE_EXPLORER_DATA_REQUIREMENTS.md
+
+This document becomes the input for the future Explorer sprint.
+
+============================================================
+28. PRODUCTION CONFIGURATION AUDIT
+============================================================
+
+Create a machine-readable production configuration checklist.
+
+Include:
+
+- chain ID
+- subnet ID
+- blockchain ID
+- genesis hash
+- contract addresses
+- Treasury address
+- EmergencyMultisig address
+- Timelock address
+- ValidatorManager address
+- ValidatorRegistry address
+- ValidatorFeeVault address
+- RewardVault address
+- FeeDistributor address
+- initial validator set
+- token allocations
+- emission cap
+- governance delay
+
+Mark every field:
+
+LOCKED
+CONFIGURABLE
+DERIVED
+GENERATED AT DEPLOYMENT
+
+Do not fill unknown production values with placeholders and call them final.
+
+============================================================
+29. GENESIS VALIDATION
+============================================================
+
+Create a genesis validation script.
+
+It should verify:
+
+- expected chain configuration
+- native PW allocation
+- no accidental minting configuration
+- RewardVault assumptions
+- FeeDistributor configuration
+- validator configuration
+- required precompiles
+- required addresses
+- expected bytecode/configuration
+
+Do not generate final production genesis.
+
+This is a validation tool only.
+
+============================================================
+30. DEPENDENCY AUDIT
+============================================================
+
+Verify current pinned dependencies remain:
+
+- AvalancheGo baseline
+- icm-services pinned release
+- Solidity 0.8.30
+- OpenZeppelin 5.6.1
+- Foundry v1.7.1
+
+Do not silently upgrade.
+
+If a dependency has a security-critical update:
+
+document it as an explicit future decision.
+
+============================================================
+31. SECURITY THREAT REVIEW
+============================================================
+
+Re-run the relevant threat model against the integrated architecture.
+
+Focus on:
+
+- authority confusion
+- governance escalation
+- fee diversion
+- RewardVault theft
+- validator reward theft
+- supply inflation
+- initialization attacks
+- address misconfiguration
+- pause bypass
+- timelock bypass
+- upgrade abuse
+- replay
+- cross-contract reentrancy
+- event/accounting divergence
+- multi-node state divergence
+
+Produce:
+
+docs/PW-C08-INTEGRATED-SECURITY-REVIEW.md
+
+============================================================
+32. GAS / COST REVIEW
+============================================================
+
+Measure representative operations:
+
+- normal PW transfer
+- fee distribution
+- validator fee claim
+- RewardVault claim
+- validator sync
+- governance queue
+- governance execute
+- emergency pause
+
+Do not optimize prematurely.
+
+Identify only obvious waste.
+
+============================================================
+33. FULL REGRESSION
+============================================================
+
+Minimum required baseline:
+
+C03:
+40/40
+
+C04:
+113/113
+
+C05:
+190/190
+
+C06:
+282/282
+
+C07:
+391/391
+
+All must remain passing.
+
+If any fails:
+
+STOP.
+
+============================================================
+34. TEST TARGET
+============================================================
+
+C08 should include:
+
+- cross-contract unit tests
+- integration tests
+- multi-node tests
+- fuzz tests
+- invariant tests
+- deployment validation tests
+- genesis validation tests
+- governance integration tests
+- economic conservation tests
+
+Target:
+
+ZERO FAILURES.
+
+Do not inflate test count just to produce a large number.
+
+Quality > quantity.
+
+============================================================
+35. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C08-INTEGRATED-ARCHITECTURE-SPEC.md
+
+Include:
+
+1. Complete architecture
+2. Contract dependency graph
+3. Authority graph
+4. Fund flow
+5. Supply flow
+6. Governance flow
+7. Validator flow
+8. RewardVault flow
+9. Pause architecture
+10. Timelock architecture
+11. Upgradeability
+12. Initialization
+13. Security boundaries
+14. Production configuration
+
+Create:
+
+docs/PW-C08-INTEGRATED-SECURITY-REVIEW.md
+
+Include:
+
+- threat analysis
+- authority matrix
+- fund-flow analysis
+- supply analysis
+- upgrade analysis
+- governance analysis
+- validator analysis
+- failure modes
+- mitigations
+- unresolved risks
+
+Create:
+
+docs/PW-C08-TEST-REPORT.md
+
+Include:
+
+- unit tests
+- fuzz tests
+- invariant tests
+- integration tests
+- multi-node tests
+- regression results
+- economic scenario
+- deployment validation
+- genesis validation
+
+Create:
+
+docs/PW-C08-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Architecture reconciliation
+C. Implementation
+D. Economic verification
+E. Governance verification
+F. Validator verification
+G. RewardVault verification
+H. Security review
+I. Test results
+J. Deployment readiness
+K. Explorer data requirements
+L. Known limitations
+M. Remaining risks
+N. Exact prerequisites for C09
+
+============================================================
+36. COST CONTROL
+============================================================
+
+Reuse existing infrastructure.
+
+Do NOT:
+
+- deploy public testnet
+- deploy mainnet
+- generate production keys
+- build Explorer
+- build PWSwap
+- build PrimeWave Dex
+- build PWUSD
+- implement Phase-2 PoS
+- rebuild existing contracts unnecessarily
+
+C08 is an integration/audit sprint.
+
+============================================================
+37. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C08 PASSES only when:
+
+[ ] Complete architecture dependency map exists.
+
+[ ] Authority graph exists.
+
+[ ] No duplicate economic authority exists.
+
+[ ] ValidatorManager remains validator source of truth.
+
+[ ] FeeDistributor remains fee-split authority.
+
+[ ] ValidatorFeeVault remains validator-fee accounting authority.
+
+[ ] RewardVault remains separate.
+
+[ ] EmergencyMultisig remains emergency authority.
+
+[ ] Timelock remains governance-delay authority.
+
+[ ] 70/20/10 verified on live local chain.
+
+[ ] Validator fee accounting verified.
+
+[ ] RewardVault verified.
+
+[ ] Governance verified.
+
+[ ] Supply invariant verified.
+
+[ ] No native minting path exists.
+
+[ ] Initialization audited.
+
+[ ] Zero-address configuration audited.
+
+[ ] Upgradeability audited.
+
+[ ] Pause architecture audited.
+
+[ ] Timelock audited.
+
+[ ] Multi-node consistency verified.
+
+[ ] Cross-contract end-to-end scenario passes.
+
+[ ] Failure/recovery tests pass.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] C03 regression passes.
+
+[ ] C04 regression passes.
+
+[ ] C05 regression passes.
+
+[ ] C06 regression passes.
+
+[ ] C07 regression passes.
+
+[ ] Production configuration checklist exists.
+
+[ ] Genesis validation script exists.
+
+[ ] Explorer data requirements document exists.
+
+[ ] Integrated security review exists.
+
+[ ] Documentation complete.
+
+============================================================
+38. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP immediately if:
+
+- any duplicate authority is discovered
+- any unauthorized fund withdrawal exists
+- any mint path exists
+- supply can exceed 100M
+- 70/20/10 breaks
+- ValidatorManager can be bypassed
+- RewardVault can become insolvent
+- timelock can be bypassed
+- emergency multisig gains non-emergency powers
+- initialization can be hijacked
+- production address configuration is ambiguous
+- multi-node state diverges
+- any C03-C07 regression fails
+
+Do NOT weaken invariants.
+
+Do NOT "fix" a failing test by deleting or weakening the test.
+
+Do NOT silently alter locked architecture.
+
+============================================================
+39. FINAL STOP
+============================================================
+
+When C08 passes:
+
+STOP.
+
+Do NOT begin C09.
+
+Do NOT implement:
+
+- Phase-2 PoS
+- staking
+- delegation
+- slashing
+- PrimeWaveStakingManager
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- Block Explorer
+- production deployment
+
+Report:
+
+PW-C08 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C08
+============================================================

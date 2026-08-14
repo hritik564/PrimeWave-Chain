@@ -6,4 +6,5 @@
 - [PrimeWave Chain PW-C05](primewave-pw-c05.md) — C05 COMPLETE; validator registry adapter; 190/190 tests; pre-computed addr pattern; devSetWeight underflow pitfall
 - [PrimeWave Chain PW-C06](primewave-pw-c06.md) — C06 COMPLETE; RewardVault; 282/282 tests; totalEmitted write-only pitfall; rate ratchet; zero-weight pause; Foundry VM addr fuzz exclude
 - [PrimeWave Chain PW-C07](primewave-pw-c07.md) — C07 COMPLETE; EMS+Timelock; pause on FD/VFV/RV; 391/391 tests; prank+value gotcha; genesis FD gap
+- [PrimeWave Chain PW-C08](primewave-pw-c08.md) — C08 COMPLETE; 535/535 tests; via_ir block.timestamp caching, EMS expectRevert pattern, rate budget, claim revert semantics
 - [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source
