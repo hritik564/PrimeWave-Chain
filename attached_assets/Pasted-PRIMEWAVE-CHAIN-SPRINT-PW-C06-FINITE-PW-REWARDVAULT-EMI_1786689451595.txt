@@ -1,0 +1,1386 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C06 — FINITE PW REWARDVAULT + EMISSION ACCOUNTING
+
+============================================================
+STATUS
+============================================================
+
+PW-C00:
+PASSED / LOCKED
+
+PW-C01:
+PASSED
+
+PW-C02:
+PASSED
+
+PW-C03:
+PASSED
+
+PW-C04:
+PASSED
+
+PW-C05:
+PASSED
+
+C05 established:
+
+Avalanche ValidatorManager
+        ↓
+PrimeWaveValidatorRegistry
+        ↓
+ValidatorFeeVault
+        ↓
+C04 reward-index accounting
+
+C06 addresses a SEPARATE economic system:
+
+15,000,000 PW pre-funded reserve
+        ↓
+RewardVault
+        ↓
+Finite staking/validator reward emissions
+
+C06 MUST NOT connect the RewardVault to Phase-2 PoS yet.
+
+============================================================
+1. PRIMARY OBJECTIVE
+============================================================
+
+Implement and rigorously test the PrimeWave RewardVault.
+
+The RewardVault must distribute ONLY pre-funded PW.
+
+It must NEVER mint PW.
+
+The locked economic parameters are:
+
+RewardVault allocation:
+15,000,000 PW
+
+Maximum annual emission:
+3,000,000 PW/year
+
+Approximate maximum daily emission:
+8,219.178082 PW/day
+
+Minimum theoretical vault lifespan:
+5 years
+
+This assumes the maximum annual emission is fully utilized continuously.
+
+Unused emissions:
+
+REMAIN IN THE VAULT.
+
+They are NOT:
+
+- burned
+- redistributed
+- transferred to Treasury
+- transferred to validators automatically
+- minted
+- accelerated
+
+============================================================
+2. ABSOLUTE SUPPLY INVARIANT
+============================================================
+
+PrimeWave maximum supply:
+
+100,000,000 PW
+
+The RewardVault must NEVER mint PW.
+
+There must be no:
+
+- Native Minter call
+- mint()
+- inflation mechanism
+- hidden token creation
+- automatic supply expansion
+
+Reward distribution must satisfy:
+
+RewardVault balance decreases
+=
+PW actually transferred to recipients
+
+Total PW supply must NEVER increase because of the RewardVault.
+
+============================================================
+3. SOURCE DOCUMENTATION
+============================================================
+
+Read before implementation:
+
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PW-C05-FINAL-REPORT.md
+- docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+
+Treat these documents as the source of truth.
+
+Do not silently change locked tokenomics.
+
+============================================================
+4. C06 SCOPE
+============================================================
+
+C06 MAY implement:
+
+- RewardVault
+- finite reward accounting
+- emission-rate enforcement
+- reward index
+- epoch/time accounting
+- claim mechanism
+- recipient registration/interface
+- funding verification
+- accounting invariants
+- rate reduction mechanism
+- unit tests
+- fuzz tests
+- invariant tests
+- local deployment
+- local funding
+- local integration tests
+- documentation
+
+C06 MUST NOT implement:
+
+- Phase-2 PoS
+- PrimeWaveStakingManager
+- staking deposits
+- delegation
+- unbonding
+- slashing
+- validator staking weights
+- delegator rewards
+- production validator economics
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- MLM software
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- salary
+- P2P
+- bridges
+- BEP-20 migration
+- mainnet
+- public testnet
+- production keys
+
+============================================================
+5. CRITICAL SEPARATION FROM VALIDATOR FEES
+============================================================
+
+There are TWO separate validator-related economic systems.
+
+SYSTEM A — TRANSACTION FEES
+
+Actual transaction fees
+        ↓
+FeeDistributor
+        ↓
+70% → ValidatorFeeVault
+20% → Treasury
+10% → Burn
+
+SYSTEM B — FINITE REWARD RESERVE
+
+15M PW
+        ↓
+RewardVault
+        ↓
+staking/validator rewards
+
+DO NOT combine these.
+
+The RewardVault must NOT receive the 70% transaction-fee allocation.
+
+The ValidatorFeeVault must NOT receive RewardVault emissions.
+
+The Treasury must NOT receive unused RewardVault emissions.
+
+============================================================
+6. REWARDVAULT FUNDING
+============================================================
+
+The RewardVault must be pre-funded.
+
+For local testing:
+
+deploy RewardVault.
+
+Then fund it with development PW.
+
+Target production allocation:
+
+15,000,000 PW.
+
+The contract must be able to expose:
+
+- current balance
+- total funded
+- total distributed
+- total remaining
+- total claimed
+
+The accounting must make it impossible to claim more than the actual funded balance.
+
+============================================================
+7. FUNDING INTEGRITY
+============================================================
+
+Do NOT assume that a configuration variable saying:
+
+rewardReserve = 15_000_000 PW
+
+means the vault actually owns those tokens.
+
+The actual native PW balance must be verified.
+
+The vault must distinguish:
+
+Declared allocation
+vs
+Actual balance.
+
+The production system must eventually verify that the 15M allocation is physically funded before reward activation.
+
+============================================================
+8. NO MINTING
+============================================================
+
+Search the implementation and dependencies for:
+
+- NativeMinter
+- mintNativeCoin
+- mint
+- inflation
+- reward minting
+
+RewardVault MUST NOT depend on NativeMinter.
+
+If Avalanche's standard staking reward implementation attempts to mint native PW:
+
+DO NOT use it.
+
+Use the pre-funded RewardVault mechanism instead.
+
+Document this explicitly.
+
+============================================================
+9. MAXIMUM EMISSION RATE
+============================================================
+
+The absolute emission ceiling is:
+
+3,000,000 PW/year.
+
+Equivalent maximum:
+
+3,000,000 / 365
+≈ 8,219.178082 PW/day
+
+The implementation must enforce the cap.
+
+Do NOT use floating point.
+
+Use integer fixed-point/time-based arithmetic.
+
+The implementation must make it impossible for normal reward operations to distribute more than:
+
+3,000,000 PW
+
+over any rolling/defined annual emission period according to the chosen accounting model.
+
+IMPORTANT:
+
+Before coding, determine the safest precise interpretation of:
+
+"3,000,000 PW maximum annual staking emissions"
+
+Possible approaches include:
+
+- epoch-based annual cap
+- continuous rate limit
+- timestamp-based cumulative emission
+- fixed annual emission windows
+
+Choose the model that best preserves the locked economic intent.
+
+Document the exact mathematical definition.
+
+============================================================
+10. RATE CALCULATION
+============================================================
+
+Do NOT hardcode:
+
+8,219.18 PW/day
+
+as a floating-point number.
+
+Use integer smallest-unit arithmetic.
+
+Define:
+
+SECONDS_PER_YEAR
+
+and:
+
+MAX_ANNUAL_EMISSION
+
+or an equivalent exact formulation.
+
+The calculation must not accumulate hidden rounding errors.
+
+Any unavoidable rounding remainder must remain inside the RewardVault.
+
+============================================================
+11. FIVE-YEAR MINIMUM LIFESPAN
+============================================================
+
+At maximum utilization:
+
+15,000,000 PW
+/
+3,000,000 PW/year
+=
+5 years
+
+This is a MINIMUM theoretical lifespan.
+
+The vault may last longer if:
+
+- validators do not claim maximum rewards
+- eligibility is below maximum
+- the emission rate is reduced
+- some rewards remain unclaimed
+
+Do NOT implement automatic replenishment.
+
+Do NOT mint replacement rewards.
+
+============================================================
+12. UNUSED EMISSIONS
+============================================================
+
+Unused emissions remain in the RewardVault.
+
+Example:
+
+Maximum possible annual emission:
+
+3,000,000 PW
+
+Actual distributed:
+
+2,100,000 PW
+
+Unused:
+
+900,000 PW
+
+That 900,000 PW remains in the vault.
+
+It is NOT:
+
+- burned
+- sent to Treasury
+- redistributed
+- automatically accelerated
+
+Test this explicitly.
+
+============================================================
+13. REWARD INDEX MODEL
+============================================================
+
+Evaluate the same general reward-index architecture used successfully in C04.
+
+Conceptually:
+
+RewardVault
+      ↓
+Reward emission
+      ↓
+Global reward index
+      ↓
+Eligible effective weight
+      ↓
+Individual claimable reward
+
+Determine whether:
+
+accRewardPerWeight
+
+is appropriate.
+
+Use fixed-point integer arithmetic.
+
+Avoid O(N) distribution.
+
+Reward accrual should be approximately O(1).
+
+Individual claims should be O(1).
+
+If a different architecture is safer, document why.
+
+============================================================
+14. RECIPIENT MODEL
+============================================================
+
+C06 must define the recipient interface without implementing Phase-2 staking.
+
+The RewardVault should support a future authoritative source of:
+
+- eligible reward recipient
+- effective reward weight
+- eligibility
+
+For C06 local testing, use development-only recipients.
+
+Do NOT create a fake production staking manager.
+
+Do NOT connect to C05's validator registry unless the interface is genuinely required.
+
+The production integration point should be documented for the future PrimeWaveStakingManager.
+
+============================================================
+15. IMPORTANT — PHASE 1 VS PHASE 2
+============================================================
+
+Do NOT assume C06 must distribute directly to the 15 PoA validators.
+
+The RewardVault is being built as the finite reward reserve.
+
+Phase 2 will eventually provide the actual staking/reward eligibility model.
+
+C06 should therefore create a clean interface such as:
+
+reward recipient
+effective reward weight
+eligibility
+
+without implementing staking.
+
+If Phase 1 requires a temporary local recipient model for testing:
+
+make it explicitly development-only.
+
+============================================================
+16. CLAIM MODEL
+============================================================
+
+Prefer a pull-based claim model.
+
+Validator/recipient:
+
+claim()
+
+rather than:
+
+RewardVault loops through all recipients.
+
+Benefits:
+
+- O(1) claim
+- no O(N) distribution
+- lower gas
+- recipient controls claim timing
+- simpler accounting
+
+A claim must:
+
+1. calculate claimable amount
+2. update accounting checkpoint
+3. transfer native PW
+4. emit event
+5. prevent double claim
+
+============================================================
+17. CLAIM SECURITY
+============================================================
+
+A recipient must only claim its own entitlement.
+
+Test:
+
+- double claim
+- unauthorized claim
+- another recipient's claim
+- zero claim
+- claim after deactivation
+- claim after weight changes
+- claim after rate reduction
+
+No recipient may withdraw arbitrary RewardVault funds.
+
+============================================================
+18. EMISSION ACCOUNTING
+============================================================
+
+Track at minimum:
+
+- total funded
+- total emitted/accrued
+- total claimed
+- total remaining
+- current emission rate
+- current reward index
+- last emission timestamp
+- annual emission consumed according to the chosen model
+
+Define clearly:
+
+"emitted"
+
+vs
+
+"claimed"
+
+These are NOT necessarily the same.
+
+Example:
+
+Rewards accrued:
+100 PW
+
+Rewards claimed:
+60 PW
+
+Then:
+
+60 PW has left the vault.
+
+40 PW remains claimable.
+
+Do not count unclaimed rewards as still unallocated.
+
+============================================================
+19. SOLVENCY INVARIANT
+============================================================
+
+At all times:
+
+totalClaimed
++
+totalClaimable
++
+unallocatedBalance
+=
+actualRewardVaultBalance relationship
+
+Use the exact accounting identity appropriate to the implementation.
+
+More fundamentally:
+
+Total distributed/claimed
++
+Total currently claimable
+<=
+Actual funded balance
+
+Never allow:
+
+total liabilities > actual vault balance.
+
+============================================================
+20. EMISSION CAP INVARIANT
+============================================================
+
+For every defined emission period:
+
+emitted <= maximum permitted emission
+
+The contract must reject or prevent any operation that would exceed the cap.
+
+Fuzz timestamps and claim sequences.
+
+Test:
+
+- emission at exact cap
+- emission one unit below cap
+- attempted emission one unit above cap
+- multiple claims
+- long time jumps
+- short time intervals
+
+============================================================
+21. VAULT EXHAUSTION
+============================================================
+
+When the vault reaches zero:
+
+No further rewards may be paid.
+
+The system must:
+
+- stop reward emission
+- not revert unrelated chain transactions
+- not mint replacement PW
+- not borrow from Treasury
+- not borrow from ValidatorFeeVault
+
+Define the exact behavior.
+
+If a recipient attempts to claim after exhaustion:
+
+claimable amount must be limited to the remaining funded balance.
+
+Prefer preventing an insolvent accounting state entirely.
+
+============================================================
+22. RATE REDUCTION
+============================================================
+
+Locked governance decision:
+
+The emission rate may be REDUCED.
+
+It may NEVER be increased above the locked maximum through ordinary governance.
+
+The maximum remains:
+
+3,000,000 PW/year.
+
+Determine the safest implementation.
+
+Possible model:
+
+CurrentEmissionRate <= MAX_EMISSION_RATE
+
+Any rate reduction must:
+
+- be authorized
+- be explicit
+- take effect deterministically
+- never retroactively create extra rewards
+- preserve previously accrued rewards
+
+Do NOT implement an increase function that can exceed the cap.
+
+============================================================
+23. GOVERNANCE BOUNDARY
+============================================================
+
+C06 must not create final production governance.
+
+However, document the future authority required to reduce the emission rate.
+
+The locked governance rule is:
+
+Protocol Admin + timelock
+
+may reduce the emission rate.
+
+They may NOT increase it above the locked cap without a protocol upgrade.
+
+For local development:
+
+use a clearly labeled development authority.
+
+Do NOT generate production multisig keys.
+
+============================================================
+24. RATE CHANGE CHECKPOINT
+============================================================
+
+If the emission rate is changed:
+
+first checkpoint all accumulated rewards under the old rate.
+
+Then:
+
+apply new rate.
+
+Never retroactively apply the new rate to historical time.
+
+Example:
+
+Period A:
+rate = 3M/year
+
+Rate reduced
+
+Period B:
+rate = 2M/year
+
+Rewards in Period A remain based on 3M/year.
+
+============================================================
+25. TIME MANIPULATION
+============================================================
+
+Analyze timestamp assumptions.
+
+Test:
+
+- normal time progression
+- same-block claims
+- very short intervals
+- large time jumps
+- timestamp near emission boundary
+- timestamp near annual boundary
+
+Do not assume timestamps are perfectly precise.
+
+The implementation must not allow economically meaningful over-emission through timestamp edge cases.
+
+============================================================
+26. REWARD WEIGHT
+============================================================
+
+Use a deterministic effective-weight model.
+
+Do NOT invent staking.
+
+For C06 testing, use development recipient weights.
+
+Test:
+
+- equal weights
+- unequal weights
+- zero weight
+- weight changes
+- inactive recipient
+- all recipients inactive
+
+The system must not divide by zero.
+
+If total eligible weight = 0:
+
+emissions should remain unallocated in the vault.
+
+Do not distribute to arbitrary recipients.
+
+============================================================
+27. ROUNDING
+============================================================
+
+Use integer arithmetic.
+
+No floating point.
+
+Define deterministic rounding.
+
+Any rounding remainder must remain accounted for.
+
+It must NOT silently disappear.
+
+It must NOT be sent to:
+
+- Treasury
+- burn
+- arbitrary recipient
+
+unless explicitly defined by the accounting model.
+
+============================================================
+28. FUZZ TESTING
+============================================================
+
+Use Foundry fuzzing.
+
+Fuzz:
+
+- timestamps
+- emission periods
+- recipient weights
+- recipient activation
+- claims
+- rate reductions
+- funding amounts
+- small balances
+- large balances
+- partial claims
+- repeated claims
+
+Verify:
+
+- no over-emission
+- no over-claim
+- no minting
+- no insolvency
+- no double claim
+- no unauthorized withdrawal
+- no supply increase
+
+============================================================
+29. INVARIANT TESTING
+============================================================
+
+Implement stateful invariant tests.
+
+At minimum:
+
+INVARIANT 1:
+Total emitted <= allowed emission cap.
+
+INVARIANT 2:
+Total claimed <= total funded.
+
+INVARIANT 3:
+Total claimable <= total funded.
+
+INVARIANT 4:
+No minting occurs.
+
+INVARIANT 5:
+Vault cannot pay more native PW than it owns.
+
+INVARIANT 6:
+Rate <= MAX_EMISSION_RATE.
+
+INVARIANT 7:
+Rate reduction cannot increase historical rewards.
+
+INVARIANT 8:
+Unauthorized account cannot alter emission rate.
+
+INVARIANT 9:
+Unauthorized account cannot withdraw funds.
+
+INVARIANT 10:
+Claimed + claimable + remaining accounting is conserved.
+
+============================================================
+30. SUPPLY TEST
+============================================================
+
+Record native PW total supply before RewardVault operation.
+
+Perform:
+
+- funding
+- reward accrual
+- claims
+- rate reduction
+- repeated claims
+
+Verify:
+
+Total supply does NOT increase.
+
+The only balance changes are transfers of already-existing PW.
+
+============================================================
+31. 15M FUNDING TEST
+============================================================
+
+Perform a local test with:
+
+15,000,000 PW
+
+funded into RewardVault.
+
+Verify:
+
+Vault balance =
+15,000,000 PW
+
+Then verify the system can never distribute more than this amount.
+
+Do not wait five real years.
+
+Use controlled local timestamp advancement.
+
+============================================================
+32. MAXIMUM EMISSION TEST
+============================================================
+
+Simulate the maximum emission rate for five theoretical years using controlled timestamps.
+
+Verify:
+
+Year 1:
+<= 3,000,000 PW
+
+Year 2:
+<= 3,000,000 PW
+
+Year 3:
+<= 3,000,000 PW
+
+Year 4:
+<= 3,000,000 PW
+
+Year 5:
+<= remaining reserve
+
+Total:
+<= 15,000,000 PW
+
+Do not actually wait five years.
+
+Use Foundry time manipulation.
+
+============================================================
+33. RATE REDUCTION TEST
+============================================================
+
+Example:
+
+Initial:
+
+3,000,000 PW/year
+
+Then reduce to:
+
+2,000,000 PW/year
+
+Verify:
+
+- old rewards remain correct
+- new rewards use lower rate
+- annual maximum remains respected
+- rate cannot be increased back above the locked maximum through the reduction function
+- unauthorized rate reduction fails
+- unauthorized rate increase fails
+
+============================================================
+34. ZERO-WEIGHT TEST
+============================================================
+
+Set all development recipients inactive or zero weight.
+
+Advance time.
+
+Verify:
+
+No reward is assigned.
+
+The corresponding emission remains unallocated in the RewardVault.
+
+When a valid recipient becomes eligible:
+
+new eligible rewards begin accruing.
+
+Do not retroactively distribute rewards from the zero-weight period.
+
+============================================================
+35. C04 REGRESSION
+============================================================
+
+All previous tests must continue passing.
+
+At minimum preserve:
+
+C03:
+40/40
+
+C04:
+113/113
+
+C05:
+190/190
+
+Run the complete relevant regression suite.
+
+Do not break:
+
+- FeeDistributor
+- ValidatorFeeVault
+- PrimeWaveValidatorRegistry
+
+============================================================
+36. NO NATIVE MINTER
+============================================================
+
+Search the complete C06 implementation for NativeMinter dependencies.
+
+The RewardVault must have:
+
+NO:
+
+- mintNativeCoin()
+- native minting
+- inflation hook
+- automatic supply expansion
+
+If any dependency introduces minting:
+
+STOP.
+
+Do not work around it silently.
+
+Document the conflict.
+
+============================================================
+37. SECURITY REVIEW
+============================================================
+
+Review for:
+
+- reentrancy
+- unauthorized claims
+- unauthorized rate changes
+- unauthorized withdrawals
+- insolvency
+- integer overflow
+- timestamp manipulation
+- reward-index precision
+- weight manipulation
+- activation/deactivation edge cases
+- rate-change edge cases
+- zero-weight conditions
+- vault exhaustion
+- forced native-PW transfers
+- accounting mismatch
+
+Use CEI where appropriate.
+
+Use OpenZeppelin v5.6.1 where justified.
+
+Do not add unnecessary dependencies.
+
+============================================================
+38. FORCED NATIVE TRANSFERS
+============================================================
+
+Consider native PW arriving at RewardVault outside the normal funding function.
+
+Examples:
+
+- direct native transfer
+- selfdestruct-style forced balance changes where applicable
+
+Determine whether:
+
+actualBalance
+vs
+accountedBalance
+
+can diverge.
+
+Do not allow unexpected PW to corrupt reward accounting.
+
+Document the treatment of excess native PW.
+
+============================================================
+39. EVENTS
+============================================================
+
+Create indexer-friendly events.
+
+At minimum consider:
+
+RewardVaultFunded
+RewardAccrued
+RewardClaimed
+EmissionRateReduced
+RecipientRegistered
+RecipientUpdated
+RecipientActivated
+RecipientDeactivated
+
+Events must allow future indexers to reconstruct:
+
+- funding
+- emission
+- claims
+- recipient state
+- rate changes
+
+Do not emit redundant events.
+
+============================================================
+40. CONTRACT ARCHITECTURE
+============================================================
+
+Use the minimum number of contracts necessary.
+
+Prefer a single RewardVault contract if safe.
+
+Do not create unnecessary:
+
+- RewardManager
+- EmissionManager
+- RewardDistributor
+- StakingManager
+
+The future PrimeWaveStakingManager should be able to integrate with a clean RewardVault interface.
+
+============================================================
+41. PHASE-2 INTEGRATION INTERFACE
+============================================================
+
+Document the future interface required by PrimeWaveStakingManager.
+
+The future staking manager may need to provide:
+
+- recipient
+- effective weight
+- eligibility
+- activation/deactivation
+- reward claim authorization
+
+Do NOT implement PrimeWaveStakingManager now.
+
+Do NOT import the Phase-2 staking implementation.
+
+Only define the clean interface boundary if necessary.
+
+============================================================
+42. LOCAL DEPLOYMENT
+============================================================
+
+Deploy locally using Foundry.
+
+Use development-only addresses.
+
+Record:
+
+- RewardVault address
+- deployment transaction
+- deployer
+- initial balance
+- configuration
+- bytecode/code hash where practical
+
+Do NOT create production keys.
+
+Do NOT deploy publicly.
+
+============================================================
+43. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C06-REWARDVAULT-SPEC.md
+
+Include:
+
+1. Purpose
+2. 15M allocation
+3. Funding model
+4. No-minting invariant
+5. Emission mathematics
+6. Annual cap
+7. Five-year minimum lifespan
+8. Reward index
+9. Recipient model
+10. Claim mechanism
+11. Rate reduction
+12. Rounding
+13. Exhaustion
+14. Governance boundary
+15. Security
+16. Events
+17. Future staking integration
+18. Known limitations
+
+Create:
+
+docs/PW-C06-REWARDVAULT-TEST-REPORT.md
+
+Include:
+
+- unit tests
+- fuzz tests
+- invariant tests
+- 15M funding test
+- maximum emission test
+- five-year simulation
+- rate reduction test
+- zero-weight test
+- exhaustion test
+- supply test
+- access-control test
+- C03/C04/C05 regression
+
+Create:
+
+docs/PW-C06-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Implementation
+C. Emission model
+D. Supply invariants
+E. Funding proof
+F. Claim proof
+G. Rate reduction proof
+H. Five-year simulation
+I. Security review
+J. Test results
+K. Future staking integration
+L. Known limitations
+M. Open questions
+N. Exact prerequisites for C07
+
+============================================================
+44. COST CONTROL
+============================================================
+
+Everything remains local.
+
+DO NOT:
+
+- deploy public testnet
+- deploy mainnet
+- generate production keys
+- configure production multisig
+- build PWSwap
+- build PrimeWave Dex
+- build MLM software
+- implement Phase-2 PoS
+
+Reuse existing Foundry and local-chain infrastructure.
+
+Do not rebuild tooling unnecessarily.
+
+============================================================
+45. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C06 PASSES only when:
+
+[ ] RewardVault implemented.
+
+[ ] RewardVault is pre-funded model.
+
+[ ] No minting exists.
+
+[ ] NativeMinter is not used.
+
+[ ] 15M PW allocation is documented.
+
+[ ] Actual local funding is verified.
+
+[ ] Maximum annual emission is 3M PW.
+
+[ ] Emission cannot exceed the locked cap.
+
+[ ] Daily equivalent is mathematically consistent.
+
+[ ] Five-year maximum-utilization simulation passes.
+
+[ ] Unused emissions remain in the vault.
+
+[ ] Reward index/accounting works.
+
+[ ] Claims work.
+
+[ ] Double claims fail.
+
+[ ] Unauthorized claims fail.
+
+[ ] Rate reduction works.
+
+[ ] Rate cannot exceed the locked maximum.
+
+[ ] Historical rewards survive rate changes.
+
+[ ] Zero-weight behavior is safe.
+
+[ ] Vault exhaustion is safe.
+
+[ ] Rounding is deterministic.
+
+[ ] No accounting dust disappears silently.
+
+[ ] No PW is minted.
+
+[ ] Total supply never increases.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] C03 regression passes.
+
+[ ] C04 regression passes.
+
+[ ] C05 regression passes.
+
+[ ] Events are indexer-friendly.
+
+[ ] Future staking integration boundary is documented.
+
+[ ] No Phase-2 staking is implemented.
+
+[ ] No production keys exist.
+
+[ ] No public deployment exists.
+
+[ ] Documentation is complete.
+
+============================================================
+46. FAILURE POLICY
+============================================================
+
+If any implementation path requires minting PW:
+
+STOP.
+
+If annual emission can exceed 3M PW:
+
+STOP.
+
+If total distribution can exceed actual RewardVault funding:
+
+STOP.
+
+If rate reduction can accidentally create additional historical rewards:
+
+STOP.
+
+If unauthorized accounts can change the emission rate:
+
+STOP.
+
+If the accounting model becomes insolvent:
+
+STOP.
+
+If a production staking manager is required to complete basic RewardVault testing:
+
+DO NOT implement it.
+
+Use a clearly isolated development recipient adapter and document the future integration.
+
+============================================================
+47. FINAL STOP CONDITION
+============================================================
+
+When all acceptance criteria pass:
+
+STOP.
+
+Do NOT begin C07 automatically.
+
+Do NOT implement:
+
+- Phase-2 PoS
+- staking
+- delegation
+- slashing
+- PrimeWaveStakingManager
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+
+Report:
+
+PW-C06 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C06
+============================================================
