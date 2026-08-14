@@ -1,11 +1,41 @@
 # PW-C15 — C16 ENTRY GATE
 
 **Sprint:** PW-C15 — Testnet Battle Test + Mainnet Readiness
-**Status:** GATE DEFINED — Items pending live testnet execution
+**Status:** GATE DEFINED — Updated 2026-08-15 after PW-C15-External audit
 **Environment:** TESTNET / PRE-MAINNET
 
-C16 (Mainnet) may begin ONLY when every item below is checked.
-No ambiguous status. Each item is PASS, FAIL, or DEFERRED (with a defined plan).
+Status values:
+- ✅ PASS — actually executed and verified
+- ❌ FAIL — executed and failed (must resolve before C16)
+- BLOCKED — cannot execute; specific missing dependency listed
+- DEFERRED — explicitly deferred with required conditions listed
+
+C16 may begin ONLY when every item is PASS (or formally DEFERRED with sign-off).
+No ambiguous statuses. The gate only opens when real evidence exists.
+
+---
+
+## INFRASTRUCTURE AUDIT RESULTS (2026-08-15)
+
+**Replit environment capabilities confirmed:**
+
+| Resource | Available | Detail |
+|---|---|---|
+| Avalanche CLI v1.9.5 | ✅ YES | `local-bin/avalanche` |
+| AvalancheGo v1.14.2 | ✅ YES | `local-bin/avalanchego` — 4 local nodes running |
+| subnet-evm binary | ✅ YES | `local-bin/subnet-evm` |
+| Foundry (forge/cast) | ✅ YES | `local-bin/foundry/` |
+| PostgreSQL 16.10 | ✅ YES | Replit managed DB at `PGHOST=helium` |
+| Fuji P-Chain API | ✅ REACHABLE | `api.avax-test.network` — height 292884, networkID 5 |
+| Internet access | ✅ YES | Outbound HTTPS confirmed |
+| testnet-deployer key | ✅ GENERATED | C-Chain: `0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60` / P-Chain: `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw` |
+| testnet-deployer AVAX balance | ❌ 0 AVAX | Fund via https://faucet.avax.network |
+| Cloud/VPS servers | ❌ NONE | Provision externally: AWS / GCP / Hetzner |
+| SSH keys to external servers | ❌ NONE | Generate and deploy with cloud servers |
+| DNS management | ❌ NONE | Register with DNS provider |
+| TLS certificates | ❌ NONE | Let's Encrypt after DNS + server |
+| External validator nodes | ❌ NONE | Provision cloud VPS + deploy AvalancheGo |
+| ICM/Warp relayer | ❌ NONE | Requires running Fuji subnet |
 
 ---
 
@@ -13,193 +43,192 @@ No ambiguous status. Each item is PASS, FAIL, or DEFERRED (with a defined plan).
 
 ### TESTNET FOUNDATION
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-01 | Real testnet deployed on Fuji | 🔵 PENDING | Subnet ID TBD; Blockchain ID TBD |
-| G-02 | Testnet Chain ID 77 confirmed on-chain | 🔵 PENDING | `eth_chainId == 0x4d` via live RPC |
-| G-03 | Blockchain ID recorded | 🔵 PENDING | TBD — Fuji P-Chain |
-| G-04 | Genesis hash recorded | 🔵 PENDING | `sha256sum genesis.json` TBD |
-| G-05 | Genesis reproducibility proven | 🔵 PENDING | Destroy + regenerate → same hash |
+| G-01 | Real testnet deployed on Fuji | BLOCKED | Missing: funded P-Chain wallet + cloud servers. Need: ≥2 AVAX at P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw, provision VPS, run `avalanche blockchain deploy primewave-testnet --fuji --key testnet-deployer` |
+| G-02 | Testnet Chain ID 77 confirmed on-chain | BLOCKED | Depends on G-01 |
+| G-03 | Blockchain ID recorded | BLOCKED | Depends on G-01 — output of CreateChainTx |
+| G-04 | Genesis hash recorded | BLOCKED | Depends on G-06 (ceremony addresses) → fill placeholders → sha256sum genesis.json |
+| G-05 | Genesis reproducibility proven | BLOCKED | Depends on G-04 |
 
 ### VALIDATORS
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-06 | Validators operational (actual count) | 🔵 PENDING | TBD validators active |
-| G-07 | P-Chain integration proven | 🔵 PENDING | CreateSubnetTx + CreateChainTx TX IDs |
-| G-08 | ACP-99 registration proven | 🔵 PENDING | completeValidatorRegistration() TX TBD |
-| G-09 | Validator churn proven | 🔵 PENDING | Join/leave/weight-change cycle tested |
-| G-10 | Validator failure + recovery proven | 🔵 PENDING | F-01 results TBD |
-| G-11 | Multi-node consistency verified | 🔵 PENDING | Same hash/stateRoot on all nodes |
+| G-06 | Validators operational (actual count reported) | BLOCKED | Missing: cloud VPS servers. Provision ≥3 VPS, deploy AvalancheGo v1.14.2, run `setup-testnet-node.sh`. Target: 15 / Actual: 0 |
+| G-07 | P-Chain integration proven | BLOCKED | Depends on G-01 + G-06 |
+| G-08 | ACP-99 registration proven | BLOCKED | Depends on G-01 + G-06 + ICM relayer |
+| G-09 | Validator churn proven | BLOCKED | Depends on G-06 |
+| G-10 | Validator failure + recovery proven | BLOCKED | Depends on G-06 |
+| G-11 | Multi-node consistency verified | BLOCKED | Depends on G-06 (need ≥2 validators) |
 
 ### ICM / WARP
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-12 | ICM/Warp proven | 🔵 PENDING | Real Warp messages delivered |
-| G-13 | ICM retry/dedup proven | 🔵 PENDING | ICM-02, ICM-03 results TBD |
-| G-14 | ICM failure recovery proven | 🔵 PENDING | F-09 results TBD |
+| G-12 | ICM/Warp proven | BLOCKED | Depends on G-01 + G-06 + ICM relayer running. Deploy ICM relayer: see Teleporter relayer docs |
+| G-13 | ICM retry/dedup proven | BLOCKED | Depends on G-12 |
+| G-14 | ICM failure recovery proven | BLOCKED | Depends on G-12 |
 
 ### KEEPER
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-15 | Keeper proven on testnet | 🔵 PENDING | Live syncValidator() TX TBD |
-| G-16 | Keeper restart recovery proven | 🔵 PENDING | F-03 results TBD |
-| G-17 | Keeper authority bounded | 🔵 PENDING | SEC test: keeper cannot steal funds |
+| G-15 | Keeper proven on testnet | BLOCKED | Depends on G-01 + G-08. Deploy: `systemctl start primewave-testnet-keeper` on infra-01 |
+| G-16 | Keeper restart recovery proven | BLOCKED | Depends on G-15 |
+| G-17 | Keeper authority bounded (cannot steal) | BLOCKED | Depends on G-15. Test: run `PW-C15-SECURITY-REVIEW.md §6` against live keeper |
 
 ### PUBLIC RPC
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-18 | Public RPC proven | 🔵 PENDING | All 10 standard methods respond |
-| G-19 | RPC security proven | 🔵 PENDING | Admin methods blocked; invalid requests fail safely |
-| G-20 | RPC load test completed | 🔵 PENDING | PW-C15-RPC-LOAD-TEST.md results |
-| G-21 | Rate limiting verified | 🔵 PENDING | Threshold recorded |
+| G-18 | Public RPC proven | BLOCKED | Missing: cloud VPS + nginx + TLS. Provision rpc-01, copy `deploy/testnet/nginx/rpc.conf`, issue Let's Encrypt cert |
+| G-19 | RPC security proven (admin methods blocked) | BLOCKED | Depends on G-18. Run admin method scan from `PW-C15-RPC-LOAD-TEST.md §2.2` |
+| G-20 | RPC load test completed | BLOCKED | Depends on G-18. Run k6 script from `PW-C15-RPC-LOAD-TEST.md §3` |
+| G-21 | Rate limiting verified | BLOCKED | Depends on G-18 |
 
 ### PWCSCAN + INDEXER
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-22 | PWCScan proven on testnet | 🔵 PENDING | All 15 routes verified; 🧪 Testnet badge; Chain ID 77 |
-| G-23 | Indexer proven | 🔵 PENDING | 57/57 Jest + live sync verified |
-| G-24 | Indexer restart recovery proven | 🔵 PENDING | F-04 results TBD |
-| G-25 | Reindex proven | 🔵 PENDING | From-block-0 reindex verified |
+| G-22 | PWCScan proven on testnet | BLOCKED | Depends on G-18 (RPC) + G-23 (indexer). Deploy: `systemctl start primewave-testnet-pwcscan` on infra-01. Verify 🧪 Testnet badge + Chain ID 77 |
+| G-23 | Indexer proven | BLOCKED | Depends on G-01. PostgreSQL available at Replit `PGHOST=helium` or deploy PostgreSQL on infra-01. Start: `systemctl start primewave-testnet-indexer` |
+| G-24 | Indexer restart recovery proven | BLOCKED | Depends on G-23 |
+| G-25 | Reindex proven | BLOCKED | Depends on G-23 |
 
 ### DATABASE
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-26 | PostgreSQL recovery proven | 🔵 PENDING | Backup → destroy → restore drill results |
-| G-27 | RPO measured | 🔵 PENDING | ≤ 1 hour |
-| G-28 | RTO measured | 🔵 PENDING | ≤ 30 minutes |
+| G-26 | PostgreSQL recovery proven | BLOCKED | PostgreSQL IS available (Replit PGHOST=helium) but disaster recovery drill requires testnet data. Depends on G-23 being populated |
+| G-27 | RPO measured | BLOCKED | Depends on G-26 |
+| G-28 | RTO measured | BLOCKED | Depends on G-26 |
 
 ### PROTOCOL ECONOMICS
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-29 | Fee distribution proven | 🔵 PENDING | 70/20/10 verified on real txs; zero conservation violations |
-| G-30 | RewardVault proven | 🔵 PENDING | 15M balance; ≤3M/yr rate; no minting |
-| G-31 | Staking proven | 🔵 PENDING | Stake/claim cycle completed on testnet |
-| G-32 | 14-day unbond verified | DEFERRED | Real-time 14d wait required; simulation documented |
-
-> **G-32 DEFERRED NOTE:** A full 14-day real-time unbonding cycle cannot be completed
-> within the current sprint. An accelerated time-warp simulation was performed on an
-> isolated test chain and documented in PW-C15-TESTNET-BATTLE-TEST.md §8.
-> Actual 14-day observation on the live testnet must complete before mainnet launch.
-> C16 may begin with G-32 DEFERRED if leadership explicitly accepts this risk.
+| G-29 | Fee distribution proven (70/20/10 on-chain) | BLOCKED | Depends on G-01 + deployed contracts |
+| G-30 | RewardVault proven (15M PW, ≤3M/yr rate, no mint) | BLOCKED | Depends on G-01 + deployed contracts |
+| G-31 | Staking proven | BLOCKED | Depends on G-01 |
+| G-32 | 14-day unbond verified (real-time) | DEFERRED | Requires 14 calendar days on live testnet. Acceptable to begin C16 if G-32 soak is in progress and leadership accepts. Accelerated simulation documented in `PW-C15-TESTNET-BATTLE-TEST.md §8`. |
 
 ### GOVERNANCE
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-33 | Governance proven on testnet | 🔵 PENDING | GOV-01..GOV-09 results |
-| G-34 | Emergency pause/unpause proven | 🔵 PENDING | Live 3-of-5 test |
-| G-35 | Timelock 48h proven | 🔵 PENDING | Real 48h wait or acceptable simulation |
+| G-33 | Governance proven on testnet | BLOCKED | Depends on G-01 + deployed contracts |
+| G-34 | Emergency pause/unpause proven | BLOCKED | Depends on G-33 |
+| G-35 | Timelock 48h proven | BLOCKED | Depends on G-33. Real 48h wait OR leadership-accepted simulation. |
 
 ### MONITORING + OPERATIONS
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-36 | Monitoring proven | 🔵 PENDING | Prometheus scraping; controlled alert fired |
-| G-37 | Alert recovery cycle proven | 🔵 PENDING | Alert fires → resolves |
-| G-38 | Backup/restore proven | 🔵 PENDING | Drill completed |
-| G-39 | DNS/TLS verified | 🔵 PENDING | HTTPS on all public endpoints |
+| G-36 | Monitoring proven | BLOCKED | Depends on G-06 + running infrastructure. Deploy: `cp deploy/testnet/prometheus/prometheus.yml /etc/prometheus/`, start Prometheus + Grafana on monitoring-01 |
+| G-37 | Alert recovery cycle proven | BLOCKED | Depends on G-36 |
+| G-38 | Backup/restore proven | BLOCKED | Depends on G-23 (indexer with real data). Scripts ready: `backup-testnet-db.sh`, `restore-testnet-db.sh` |
+| G-39 | DNS/TLS verified | BLOCKED | Missing: DNS provider access + cloud server. Register A records for `rpc.testnet.*` and `explorer.testnet.*`, issue Let's Encrypt certs |
 
 ### PERFORMANCE + STABILITY
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-40 | Performance measured | 🔵 PENDING | PW-C15-PERFORMANCE-REPORT.md results |
-| G-41 | Soak test completed or explicitly accepted | 🔵 PENDING | PW-C15-SOAK-TEST.md: ≥24h or shortfall documented |
-| G-42 | All failure recovery scenarios passed | 🔵 PENDING | F-01..F-12 all PASS |
+| G-40 | Performance measured | BLOCKED | Depends on G-01 + G-06 |
+| G-41 | Soak test ≥24h or explicitly accepted | BLOCKED | Depends on live testnet. Cannot soak a non-existent network |
+| G-42 | All failure recovery scenarios passed | BLOCKED | Depends on G-01 + G-06 |
 
 ### SECURITY
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-43 | Security audit clean | 🔵 PENDING | PW-C15-SECURITY-REVIEW.md summary |
-| G-44 | No Critical findings outstanding | 🔵 PENDING | Findings log TBD |
-| G-45 | No High findings outstanding | 🔵 PENDING | All High findings remediated |
+| G-43 | Security audit clean | BLOCKED | Depends on G-01 + deployed contracts |
+| G-44 | No Critical findings outstanding | BLOCKED | Depends on G-43 |
+| G-45 | No High findings outstanding | BLOCKED | Depends on G-43 |
 
 ### MAINNET PREPARATION
 
-| # | Item | Status | Evidence |
+| # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-46 | Mainnet deployment rehearsal complete | 🔵 PENDING | Rehearsal steps 1-11 all PASS |
-| G-47 | Mainnet Chain ID still intentionally TBD or explicitly approved | ✅ PASS | TBD — all 2-digit taken; 3-digit candidates listed |
-| G-48 | Mainnet key ceremony procedure prepared | ✅ PASS | PW-C15-MAINNET-READINESS.md §3 |
-| G-49 | No mainnet private keys generated | ✅ PASS | Confirmed — none generated in C14 or C15 |
+| G-46 | Mainnet deployment rehearsal complete | BLOCKED | Depends on G-01 (need live testnet to rehearse on) |
+| G-47 | Mainnet Chain ID TBD or explicitly approved | ✅ PASS | TBD confirmed. All 1–99 taken per chainid.network 2026-08-15. Candidates: 149, 209, 229, 235, 241 |
+| G-48 | Mainnet key ceremony procedure prepared | ✅ PASS | `PW-C15-MAINNET-READINESS.md §3` complete |
+| G-49 | No mainnet private keys generated | ✅ PASS | Confirmed — only testnet-deployer generated |
 | G-50 | PWC-20 not implemented (PROPOSED only) | ✅ PASS | Not touched in C14 or C15 |
 
-### REGRESSION
+### REGRESSION (IN-REPLIT VERIFIED 2026-08-15)
 
 | # | Item | Status | Evidence |
 |---|---|---|---|
-| G-51 | Forge 792/792 | ✅ PASS | C15 regression run 2026-08-15 |
-| G-52 | Indexer Jest 57/57 | ✅ PASS | C15 regression run 2026-08-15 |
-| G-53 | Keeper Jest 20/20 | ✅ PASS | C15 regression run 2026-08-15 |
+| G-51 | Forge 792/792 | ✅ PASS | Run 2026-08-15 |
+| G-52 | Indexer Jest 57/57 | ✅ PASS | Run 2026-08-15 |
+| G-53 | Keeper Jest 20/20 | ✅ PASS | Run 2026-08-15 |
+
+### ADDITIONAL IN-REPLIT VERIFIED ITEMS
+
+| # | Item | Status | Evidence |
+|---|---|---|---|
+| G-54 | Genesis static invariants (Chain ID 77, 100M PW, NativeMinter disabled) | ✅ PASS | Python validation 2026-08-15 |
+| G-55 | deploy-contracts.sh chain ID guard rejects wrong chain | ✅ PASS | Tested against dev chain 73571 — correctly rejected |
+| G-56 | Fuji P-Chain API reachable from deployment environment | ✅ PASS | api.avax-test.network height 292884 confirmed |
+| G-57 | testnet-deployer key generated (public key inventoried) | ✅ PASS | C-Chain: 0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60 |
+| G-58 | testnet-deployer Fuji balance adequate (≥2 AVAX P-Chain) | BLOCKED | Current balance: 0 AVAX. Fund via faucet.avax.network → export C→P |
+| G-59 | 6 genesis placeholders identified and documented | ✅ PASS | `__REPLACE_TESTNET_DEPLOYER_ADDRESS__` and 5 others — see `config/testnet/genesis-template.json` |
+| G-60 | All C14 testnet config files consistent (Chain ID 77) | ✅ PASS | Verified 2026-08-15 via grep scan |
 
 ---
 
 ## GATE SUMMARY
 
-| Category | Total Items | PASS | DEFERRED | PENDING LIVE |
-|---|---|---|---|---|
-| Testnet Foundation | 5 | 0 | 0 | 5 |
-| Validators | 6 | 0 | 0 | 6 |
-| ICM/Warp | 3 | 0 | 0 | 3 |
-| Keeper | 3 | 0 | 0 | 3 |
-| RPC | 4 | 0 | 0 | 4 |
-| PWCScan + Indexer | 4 | 0 | 0 | 4 |
-| Database | 3 | 0 | 0 | 3 |
-| Protocol Economics | 4 | 0 | 1 | 3 |
-| Governance | 3 | 0 | 0 | 3 |
-| Monitoring + Operations | 4 | 0 | 0 | 4 |
-| Performance + Stability | 3 | 0 | 0 | 3 |
-| Security | 3 | 0 | 0 | 3 |
-| Mainnet Preparation | 5 | 3 | 0 | 2 |
-| Regression | 3 | 3 | 0 | 0 |
-| **TOTAL** | **53** | **6** | **1** | **46** |
+| Category | Total Items | ✅ PASS | BLOCKED | DEFERRED | ❌ FAIL |
+|---|---|---|---|---|---|
+| Testnet Foundation | 5 | 0 | 5 | 0 | 0 |
+| Validators | 6 | 0 | 6 | 0 | 0 |
+| ICM/Warp | 3 | 0 | 3 | 0 | 0 |
+| Keeper | 3 | 0 | 3 | 0 | 0 |
+| RPC | 4 | 0 | 4 | 0 | 0 |
+| PWCScan + Indexer | 4 | 0 | 4 | 0 | 0 |
+| Database | 3 | 0 | 3 | 0 | 0 |
+| Protocol Economics | 4 | 0 | 3 | 1 | 0 |
+| Governance | 3 | 0 | 3 | 0 | 0 |
+| Monitoring + Operations | 4 | 0 | 4 | 0 | 0 |
+| Performance + Stability | 3 | 0 | 3 | 0 | 0 |
+| Security | 3 | 0 | 3 | 0 | 0 |
+| Mainnet Preparation | 5 | 3 | 1 | 0 | 0 |
+| Regression | 3 | 3 | 0 | 0 | 0 |
+| In-Replit Verified | 7 | 5 | 2 | 0 | 0 |
+| **TOTAL** | **64** | **11** | **51** | **1** | **0** |
 
-**C16 gate status: BLOCKED — 46 items require live testnet execution**
+**C16 gate status: BLOCKED**
 
-All 46 pending items require external infrastructure (Fuji P-Chain, cloud servers,
-validators, DNS, TLS). All code, procedures, scripts, and documentation are
-complete and ready. Gate opens when infrastructure is provisioned and live testnet
-battle testing completes.
+**PRIMARY BLOCKER:** External cloud infrastructure not provisioned.
 
----
+**Minimum required to unblock:**
+1. Fund `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw` with ≥ 2 AVAX via faucet.avax.network
+2. Provision ≥ 3 cloud VPS servers (minimum viable testnet)
+3. Register DNS records for testnet subdomains
+4. Issue TLS certificates (Let's Encrypt)
+5. Execute `avalanche blockchain deploy primewave-testnet --fuji --key testnet-deployer`
+6. Fill genesis placeholders + generate genesis.json
+7. Deploy validators + contracts + keeper + indexer + PWCScan
+8. Execute C15 test matrix
 
-## GATE OPENING PROCEDURE
-
-When all items are resolved:
-
-1. Fill in every TBD field in this document with actual values
-2. Confirm all 53 items are PASS (or explicitly DEFERRED with leadership sign-off)
-3. Run final regression: Forge 792/792, Indexer 57/57, Keeper 20/20
-4. Leadership signs off on any DEFERREDs (currently: G-32 14-day unbond)
-5. Document is countersigned by Ceremony Lead and Security Auditor
-6. C16 may begin
+See `docs/PW-C15-INFRA-PROVISIONING-GUIDE.md` for exact commands.
 
 ---
 
-## STOP CONDITIONS (BLOCKING C16)
+## STOP CONDITIONS (PERMANENTLY BLOCKING C16)
 
-Any of the following permanently blocks C16 until resolved:
-
-| Condition | Reason |
+| Condition | Current Status |
 |---|---|
-| Mainnet private keys generated prematurely | Security — key ceremony belongs to C16 |
-| Mainnet Chain ID changed without approval | Architecture integrity |
-| Testnet Chain ID 77 inconsistent | Network identity broken |
-| NativeMinter enabled | Supply invariant broken |
-| Fixed 100M supply broken | Tokenomics violation |
-| RewardVault minting | Extra emission beyond 15M |
-| Fee split broken | Economic protocol violation |
-| ValidatorManager authority bypassed | Consensus integrity |
-| Nodes diverge persistently | Chain consistency broken |
-| Indexer loses chain data | Data integrity broken |
-| PWCScan fabricates data | Explorer integrity broken |
-| Critical or High security finding outstanding | Security — must be remediated |
-| Genesis not reproducible | Deployment procedure broken |
+| Mainnet private keys generated | ✅ NONE (only testnet-deployer generated) |
+| Mainnet Chain ID changed without approval | ✅ TBD — unchanged |
+| Testnet Chain ID 77 inconsistent | ✅ Consistent across all files |
+| NativeMinter enabled | ✅ Disabled (genesis validated) |
+| Fixed 100M supply broken | ✅ Confirmed (genesis validated) |
+| RewardVault can mint | ✅ No mint path (NativeMinter disabled) |
+| Fee split broken | ✅ 70/20/10 confirmed in all configs |
+| ValidatorManager authority bypassed | ✅ Not bypassed in code |
+| Critical or High security finding outstanding | ✅ None found in code (live audit pending) |
+| Genesis not reproducible | BLOCKED — live ceremony pending |
+| Production credentials in testnet | ✅ None committed |

@@ -1,8 +1,8 @@
 # PW-C15 — FINAL REPORT
 
 **Sprint:** PW-C15 — Testnet Battle Test + Mainnet Readiness
-**Status:** IN PROGRESS — External infrastructure required for live execution
-**Date:** 2026-08-15
+**Status:** IN PROGRESS — External infrastructure audit complete; live execution blocked
+**Date:** 2026-08-15 (updated: PW-C15-External audit)
 **Author:** PrimeWave Engineering
 
 ---
@@ -13,33 +13,46 @@ C15 encompasses two objectives:
 - **Objective A:** Deploy and operate the real PrimeWave Testnet (Chain ID 77, Fuji P-Chain)
 - **Objective B:** Battle-test the complete system and determine mainnet readiness
 
-**What C15 completed in-Replit:**
-- All 12 required operational and readiness documentation files
-- Complete C15 test matrix (C15-01 through C15-45)
-- Authoritative mainnet Chain ID collision check (all 1–99 taken; candidates listed)
-- Mainnet key ceremony procedure
-- C16 entry gate with 53 checklist items
+**What C15 completed (in-Replit + PW-C15-External audit):**
+- All 12 required operational and readiness documentation files + test matrix + provisioning guide
+- Full infrastructure dependency audit (14 categories A–N)
+- testnet-deployer key generated: C-Chain `0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60` / P-Chain `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw`
+- Fuji P-Chain API confirmed reachable: height 292884, networkID 5
+- Genesis static invariants all PASS: Chain ID 77, 100M PW, NativeMinter disabled
+- deploy-contracts.sh chain ID guard tested and PASS (correctly rejects dev chain 73571)
+- deploy-contracts.sh chain ID guard tested and PASS
+- C16 entry gate updated with accurate BLOCKED/PASS statuses (64 items; 11 PASS, 51 BLOCKED, 1 DEFERRED)
+- Exact infrastructure provisioning commands written to `PW-C15-INFRA-PROVISIONING-GUIDE.md`
+- Mainnet Chain ID candidates confirmed: all 1–99 taken; candidates 149, 209, 229, 235, 241
 - Full regression: Forge 792/792, Indexer 57/57, Keeper 20/20
-- Chain ID 77 consistency verified across all config, scripts, and docs
 
-**What requires external infrastructure:**
-All live testnet items: Fuji P-Chain deployment, cloud servers, validators, DNS, TLS,
-real ICM/Warp, live RPC, live indexer, live PWCScan, and all battle test results.
+**What requires external infrastructure (PRIMARY BLOCKER):**
+All live testnet items. Primary dependencies:
+1. Fund `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw` with ≥ 2 AVAX (faucet.avax.network)
+2. Provision cloud VPS servers (≥3 validators minimum)
+3. Register DNS records for testnet subdomains
+4. Issue TLS certificates (Let's Encrypt)
+5. Deploy AvalancheGo validators, contracts, keeper, indexer, PWCScan
 
 ---
 
 ## 1. TESTNET STATUS
 
+**PUBLIC TESTNET DEPLOYMENT BLOCKED BY EXTERNAL INFRASTRUCTURE**
+
 | Field | Value |
 |---|---|
 | Chain ID (EVM) | 77 |
 | Chain ID (hex) | 0x4d |
-| Blockchain ID | TBD — Fuji P-Chain (requires external infra) |
-| Subnet ID | TBD — Fuji P-Chain (requires external infra) |
-| Genesis hash | TBD — requires ceremony addresses |
-| Genesis file hash (SHA-256) | TBD |
-| Testnet network label | "🧪 Testnet" (configured in PWCScan env) |
-| testnet-health-check.sh | Checks `eth_chainId == 0x4d`, `net_version == 77` |
+| Blockchain ID | BLOCKED — requires Fuji P-Chain CreateChainTx |
+| Subnet ID | BLOCKED — requires Fuji P-Chain CreateSubnetTx |
+| Genesis hash | BLOCKED — 6 address placeholders unfilled |
+| testnet-deployer C-Chain address | `0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60` |
+| testnet-deployer P-Chain address | `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw` |
+| testnet-deployer balance | 0 AVAX — fund via faucet.avax.network |
+| Fuji P-Chain API | REACHABLE — height 292884, networkID 5 |
+| Testnet network label | "🧪 Testnet" configured in PWCScan env |
+| testnet-health-check.sh | Ready — checks `eth_chainId == 0x4d`, `net_version == 77` |
 
 ---
 
