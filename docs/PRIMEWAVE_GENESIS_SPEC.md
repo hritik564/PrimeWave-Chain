@@ -291,3 +291,60 @@ Before mainnet genesis:
 ---
 
 *This document is a PW-C00 design specification. No production deployment has occurred.*
+
+---
+
+## 8. Funding Procedure (C11)
+
+The RewardVault must be funded with exactly **15,000,000 PW** (15,000,000 × 10¹⁸ wei) immediately after contract deployment.
+
+### 8.1 Address Placeholders (pre-ceremony)
+
+These addresses are NOT yet generated. They will be produced during the Production Deployment Ceremony:
+
+| Contract | Address |
+|---|---|
+| `FeeDistributor` | TBD — ceremony output |
+| `ValidatorFeeVault` | TBD — ceremony output |
+| `DevTreasury` | TBD — ceremony output |
+| `RewardVault` | TBD — ceremony output |
+| `PrimeWaveValidatorRegistry` | TBD — ceremony output |
+| `EmergencyMultisig` | TBD — ceremony output |
+| `PrimeWaveTimelock` | TBD — ceremony output |
+| Deployer (burn after ceremony) | TBD — ceremony output |
+
+### 8.2 Funding Transaction
+
+```bash
+# Performed during Step 14 of Production Deployment Ceremony
+# via DeployProduction.s.sol (step 14 is embedded in the script)
+
+forge script contracts/script/DeployProduction.s.sol:DeployProduction \
+  --sig "fundRewardVault()" \
+  --rpc-url $CHAIN_RPC_URL \
+  --broadcast \
+  --private-key $DEPLOYER_KEY
+
+# Hard invariant in script:
+# require(totalFunded == 15_000_000 * 10**18, "FUNDING INVARIANT FAILED");
+```
+
+### 8.3 Verification
+
+```bash
+bash scripts/validate-production-genesis.sh $CHAIN_RPC_URL 73571
+
+# Section 5 of the script checks:
+# - rewardVaultBalance >= 15_000_000 * 10**18
+```
+
+### 8.4 Why Exactly 15M
+
+See `docs/PW-C00-FINAL-GATE.md` and `docs/PRIMEWAVE_TOKENOMICS.md`.
+- Total supply: 100M PW (fixed, immutable)
+- Reward allocation: 15M PW (5 years at 3M PW/year initial rate)
+- This is a one-time transfer from the deployer genesis allocation — not a mint
+
+---
+
+*Updated C11: Funding procedure, address placeholders, and verification script added.*

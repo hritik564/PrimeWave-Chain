@@ -346,3 +346,49 @@ Each of the 15 initial validators requires:
 ---
 
 *This document defines the security procedure. No production keys have been generated during PW-C00/PW-C01. Execution of this procedure begins only after all prerequisites in `PW-C00-FINAL-GATE.md` are satisfied and explicit approval is received.*
+
+---
+
+## 13. EMS Signer Rotation Procedure (C11)
+
+EmergencyMultisig signers are **immutable** after construction. There is no `updateSigner()` function. Rotation requires deploying a new EMS and transferring the `pauseController` role on all governed contracts.
+
+### 13.1 When Rotation is Needed
+
+- Compromise of an EMS signer key (confirmed or suspected)
+- Scheduled rotation (annual recommended)
+- Signer departure from the team
+
+### 13.2 Rotation Steps
+
+**Step 1:** Prepare new signer set (5 new hardware wallet addresses).
+
+**Step 2:** Deploy new `EmergencyMultisig` contract with updated signers:
+```bash
+forge script contracts/script/DeployNewEMS.s.sol \
+  --rpc-url $CHAIN_RPC_URL \
+  --broadcast \
+  --private-key $DEPLOYER_KEY
+```
+
+**Step 3:** Via Protocol Admin + 48h Timelock, call `setPauseController(newEmsAddress)` on each governed contract:
+- `FeeDistributor`
+- `ValidatorFeeVault`
+- `RewardVault`
+- `PrimeWaveTimelock` (if applicable)
+
+**Step 4:** Wait 48h for timelock delay to expire. Execute the queued transactions.
+
+**Step 5:** Verify old EMS no longer has `pauseController` on any contract.
+
+**Step 6:** Old EMS signers destroy or archive (mark inactive) their key material per Section 7.
+
+### 13.3 Security Notes
+
+- This rotation requires NO new governance power — it goes through the existing Protocol Admin + 48h Timelock path
+- The new EMS must have 5 signers and THRESHOLD = 3 (compile-time constant — enforced by `EmergencyMultisig` constructor)
+- Document the new signer addresses in `docs/PRIMEWAVE_INFRASTRUCTURE.md`
+
+---
+
+*Updated C11: EMS rotation procedure added (resolves SEC-L-01 from C10 audit).*

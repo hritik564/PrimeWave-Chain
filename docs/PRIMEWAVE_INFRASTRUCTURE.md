@@ -271,3 +271,51 @@ Mainnet launch REQUIRES:
 ---
 
 *This document is a PW-C00 design specification. No production deployment has occurred.*
+
+---
+
+## 10. Validator Keeper Service (C11)
+
+### 10.1 Purpose
+
+The Validator Keeper is a TypeScript off-chain service that monitors the `PrimeWaveValidatorRegistry` and issues `syncValidator()` / `updateWeight()` transactions whenever validator state on-chain requires synchronization.
+
+The keeper requires **no privileged role** — `syncValidator()` and `updateWeight()` are permissionless functions on the registry.
+
+### 10.2 Deployment
+
+**Runtime:** Node.js 22+, single process per chain  
+**Location:** `keeper/` directory (compiled TypeScript → CommonJS)  
+**State:** JSON file at `$STATE_FILE_PATH` (atomic write with tmp+rename)  
+**Health:** HTTP `GET /health` at `$HEALTH_PORT` (default 8080)  
+**Metrics:** Prometheus `GET /metrics` at `$HEALTH_PORT/metrics`
+
+```bash
+cd keeper
+npm install
+npm run build
+KEEPER_RPC_URL=http://localhost:9650/ext/bc/<chain-id>/rpc \
+KEEPER_CHAIN_ID=73571 \
+KEEPER_REGISTRY_ADDRESS=<registry-address> \
+KEEPER_VALIDATOR_MANAGER=<vm-address> \
+KEEPER_PRIVATE_KEY=<keeper-eoa-key> \
+npm start
+```
+
+See `docs/PW-C11-KEEPER-SPEC.md` for the full configuration reference, retry policy, and operational runbook.
+
+### 10.3 Network Topology Update (C11)
+
+| Node Role | Count | Purpose |
+|---|---|---|
+| Validator nodes | 15 | Block production (private network) |
+| Public RPC nodes | 3+ | External access (round-robin LB) |
+| Keeper host | 1 | Validator sync service (internal) |
+| Monitoring host | 1 | Prometheus + Grafana + Alertmanager |
+| Archive node | 1 | Historical queries + indexer |
+
+Keeper is deployed on a **separate host from validators** with internal network access to the RPC port of one validator or the public RPC nodes.
+
+---
+
+*Updated C11: Keeper topology and deployment section added.*

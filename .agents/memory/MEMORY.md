@@ -9,4 +9,5 @@
 - [PrimeWave Chain PW-C08](primewave-pw-c08.md) — C08 COMPLETE; 535/535 tests; via_ir block.timestamp caching, EMS expectRevert pattern, rate budget, claim revert semantics
 - [PrimeWave Chain PW-C09](primewave-pw-c09.md) — C09 COMPLETE; StakingManager PoS; 574/574 tests; zero-reward/prank/INITIAL_RATE/IWarpMessenger pitfalls
 - [PrimeWave Chain PW-C10](primewave-pw-c10.md) — C10 COMPLETE; 745/745 tests; forceInitiateValidatorRemoval, vault.claim prank, via_ir ts caching, timelock-as-vault-admin
+- [PrimeWave Chain PW-C11](primewave-pw-c11.md) — C11 COMPLETE; 792/792 Forge + 20/20 keeper Jest; DI pattern for keeper tests; address prediction; ValidateGenesis view fix
 - [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source

@@ -198,3 +198,26 @@ The following are NOT in scope for Phase 1 but are acknowledged:
 ---
 
 *This document is a PW-C00 Pre-C01 Gate specification. No production deployment has occurred.*
+
+---
+
+## 8. EMS Signer Rotation (C11)
+
+The `EmergencyMultisig` contract's signer set is **immutable** after construction. There is no `updateSigner()` on-chain function.
+
+### Rotation Mechanism
+
+To rotate EMS signers:
+1. Deploy a new `EmergencyMultisig` with the updated signer set
+2. Via Protocol Admin + 48h Timelock: update `pauseController` on each governed contract to point to the new EMS
+3. Old EMS becomes inactive (no contract points to it for privileged actions)
+
+### Why This Requires No New Governance Power
+
+The `setPauseController` calls go through the existing Protocol Admin + PrimeWaveTimelock (48h delay). This is the same governance path used for all parameter updates. The rotation does not grant any new authority beyond what the governance system already provides.
+
+This clarifies and resolves SEC-L-01 from C10 audit (EMS rotation procedure).
+
+---
+
+*Updated C11: EMS signer rotation governance path documented.*

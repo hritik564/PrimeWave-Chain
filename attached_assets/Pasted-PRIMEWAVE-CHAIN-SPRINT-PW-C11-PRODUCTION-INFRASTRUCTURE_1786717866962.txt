@@ -1,0 +1,1209 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C11 — PRODUCTION INFRASTRUCTURE + VALIDATOR KEEPER + GENESIS FINALIZATION
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 through PW-C10 are LOCKED.
+
+Current verified baseline:
+
+C00 — Architecture / Decisions
+C01 — Avalanche L1 Foundation
+C02 — Native PW / Gas / Fee Architecture
+C03 — FeeDistributor
+C04 — ValidatorFeeVault
+C05 — ValidatorManager Integration
+C06 — RewardVault
+C07 — Governance
+C08 — Integrated Architecture / Security
+C09 — Phase-2 PoS + PrimeWaveStakingManager
+C10 — PoS Hardening + Phase Transition + Economic/Security Audit
+
+C10 final gate:
+745/745 PASS
+
+C00-C09 regression:
+586/586 PASS
+
+C10 security verdict:
+0 Critical
+0 High
+2 Medium accepted-as-designed
+1 Low deferred to C11
+
+============================================================
+0. C11 OBJECTIVE
+============================================================
+
+C11 is the PRODUCTION INFRASTRUCTURE + OPERATIONS + GENESIS
+FINALIZATION sprint.
+
+The objective is to convert the validated PrimeWave Chain protocol
+into a deterministic, reproducible production deployment architecture.
+
+C11 covers:
+
+1. Validator infrastructure
+2. Validator synchronization keeper
+3. Node architecture
+4. RPC architecture
+5. Monitoring
+6. Logging
+7. Health checks
+8. Alerting
+9. Backup/recovery procedures
+10. Production deployment scripts
+11. Genesis finalization
+12. RewardVault 15M PW funding procedure
+13. Governance key/signing operational interfaces
+14. Emergency Multisig signer rotation
+15. Production configuration validation
+16. Deployment rehearsal tooling
+
+C11 MUST NOT:
+
+- launch mainnet
+- generate real production private keys
+- expose private keys
+- deploy to a public production network
+- implement PWCScan
+- implement PWSwap
+- implement PrimeWave Dex
+- implement MLM software
+- change locked tokenomics
+- change the PoS economic model
+- introduce new governance powers
+
+This is ONE consolidated sprint.
+
+============================================================
+1. READ THE EXISTING DOCUMENTATION FIRST
+============================================================
+
+Read the actual repository documentation and source code before
+changing anything.
+
+At minimum:
+
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+docs/PRIMEWAVE_TOKENOMICS.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_REWARD_ECONOMICS.md
+docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_GENESIS_SPEC.md
+docs/PRIMEWAVE_DEPENDENCY_MAP.md
+docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+
+Also read:
+
+docs/PW-C08-PRODUCTION-CONFIG-CHECKLIST.md
+
+C09:
+docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md
+docs/PW-C09-STAKING-SPEC.md
+docs/PW-C09-FINAL-REPORT.md
+
+C10:
+docs/PW-C10-SECURITY-AUDIT.md
+docs/PW-C10-ECONOMIC-AUDIT.md
+docs/PW-C10-PHASE-TRANSITION-AUDIT.md
+docs/PW-C10-FINAL-REPORT.md
+
+Inspect all relevant existing scripts and configuration files.
+
+Do NOT assume documentation is correct if the actual code contradicts it.
+
+============================================================
+2. HARD LOCKED PROTOCOL PARAMETERS
+============================================================
+
+DO NOT CHANGE:
+
+Maximum PW supply:
+100,000,000 PW
+
+RewardVault reserve:
+15,000,000 PW
+
+Maximum annual staking emissions:
+3,000,000 PW/year
+
+Unbonding:
+14 days
+1,209,600 seconds
+
+Transaction fee distribution:
+
+70% → ValidatorFeeVault
+20% → DevTreasury
+10% → Burn / inaccessible destination
+
+Emergency Multisig:
+3-of-5
+
+Timelock:
+48 hours
+
+No native PW minting.
+
+ValidatorManager remains the authoritative validator source.
+
+RewardVault remains the sole staking reward source.
+
+============================================================
+3. PRODUCTION ENVIRONMENT MODEL
+============================================================
+
+Design a production-grade topology.
+
+At minimum model:
+
+                    ┌──────────────────┐
+                    │   P-Chain        │
+                    └────────┬─────────┘
+                             │
+                         ACP-99/Warp
+                             │
+                    ┌────────▼─────────┐
+                    │ ICM Relayer      │
+                    └────────┬─────────┘
+                             │
+                    ┌────────▼─────────┐
+                    │ Validator Nodes  │
+                    └────────┬─────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+         RPC Node(s)    Indexer Node     Keeper
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                       PWCScan later
+                       (C13 — NOT C11)
+
+Do not invent exact production server counts unless justified.
+
+Provide recommended minimum and recommended production topology.
+
+Separate:
+
+- validator nodes
+- public RPC
+- indexer/data nodes
+- keeper
+- monitoring
+- management/admin access
+
+Do not expose validator nodes directly to the public internet unnecessarily.
+
+============================================================
+4. VALIDATOR NODE REQUIREMENTS
+============================================================
+
+Determine and document:
+
+- CPU
+- RAM
+- disk
+- disk type
+- network bandwidth
+- operating system assumptions
+- AvalancheGo version
+- required chain configuration
+- database/data directory
+- log directory
+- snapshot strategy
+- restart behavior
+- upgrade procedure
+- health checks
+
+Use the currently locked AvalancheGo version.
+
+Do not silently upgrade dependencies.
+
+If a newer version is available, document it separately as a future
+upgrade consideration.
+
+Do NOT replace the locked dependency without approval.
+
+============================================================
+5. VALIDATOR OPERATING PROCEDURE
+============================================================
+
+Create a deterministic validator lifecycle procedure:
+
+1. Prepare host
+2. Install dependencies
+3. Install AvalancheGo
+4. Install PrimeWave chain configuration
+5. Configure node
+6. Configure validator identity
+7. Start node
+8. Verify health
+9. Verify P/X/C-chain connectivity
+10. Verify PrimeWave blockchain
+11. Verify validator registration
+12. Verify ACP-99 state
+13. Verify PrimeWaveValidatorRegistry state
+14. Verify ValidatorFeeVault state
+15. Enable monitoring
+
+Document:
+
+- startup
+- shutdown
+- restart
+- emergency stop
+- disk recovery
+- node replacement
+- validator replacement
+
+============================================================
+6. NO PRODUCTION KEYS
+============================================================
+
+C11 MUST NOT generate or expose real production keys.
+
+Use placeholders and test keys only.
+
+All production key generation must follow:
+
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+
+Document:
+
+- key types
+- who generates them
+- hardware requirements
+- ceremony
+- backups
+- geographic separation
+- recovery
+- rotation
+- destruction
+
+Never write private keys into:
+
+- Git
+- source files
+- docs
+- logs
+- CI output
+- deployment artifacts
+
+Add secret scanning where practical.
+
+============================================================
+7. VALIDATOR SYNCHRONIZATION KEEPER
+============================================================
+
+This is the most important C09 production gap.
+
+Current architecture:
+
+P-Chain
+→ Warp
+→ ICM Relayer
+→ PoAManager
+→ PrimeWaveValidatorRegistry
+→ ValidatorFeeVault
+
+The missing operational trigger is:
+
+PrimeWaveValidatorRegistry.syncValidator(validationId)
+
+Implement a lightweight production-oriented keeper service.
+
+The keeper must:
+
+- observe authoritative validator state/events
+- identify validators requiring synchronization
+- call permissionless syncValidator()
+- retry failed synchronization
+- avoid duplicate harmful operations
+- maintain state
+- expose health status
+- emit operational logs
+- alert on persistent failure
+
+CRITICAL:
+
+The keeper is NOT a validator authority.
+
+The keeper MUST NOT:
+
+- create validators
+- invent validator IDs
+- assign arbitrary weight
+- deactivate arbitrary validators
+- change validator ownership
+- alter RewardVault
+- alter FeeDistributor
+- alter governance
+- mint PW
+
+The smart contract remains the authority.
+
+The keeper merely triggers permissionless synchronization.
+
+============================================================
+8. KEEPER DESIGN
+============================================================
+
+Prefer a simple architecture.
+
+Do not build an unnecessarily complex distributed service.
+
+At minimum define:
+
+- event/source listener
+- sync queue
+- retry logic
+- transaction submission
+- confirmation tracking
+- idempotency
+- failure handling
+- health endpoint
+- metrics
+
+Handle:
+
+- RPC unavailable
+- transaction dropped
+- nonce conflict
+- reverted sync
+- chain restart
+- keeper restart
+- duplicate event
+- stale event
+- validator churn
+
+Keeper restart must not lose required synchronization work.
+
+A duplicate sync call must remain safe.
+
+============================================================
+9. KEEPER SECURITY
+============================================================
+
+Keeper private key must have the minimum required authority.
+
+Prefer a dedicated operational account.
+
+Verify the keeper cannot:
+
+- mint PW
+- withdraw staking funds
+- withdraw validator fees
+- alter governance
+- change reward rate
+- change validator ownership
+
+If the keeper requires no privileged role, document that.
+
+If any privileged role is actually required, STOP and explain why.
+
+Do not grant unnecessary admin permissions merely for convenience.
+
+============================================================
+10. KEEPER LIVENESS
+============================================================
+
+Define operational targets.
+
+At minimum:
+
+- event detection latency
+- sync submission latency
+- confirmation timeout
+- retry interval
+- maximum retry count
+- alert threshold
+
+Do not invent false guarantees.
+
+Clearly distinguish:
+
+- expected latency
+- worst-case operational behavior
+- dependency-induced latency
+
+Include ACP-99/P-Chain/ICM relayer delays.
+
+============================================================
+11. VALIDATOR SYNC TESTS
+============================================================
+
+Create automated tests covering:
+
+1. new validator detected
+2. validator synchronized
+3. validator already synchronized
+4. validator weight changed
+5. validator deactivated
+6. validator reactivated
+7. duplicate event
+8. out-of-order event
+9. failed RPC
+10. failed transaction
+11. reverted sync
+12. keeper restart
+13. chain restart
+14. nonce recovery
+15. multiple validators pending
+16. validator churn
+17. simultaneous changes
+
+Verify the keeper never becomes a source of truth.
+
+============================================================
+12. GENESIS FINALIZATION
+============================================================
+
+Finalize the production genesis architecture.
+
+Do NOT launch mainnet.
+
+The final genesis specification must identify:
+
+- Chain ID
+- blockchain ID generation process
+- network ID
+- initial validators
+- initial validator weights
+- initial supply
+- allocations
+- RewardVault funding
+- genesis contracts/config
+- RewardManager configuration
+- fee configuration
+- NativeMinter disabled
+- governance addresses
+- timelock address
+- emergency multisig address
+- FeeDistributor address
+- ValidatorFeeVault address
+- RewardVault address
+- staking manager address
+- validator registry address
+
+All production addresses must remain placeholders where keys or
+final deployment addresses are not yet safely generated.
+
+Do not invent production addresses.
+
+============================================================
+13. 15M REWARDVAULT FUNDING
+============================================================
+
+C09/C10 identified this as a production requirement.
+
+Use the locked cost-effective approach unless the existing architecture
+documents establish otherwise:
+
+OPTION B:
+
+Genesis allocates sufficient PW to the controlled deployment funding
+address.
+
+After deterministic deployment:
+
+1. deploy RewardVault
+2. verify RewardVault address
+3. verify funding account balance
+4. call fund(15M PW)
+5. verify exact RewardVault balance
+6. verify RewardVault totalFunded
+7. verify no PW was minted
+8. verify deployment account remaining balance
+
+The deployment script MUST fail if the final RewardVault funding
+invariant is not satisfied.
+
+Do NOT rely on an operator remembering to fund the vault manually.
+
+The process must be deterministic and auditable.
+
+============================================================
+14. FUNDING SAFETY
+============================================================
+
+The deployment process must prevent:
+
+- underfunding
+- overfunding without explicit documentation
+- funding wrong address
+- funding wrong network
+- funding wrong chain
+- duplicate funding
+- accidental testnet/mainnet confusion
+
+Print/verify:
+
+network
+chain ID
+blockchain ID
+RewardVault address
+funding address
+expected amount
+actual amount
+
+Require explicit deployment environment configuration.
+
+============================================================
+15. GENESIS INVARIANTS
+============================================================
+
+Add automated validation for:
+
+INV-G1:
+Initial total supply = 100M PW.
+
+INV-G2:
+NativeMinter disabled.
+
+INV-G3:
+No hidden mint authority exists.
+
+INV-G4:
+RewardVault funding = 15M PW.
+
+INV-G5:
+RewardVault funding does not increase total supply.
+
+INV-G6:
+RewardManager routes fees to FeeDistributor.
+
+INV-G7:
+FeeDistributor routes 70/20/10 correctly.
+
+INV-G8:
+ValidatorManager is authoritative.
+
+INV-G9:
+Emergency Multisig = 3-of-5.
+
+INV-G10:
+Timelock = 48 hours.
+
+INV-G11:
+Staking unbonding = 14 days.
+
+INV-G12:
+Annual reward cap = 3M PW.
+
+============================================================
+16. GENESIS VALIDATION TOOL
+============================================================
+
+Create a deterministic validation script.
+
+Suggested:
+
+scripts/validate-production-genesis.sh
+
+or equivalent.
+
+It must validate:
+
+- JSON/config structure
+- Chain ID
+- required addresses
+- required contracts
+- reward configuration
+- fee configuration
+- NativeMinter status
+- allocations
+- supply
+- validator configuration
+
+It should fail loudly on:
+
+- missing field
+- wrong address
+- wrong amount
+- wrong chain ID
+- wrong dependency version
+- unexpected mint configuration
+- incorrect RewardVault funding
+
+============================================================
+17. DEPLOYMENT SCRIPT HARDENING
+============================================================
+
+Review all existing deployment scripts.
+
+Ensure they are:
+
+- deterministic
+- idempotent where possible
+- network-aware
+- chain-ID-aware
+- explicit about environment
+- safe against wrong RPC
+- safe against wrong chain
+- fail-fast
+
+Never deploy production contracts to an unexpected chain.
+
+Before deployment print:
+
+Environment
+Network
+Chain ID
+RPC endpoint
+Deployer address
+Expected contracts
+Expected addresses if deterministic
+
+Then require a non-production/test mode confirmation mechanism.
+
+For production ceremony, use the procedure defined by the key security
+documentation rather than embedding credentials in scripts.
+
+============================================================
+18. EMERGENCY MULTISIG SIGNER ROTATION
+============================================================
+
+C10 identified:
+
+LOW — Emergency Multisig signer rotation.
+
+Review the existing EmergencyMultisig implementation and governance
+policy.
+
+Determine whether signer rotation is:
+
+- supported
+- intentionally immutable
+- timelocked
+- emergency-controlled
+- absent
+
+Do NOT invent a new governance power.
+
+If rotation is already architecturally specified, implement/test it
+according to the specification.
+
+If it is not specified, document the limitation and the recommended
+production procedure.
+
+A signer rotation mechanism MUST NOT become a hidden mint or treasury
+withdrawal authority.
+
+============================================================
+19. MONITORING
+============================================================
+
+Design production monitoring for:
+
+CHAIN:
+
+- node alive
+- RPC alive
+- block production
+- block height
+- block time
+- peer count
+- disk
+- CPU
+- memory
+- network
+
+VALIDATORS:
+
+- validator status
+- validator weight
+- registration status
+- synchronization lag
+- reward/fee claims
+- uptime where available
+
+ECONOMICS:
+
+- RewardVault balance
+- annual emissions
+- emission rate
+- ValidatorFeeVault balance
+- fee distribution
+- Treasury balance
+- burn accounting
+
+GOVERNANCE:
+
+- EmergencyMultisig activity
+- Timelock proposals
+- pending execution
+- pause state
+
+KEEPER:
+
+- event lag
+- pending syncs
+- failed transactions
+- retry count
+- nonce status
+- last successful sync
+
+============================================================
+20. ALERTING
+============================================================
+
+Define alerts for:
+
+CRITICAL:
+
+- chain halted
+- all validators unavailable
+- RewardVault unexpected balance
+- unauthorized governance event
+- NativeMinter unexpectedly enabled
+- fee routing mismatch
+
+HIGH:
+
+- validator sync lag
+- keeper failing
+- RPC unavailable
+- disk near full
+- block production abnormal
+- validator set mismatch
+
+MEDIUM:
+
+- individual validator offline
+- elevated RPC latency
+- failed transaction retries
+
+Do not create meaningless alerts.
+
+Document thresholds and reasoning.
+
+============================================================
+21. LOGGING
+============================================================
+
+Define structured logs.
+
+Every operational component should include:
+
+timestamp
+environment
+chain ID
+component
+event
+severity
+transaction hash where applicable
+validator ID where applicable
+error information
+
+Do not log:
+
+private keys
+seed phrases
+sensitive credentials
+
+============================================================
+22. BACKUP / RECOVERY
+============================================================
+
+Document:
+
+- node data backup
+- configuration backup
+- validator identity backup
+- governance backup
+- keeper state backup
+- monitoring configuration
+- recovery procedure
+
+Distinguish:
+
+rebuild-from-genesis
+
+from:
+
+restore-from-backup.
+
+A validator node must be recoverable without compromising validator
+identity.
+
+============================================================
+23. NODE REPLACEMENT
+============================================================
+
+Create a documented procedure:
+
+old validator node failure
+→ stop old instance
+→ provision replacement
+→ restore required identity
+→ restore configuration
+→ synchronize chain
+→ verify validator status
+→ verify registry synchronization
+→ re-enable monitoring
+
+Avoid double-running the same validator identity.
+
+============================================================
+24. UPGRADE PROCEDURE
+============================================================
+
+Document how AvalancheGo / PrimeWave chain upgrades will be handled.
+
+Must include:
+
+- version verification
+- compatibility check
+- testnet rehearsal
+- backup
+- rollback strategy
+- validator coordination
+- monitoring
+- post-upgrade verification
+
+Do not upgrade versions in C11 unless required to fix a demonstrated
+compatibility problem.
+
+============================================================
+25. COST CONTROL
+============================================================
+
+This is a HARD REQUIREMENT.
+
+Reuse existing infrastructure scripts and configuration.
+
+Do NOT:
+
+- rebuild the blockchain
+- rewrite contracts
+- duplicate previous test suites
+- build explorer
+- build indexing system
+- deploy public mainnet
+- generate production keys
+- create unnecessary microservices
+- introduce Kubernetes unless demonstrably necessary
+- introduce complex orchestration without justification
+
+Prefer:
+
+- shell scripts
+- lightweight keeper
+- standard monitoring
+- deterministic deployment tooling
+- simple service definitions
+
+The production architecture should be operationally realistic and
+cost-efficient.
+
+============================================================
+26. TESTING
+============================================================
+
+Create a C11 infrastructure test suite.
+
+At minimum test:
+
+- genesis validation
+- RewardVault funding
+- chain ID verification
+- NativeMinter disabled
+- fee configuration
+- validator configuration
+- keeper synchronization
+- keeper restart
+- duplicate sync
+- failed RPC
+- failed transaction
+- nonce recovery
+- node restart
+- configuration validation
+- wrong-network detection
+- wrong-chain detection
+
+Use local/dev infrastructure only.
+
+No production keys.
+
+No mainnet deployment.
+
+============================================================
+27. END-TO-END LOCAL DEPLOYMENT REHEARSAL
+============================================================
+
+Create:
+
+contracts/script/IntegrationC11.s.sol
+
+and/or appropriate infrastructure scripts.
+
+Perform one complete local production-style rehearsal:
+
+1. Clean environment
+2. Build dependencies
+3. Generate deterministic test configuration
+4. Start chain
+5. Validate Chain ID
+6. Validate blockchain ID
+7. Validate genesis
+8. Verify NativeMinter disabled
+9. Deploy contracts
+10. Verify addresses
+11. Fund RewardVault with 15M PW
+12. Verify exact RewardVault balance
+13. Verify FeeDistributor
+14. Verify ValidatorFeeVault
+15. Verify staking manager
+16. Verify validator registry
+17. Start keeper
+18. Create validator state change
+19. Detect state change
+20. Synchronize validator
+21. Verify registry
+22. Verify ValidatorFeeVault
+23. Generate transaction fees
+24. Verify 70/20/10
+25. Restart keeper
+26. Verify recovery
+27. Restart node
+28. Verify recovery
+29. Run health checks
+30. Run all relevant regression tests
+
+============================================================
+28. DEPLOYMENT CEREMONY DOCUMENT
+============================================================
+
+Create:
+
+docs/PW-C11-PRODUCTION-DEPLOYMENT-CEREMONY.md
+
+Include:
+
+PRE-CEREMONY
+- software versions
+- dependency hashes
+- genesis hash
+- chain ID
+- addresses
+- validator list
+- key ceremony
+- backups
+
+CEREMONY
+- genesis creation
+- genesis verification
+- contract deployment
+- address verification
+- RewardVault funding
+- validator initialization
+- governance configuration
+
+POST-CEREMONY
+- supply verification
+- RewardVault verification
+- fee routing verification
+- validator verification
+- RPC verification
+- monitoring verification
+- keeper verification
+
+ABORT CONDITIONS
+- wrong chain ID
+- wrong genesis hash
+- incorrect supply
+- RewardVault underfunded
+- NativeMinter enabled
+- incorrect fee routing
+- incorrect governance address
+- validator mismatch
+
+============================================================
+29. DOCUMENTATION
+============================================================
+
+Create/update:
+
+docs/PW-C11-PRODUCTION-INFRASTRUCTURE.md
+docs/PW-C11-VALIDATOR-OPERATIONS.md
+docs/PW-C11-KEEPER-SPEC.md
+docs/PW-C11-GENESIS-FINALIZATION.md
+docs/PW-C11-MONITORING-AND-ALERTING.md
+docs/PW-C11-DISASTER-RECOVERY.md
+docs/PW-C11-DEPLOYMENT-REHEARSAL.md
+docs/PW-C11-TEST-REPORT.md
+docs/PW-C11-FINAL-REPORT.md
+
+Update:
+
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_GENESIS_SPEC.md
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+
+Do not duplicate contradictory information.
+
+If a document already contains the authoritative specification,
+update it rather than creating conflicting parallel rules.
+
+============================================================
+30. SECURITY REVIEW
+============================================================
+
+Review C11 for:
+
+- keeper key compromise
+- RPC compromise
+- validator key compromise
+- wrong-chain deployment
+- wrong-genesis deployment
+- incorrect RewardVault funding
+- accidental double validator
+- keeper replay
+- nonce abuse
+- monitoring blind spots
+- backup compromise
+- insider misuse
+- emergency signer loss
+
+Classify:
+
+CRITICAL
+HIGH
+MEDIUM
+LOW
+INFORMATIONAL
+
+Do not hide risks.
+
+============================================================
+31. REGRESSION
+============================================================
+
+Run the complete previous protocol regression.
+
+Minimum:
+
+C00-C10 baseline must remain green.
+
+C10 baseline:
+745/745
+
+C09 baseline:
+586/586
+
+C00-C08 baseline:
+535/535
+
+Do not silently modify old tests to hide regressions.
+
+If an infrastructure test requires a legitimate test-only adaptation,
+document it.
+
+============================================================
+32. C11 ACCEPTANCE CRITERIA
+============================================================
+
+C11 passes only if:
+
+[ ] Production topology documented
+[ ] Validator requirements documented
+[ ] Validator lifecycle documented
+[ ] Keeper implemented or fully specified with executable local tests
+[ ] Keeper remains non-authoritative
+[ ] Keeper restart/retry behavior tested
+[ ] Keeper security reviewed
+[ ] Genesis finalized as a deterministic specification
+[ ] 15M RewardVault funding procedure implemented
+[ ] RewardVault funding automatically verified
+[ ] NativeMinter disabled verified
+[ ] 100M supply verified
+[ ] 3M annual cap verified
+[ ] 14-day unbonding verified
+[ ] 70/20/10 fee routing verified
+[ ] Governance addresses verified
+[ ] Emergency Multisig 3-of-5 verified
+[ ] Timelock 48h verified
+[ ] Emergency signer rotation finding resolved or explicitly documented
+[ ] Production deployment scripts hardened
+[ ] Wrong-network protection implemented
+[ ] Wrong-chain protection implemented
+[ ] Monitoring designed
+[ ] Alerting designed
+[ ] Logging designed
+[ ] Backup/recovery documented
+[ ] Node replacement documented
+[ ] Upgrade procedure documented
+[ ] Deployment rehearsal passes
+[ ] C00-C10 regression passes
+[ ] No production keys generated
+[ ] No mainnet deployment
+[ ] No Critical unresolved infrastructure issue
+[ ] No High unresolved infrastructure issue
+[ ] No protocol economic rule changed
+
+============================================================
+33. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP and report immediately if:
+
+1. 15M RewardVault funding cannot be guaranteed deterministically.
+2. Genesis can accidentally enable NativeMinter.
+3. Initial supply can exceed 100M.
+4. Keeper requires dangerous privileged authority.
+5. Keeper can alter validator truth.
+6. Production deployment can silently target wrong chain.
+7. Production deployment can silently target wrong network.
+8. Validator identity can accidentally be duplicated.
+9. Governance keys must be embedded in deployment scripts.
+10. Emergency signer rotation requires a new unauthorized governance power.
+11. A dependency must be changed without approval.
+12. Previous C00-C10 invariants regress.
+13. A production security Critical/High issue is discovered.
+14. Mainnet deployment becomes necessary to validate C11.
+
+Do NOT work around these silently.
+
+============================================================
+34. FINAL OUTPUT
+============================================================
+
+When complete, STOP.
+
+Do NOT start C12.
+
+Return:
+
+PW-C11 COMPLETE
+
+with:
+
+1. Total test count
+2. Infrastructure test count
+3. Keeper test count
+4. Genesis validation result
+5. RewardVault funding proof
+6. NativeMinter verification
+7. Supply verification
+8. Validator infrastructure result
+9. Keeper result
+10. Monitoring result
+11. Backup/recovery result
+12. Deployment rehearsal result
+13. Security findings by severity
+14. C00-C10 regression result
+15. Remaining risks
+16. C12 prerequisites
+
+============================================================
+END PW-C11
+============================================================

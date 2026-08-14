@@ -128,7 +128,7 @@ contract ValidateGenesis is Script {
     uint256 warnCount;
     uint256 failCount;
 
-    function run() external view {
+    function run() external {
         console.log("===========================================================");
         console.log("PrimeWave Chain  -  Genesis Configuration Validator (PW-C08)");
         console.log("===========================================================");
@@ -160,11 +160,14 @@ contract ValidateGenesis is Script {
             console.log("STATUS: FAILED - REVIEW REQUIRED");
         }
         console.log("===========================================================");
+
+        // Hard-fail the script if any check failed (so CI/CD pipelines catch it)
+        require(failCount == 0, "ValidateGenesis: one or more FAIL checks -- review output above");
     }
 
     // ── Validators ────────────────────────────────────────────────────────────
 
-    function _validateChainId() internal view {
+    function _validateChainId() internal {
         console.log("--- Chain ID ---");
         uint256 chainId = block.chainid;
         if (chainId == EXPECTED_CHAIN_ID) {
@@ -176,7 +179,7 @@ contract ValidateGenesis is Script {
         }
     }
 
-    function _validateNativeMinterDisabled() internal view {
+    function _validateNativeMinterDisabled() internal {
         console.log("--- NativeMinter Precompile ---");
         // Check if NativeMinter precompile has code (if enabled, it will have bytecode)
         uint256 codeSize;
@@ -194,7 +197,7 @@ contract ValidateGenesis is Script {
         }
     }
 
-    function _validateFeeDistributor() internal view {
+    function _validateFeeDistributor() internal {
         console.log("--- FeeDistributor ---");
 
         address distAddr = vm.envOr("DIST_ADDRESS", DEV_DIST);
@@ -260,7 +263,7 @@ contract ValidateGenesis is Script {
         }
     }
 
-    function _validateValidatorFeeVault() internal view {
+    function _validateValidatorFeeVault() internal {
         console.log("--- ValidatorFeeVault ---");
 
         address vaultAddr = vm.envOr("VAULT_ADDRESS", DEV_VAULT);
@@ -304,7 +307,7 @@ contract ValidateGenesis is Script {
         console.log("  VFV.totalClaimed:", vfv.totalClaimed());
     }
 
-    function _validateDevTreasury() internal view {
+    function _validateDevTreasury() internal {
         console.log("--- DevTreasury ---");
 
         address treasuryAddr = vm.envOr("TREASURY_ADDRESS", DEV_TREASURY);
@@ -322,7 +325,7 @@ contract ValidateGenesis is Script {
         console.log("  Treasury.balance:", treasuryAddr.balance);
     }
 
-    function _validateRewardVault() internal view {
+    function _validateRewardVault() internal {
         console.log("--- RewardVault ---");
 
         address rvAddr = vm.envOr("RV_ADDRESS", address(0));
@@ -387,7 +390,7 @@ contract ValidateGenesis is Script {
         console.log("  RV.isExhausted:", rv.isExhausted());
     }
 
-    function _validateEmergencyMultisig() internal view {
+    function _validateEmergencyMultisig() internal {
         console.log("--- EmergencyMultisig ---");
 
         address emsAddr = vm.envOr("EMS_ADDRESS", address(0));
@@ -420,7 +423,7 @@ contract ValidateGenesis is Script {
         console.log("  EMS.nonce (proposals executed):", ems.nonce());
     }
 
-    function _validateTimelock() internal view {
+    function _validateTimelock() internal {
         console.log("--- PrimeWaveTimelock ---");
 
         address tlAddr = vm.envOr("TIMELOCK_ADDRESS", address(0));
@@ -447,7 +450,7 @@ contract ValidateGenesis is Script {
         console.log("  TL.proposer:", tl.proposer());
     }
 
-    function _validateSupplyInvariants() internal view {
+    function _validateSupplyInvariants() internal {
         console.log("--- Supply Invariants ---");
         // Note: on Foundry/local chain, we cannot easily verify the genesis alloc total.
         // On a live chain, block 0 can be inspected for initial balances.
@@ -464,7 +467,7 @@ contract ValidateGenesis is Script {
         )));
     }
 
-    function _validateNoWithdrawFunctions() internal view {
+    function _validateNoWithdrawFunctions() internal {
         console.log("--- Admin Backdoor Audit ---");
 
         address distAddr = vm.envOr("DIST_ADDRESS", DEV_DIST);
@@ -510,7 +513,7 @@ contract ValidateGenesis is Script {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    function _checkEq(string memory label, address got, address expected) internal view {
+    function _checkEq(string memory label, address got, address expected) internal {
         if (got == expected) {
             _pass(label, vm.toString(got));
         } else {
@@ -520,15 +523,18 @@ contract ValidateGenesis is Script {
         }
     }
 
-    function _pass(string memory label, string memory detail) internal pure {
+    function _pass(string memory label, string memory detail) internal {
+        passCount++;
         console.log(string(abi.encodePacked("  [PASS] ", label, ": ", detail)));
     }
 
-    function _warn(string memory label, string memory detail) internal pure {
+    function _warn(string memory label, string memory detail) internal {
+        warnCount++;
         console.log(string(abi.encodePacked("  [WARN] ", label, ": ", detail)));
     }
 
-    function _fail(string memory label, string memory detail) internal pure {
+    function _fail(string memory label, string memory detail) internal {
+        failCount++;
         console.log(string(abi.encodePacked("  [FAIL] ", label, ": ", detail)));
     }
 }
