@@ -1,5 +1,5 @@
 # PrimeWave Testnet — Allocation Documentation
-**Environment:** TESTNET | **Sprint:** PW-C14 | **Chain ID:** 77777
+**Environment:** TESTNET | **Sprint:** PW-C14 | **Chain ID:** 77 (Previous testnet Chain ID: 77777)
 
 ---
 
@@ -14,7 +14,7 @@
 | Total Supply | 100,000,000 PW (immutable) |
 | NativeMinter | DISABLED |
 | Inflation | NONE |
-| Chain ID | 77777 (TESTNET) |
+| Chain ID | 77 (TESTNET) |
 
 ---
 

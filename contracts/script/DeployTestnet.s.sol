@@ -5,12 +5,12 @@ pragma solidity 0.8.30;
 // DeployTestnet.s.sol - PrimeWave Testnet Deployment Script
 // ============================================================
 //
-// TESTNET ONLY - Chain ID 77777.
+// TESTNET ONLY - Chain ID 77.
 // Deploys all 7 protocol contracts to the PrimeWave testnet and funds
 // RewardVault with exactly 15M PW.
 //
 // Differences from DevDeploy.s.sol:
-//   1. Enforces chain ID == 77777 (refuses to run on dev or mainnet)
+//   1. Enforces chain ID == 77 (refuses to run on dev or mainnet)
 //   2. Refuses to run with the public dev mnemonic (account 0 = 0xf39F...)
 //   3. Funds RewardVault with 15M PW (not 1000 PW as in dev)
 //   4. EMS signer addresses must be set to real testnet keys before running
@@ -39,7 +39,7 @@ import {PrimeWaveValidatorRegistry}  from "../src/PrimeWaveValidatorRegistry.sol
 contract DeployTestnet is Script {
     // ── Constants ─────────────────────────────────────────────────────────────
 
-    uint256 constant TESTNET_CHAIN_ID  = 77_777;
+    uint256 constant TESTNET_CHAIN_ID  = 77;
     uint256 constant REWARD_VAULT_FUND = 15_000_000 ether; // 15M PW
 
     // 3,000,000 PW/year expressed as wei/second (matches dev rate)
@@ -63,7 +63,7 @@ contract DeployTestnet is Script {
         // Hard guard: refuse to run on wrong network
         require(
             block.chainid == TESTNET_CHAIN_ID,
-            "DeployTestnet: WRONG CHAIN ID - expected 77777 (testnet)"
+            "DeployTestnet: WRONG CHAIN ID - expected 77 (testnet)"
         );
 
         address deployer = msg.sender;

@@ -66,10 +66,10 @@ echo "  $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo ""
 
 echo "── RPC Node ──"
-check_rpc "HC-01" "eth_chainId" "0x12fc1"      # 77777 in hex
+check_rpc "HC-01" "eth_chainId" "0x4d"         # 77 in hex
 check_rpc "HC-02" "eth_blockNumber"
 check_rpc "HC-03" "eth_gasPrice"
-check_rpc "HC-04" "net_version" "77777"
+check_rpc "HC-04" "net_version" "77"
 check_rpc "HC-05" "web3_clientVersion"
 
 echo ""

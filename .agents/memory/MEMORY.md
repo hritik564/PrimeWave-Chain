@@ -13,4 +13,4 @@
 - [PrimeWave Chain PW-C12](primewave-pw-c12.md) — C12 COMPLETE; Indexer pkg; 57/57 Jest; 17-table schema; 20+ REST endpoints; ethers Fragment double-cast pitfall
 - [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source
 - [PrimeWave Chain PW-C13](primewave-pw-c13.md) — C13 COMPLETE; PWCScan explorer; 15 routes; design subagent; stats hook unwraps (no .data); 792/792+57/57+20/20
-- [PrimeWave Chain PW-C14](primewave-pw-c14.md) — C14 COMPLETE; testnet infra; Chain ID 77777; fuzz fix (address(this) pitfall); em-dash solc pitfall; 792/792+57/57+20/20
+- [PrimeWave Chain PW-C14](primewave-pw-c14.md) — C14 COMPLETE; testnet Chain ID 77 (was 77777); fuzz/em-dash pitfalls; genesis validated; 792/792+57/57+20/20

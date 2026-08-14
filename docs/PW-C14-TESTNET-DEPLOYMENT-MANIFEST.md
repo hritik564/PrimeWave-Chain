@@ -1,6 +1,6 @@
 # PW-C14: Testnet Deployment Manifest
 **Sprint:** PW-C14
-**Environment:** TESTNET ONLY — Chain ID 77777
+**Environment:** TESTNET ONLY — Chain ID **77** (Previous testnet Chain ID: 77777)
 **Status:** TEMPLATE — Fill in after testnet deployment ceremony
 
 ---
@@ -17,7 +17,8 @@
 |---|---|
 | Network Name | PrimeWave Testnet |
 | Environment | TESTNET |
-| Chain ID (EVM) | **77777** |
+| Chain ID (EVM) | **77** |
+| Previous Testnet Chain ID | 77777 | Changed post-C14; genesis regenerated |
 | Blockchain ID | TBD — Fuji P-Chain ceremony |
 | Subnet ID | TBD — Fuji P-Chain ceremony |
 | VM ID | rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8 |
@@ -150,7 +151,7 @@
 
 | Check | Result | Date |
 |---|---|---|
-| INV-G1: Chain ID 77777 | TBD | |
+| INV-G1: Chain ID 77 | TBD | |
 | INV-G2: NativeMinter disabled | TBD | |
 | INV-G3: Supply 100M PW | TBD | |
 | INV-G4: RewardVault 15M PW | TBD | |

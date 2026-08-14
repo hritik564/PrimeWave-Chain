@@ -1,9 +1,10 @@
 {
-  "_comment": "PrimeWave Chain — TESTNET Genesis Template | PW-C14 | Chain ID 77777",
+  "_comment": "PrimeWave Chain — TESTNET Genesis Template | PW-C14 | Chain ID 77",
   "_warning": "TESTNET ONLY. Do NOT use for mainnet. All allocation addresses are PLACEHOLDERS — replace with ceremony-generated addresses before launch.",
-  "_verification": "Verify Chain ID 77777 is unused at https://chainlist.org and https://github.com/ethereum-lists/chains before finalizing.",
+  "_verification": "Verify Chain ID 77 is unused at https://chainlist.org and https://github.com/ethereum-lists/chains before finalizing.",
+  "_chain_id_history": "Previous testnet Chain ID was 77777 (changed post-C14 to 77).",
   "config": {
-    "chainId": 77777,
+    "chainId": 77,
     "homesteadBlock": 0,
     "eip150Block": 0,
     "eip155Block": 0,

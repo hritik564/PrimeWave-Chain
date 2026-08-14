@@ -80,7 +80,7 @@ Verified on local dev chain (chain ID 73571, blockchain ID `2F3BHmNJWP4DNaBbMFQo
 
 | File | Description |
 |---|---|
-| `config/testnet/genesis-template.json` | Testnet genesis with Chain ID 77777 and correct hex allocations |
+| `config/testnet/genesis-template.json` | Testnet genesis with Chain ID 77 (previously 77777) and correct hex allocations |
 | `config/testnet/chain-config.json` | Subnet-EVM per-chain config |
 | `config/testnet/node-config.json` | AvalancheGo node config template |
 | `config/testnet/allocations.md` | Testnet allocation documentation |
@@ -128,13 +128,13 @@ Verified on local dev chain (chain ID 73571, blockchain ID `2F3BHmNJWP4DNaBbMFQo
 
 PWCScan updated to support `VITE_NETWORK_LABEL` environment variable:
 - Shows "Testnet" badge in header when `VITE_NETWORK_LABEL=Testnet`
-- Chain ID displayed prominently (77777 for testnet, 73571 for dev)
+- Chain ID displayed prominently (77 for testnet, 73571 for dev)
 - "TESTNET" indicator persists on all pages
 
 ### 2.6 DeployTestnet Forge Script
 
 `contracts/script/DeployTestnet.s.sol` created — mirrors `DevDeploy.s.sol` but:
-- Verifies chain ID == 77777 before deployment
+- Verifies chain ID == 77 before deployment
 - Does NOT use dev keys (refuses test mnemonic)
 - Writes addresses to `local-data/testnet-deployed-contracts.env`
 
@@ -171,4 +171,4 @@ All 18 critical stop conditions from Section 45 of PW-C14 spec verified:
 | 9 | Keeper can alter validator state | ✅ syncValidator is permissionless |
 | 10 | Genesis not reproducible | ✅ Template + procedure documented |
 | 16 | C00-C13 regression fails | ✅ All pass |
-| 18 | Mainnet accidentally deployed | ✅ Chain ID 77777 enforced |
+| 18 | Mainnet accidentally deployed | ✅ Chain ID 77 enforced |

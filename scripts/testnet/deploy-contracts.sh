@@ -33,8 +33,8 @@ echo ""
 
 # Verify chain ID
 CHAIN_ID=$(cast chain-id --rpc-url "$TESTNET_RPC_URL" 2>/dev/null)
-if [[ "$CHAIN_ID" != "77777" ]]; then
-  echo "[ERROR] Expected chain ID 77777 (testnet), got: $CHAIN_ID"
+if [[ "$CHAIN_ID" != "77" ]]; then
+  echo "[ERROR] Expected chain ID 77 (testnet), got: $CHAIN_ID"
   echo "        Refusing to deploy to wrong network."
   exit 1
 fi

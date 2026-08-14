@@ -1,12 +1,12 @@
 # PW-C14: Testnet Deployment Runbook
 **Sprint:** PW-C14
-**Environment:** TESTNET ONLY
-**Last Updated:** 2026-08-14
+**Environment:** TESTNET ONLY — Chain ID 77 (Previous testnet Chain ID: 77777)
+**Last Updated:** 2026-08-15
 
 ---
 
 > **CRITICAL:** This runbook is for the PrimeWave **TESTNET** only.
-> Chain ID 77777. NEVER execute against mainnet configuration.
+> Chain ID **77**. NEVER execute against mainnet configuration.
 > NEVER generate or use mainnet keys.
 
 ---
@@ -90,8 +90,8 @@ g=json.load(open('config/testnet/genesis.json'))
 alloc = {k:v for k,v in g['alloc'].items() if not k.startswith('_')}
 total = sum(int(v['balance'],16) for v in alloc.values())
 assert total == 100_000_000*10**18, f'BAD SUPPLY: {total}'
-assert g['config']['chainId'] == 77777
-print('Genesis OK — Chain ID 77777, Supply 100M PW')
+assert g['config']['chainId'] == 77
+print('Genesis OK — Chain ID 77, Supply 100M PW')
 print(f'SHA-256: ', end=''); import subprocess; subprocess.run(['sha256sum','config/testnet/genesis.json'])
 "
 
@@ -191,7 +191,7 @@ curl http://localhost:8080/health  # Should return {"status":"ok"}
 # Build PWCScan for testnet
 cd artifacts/pwcscan
 VITE_NETWORK_LABEL=Testnet \
-VITE_CHAIN_ID=77777 \
+VITE_CHAIN_ID=77 \
 pnpm build
 
 # Copy to explorer host, serve via nginx

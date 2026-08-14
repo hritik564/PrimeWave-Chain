@@ -1,6 +1,6 @@
 # PW-C14: Testnet Acceptance Test Matrix
 **Sprint:** PW-C14
-**Environment:** TESTNET ONLY — Chain ID 77777
+**Environment:** TESTNET ONLY — Chain ID **77** (Previous testnet Chain ID: 77777)
 **Reference:** Section 41 of PW-C14 spec
 
 ---
@@ -22,7 +22,7 @@
 | ID | Test | Method | Expected | Status | Notes |
 |---|---|---|---|---|---|
 | NET-01 | Genesis valid | `validate-testnet-genesis.sh` | All INV-G* pass | 🔵 | Awaits Fuji P-Chain subnet creation |
-| NET-02 | Chain ID correct (77777) | `cast chain-id --rpc-url $RPC` | `77777` | 🔵 | Awaits testnet RPC |
+| NET-02 | Chain ID correct (77) | `cast chain-id --rpc-url $RPC` | `77` | 🔵 | Awaits testnet RPC |
 | NET-03 | Blockchain ID recorded | Genesis construction | Non-empty CB58 string | 🔵 | Generated at subnet creation |
 | NET-04 | Native PW transfer works | `cast send ... --value 1ether` | tx included in block | 🔵 | |
 | NET-05 | Gas paid in PW (not ETH) | Inspect tx receipt | `effectiveGasPrice > 0` in PW | 🔵 | |
@@ -82,7 +82,7 @@
 ## Local Dev Simulation: In-Replit Testnet Rehearsal
 
 The following tests were run against the **local dev environment** (chain ID 73571) to rehearse
-the testnet procedures. They represent what will be executed identically on chain ID 77777:
+the testnet procedures. They represent what will be executed identically on chain ID 77:
 
 | ID | Simulated Test | Result |
 |---|---|---|

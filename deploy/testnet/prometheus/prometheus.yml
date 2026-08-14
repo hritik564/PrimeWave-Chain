@@ -7,7 +7,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     environment: testnet
-    chain_id: "77777"
+    chain_id: "77"
     network: primewave-testnet
 
 rule_files:

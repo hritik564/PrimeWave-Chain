@@ -1,0 +1,542 @@
+PRIMEWAVE CHAIN
+POST-C14 CONFIGURATION CHANGE
+TESTNET CHAIN ID CHANGE: 77777 → 77
+
+============================================================
+OBJECTIVE
+============================================================
+
+Change the PrimeWave TESTNET Chain ID from:
+
+77777
+
+to:
+
+77
+
+This is a TESTNET-only change.
+
+DO NOT change:
+
+- Development Chain ID: 73571
+- Mainnet Chain ID: TBD
+- Any mainnet configuration
+- Protocol economics
+- Native PW supply
+- RewardVault economics
+- FeeDistributor
+- Validator architecture
+- Governance architecture
+- PWC-20
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+
+============================================================
+IMPORTANT
+============================================================
+
+Changing the Chain ID changes the testnet genesis identity.
+
+Therefore this is NOT a simple string replacement.
+
+Treat this as a testnet genesis/configuration regeneration.
+
+The previous testnet Chain ID was:
+
+77777
+
+The new testnet Chain ID is:
+
+77
+
+The new testnet configuration must be internally consistent.
+
+============================================================
+1. INSPECT FIRST
+============================================================
+
+Before modifying anything:
+
+Search the entire repository for:
+
+77777
+73571
+Chain ID
+chainId
+VITE_CHAIN_ID
+testnet
+
+Identify every testnet-specific reference to 77777.
+
+Do NOT blindly replace all occurrences of 77777.
+
+Classify each occurrence as:
+
+- testnet configuration
+- documentation
+- dev configuration
+- mainnet configuration
+- test artifact
+- historical record
+
+Only update references that are actually testnet configuration or
+current testnet documentation.
+
+============================================================
+2. UPDATE TESTNET GENESIS
+============================================================
+
+Update:
+
+config/testnet/genesis-template.json
+
+Chain ID:
+
+77777 → 77
+
+Verify the resulting genesis contains:
+
+chainId = 77
+
+Do not change:
+
+- native PW configuration
+- NativeMinter disabled state
+- RewardManager configuration
+- FeeDistributor address
+- allocations
+- 100M PW fixed supply
+- RewardVault funding architecture
+- other locked genesis parameters
+
+============================================================
+3. REGENERATE TESTNET GENESIS
+============================================================
+
+Regenerate the testnet genesis using the existing C14 process.
+
+Do NOT manually edit generated artifacts if the existing scripts can
+reproduce them.
+
+The resulting genesis must be reproducible.
+
+Run all existing genesis validation scripts.
+
+Verify:
+
+- Chain ID = 77
+- total PW allocation = 100,000,000 PW
+- NativeMinter disabled
+- RewardManager correct
+- FeeDistributor correct
+- all expected allocations present
+- no mainnet addresses accidentally introduced
+- no dev-only configuration accidentally introduced
+
+============================================================
+4. BLOCKCHAIN ID
+============================================================
+
+Because genesis has changed, the testnet blockchain identity will
+change.
+
+Do NOT preserve the old testnet blockchain ID.
+
+The old development blockchain ID:
+
+2F3BHmNJWP4DNaBbMFQog3TvfcF6GRY7PX99r7Xzae4cRwAv6a
+
+must NOT be treated as the new testnet blockchain ID.
+
+Determine the correct new testnet blockchain identity from the
+regenerated deployment configuration/process.
+
+Document:
+
+Old testnet identity, if previously generated
+New testnet identity
+Reason for change
+
+Do not confuse:
+
+Chain ID
+Blockchain ID
+Subnet ID
+Network ID
+
+============================================================
+5. UPDATE TESTNET CONFIGURATION
+============================================================
+
+Update all testnet-specific configuration files under:
+
+config/testnet/
+
+scripts/testnet/
+
+deploy/testnet/
+
+and relevant environment templates.
+
+Ensure all references consistently use:
+
+CHAIN_ID=77
+
+where applicable.
+
+Do NOT change the development configuration.
+
+Development must remain:
+
+CHAIN_ID=73571
+
+============================================================
+6. UPDATE PWCScan
+============================================================
+
+Update the testnet frontend configuration:
+
+VITE_CHAIN_ID=77
+
+Ensure:
+
+VITE_NETWORK_LABEL=Testnet
+
+remains enabled.
+
+PWCScan must visibly identify the network as:
+
+🧪 Testnet
+
+The Chain ID displayed by PWCScan must be:
+
+77
+
+Do NOT display "Mainnet".
+
+Do NOT change the development default unless the existing architecture
+requires an explicit testnet override.
+
+============================================================
+7. UPDATE HEALTH CHECKS
+============================================================
+
+Update all testnet health checks and validation scripts.
+
+They must expect:
+
+Chain ID = 77
+
+Verify:
+
+eth_chainId
+net_version
+
+and any other relevant chain identity checks.
+
+The health check must FAIL if it connects to:
+
+73571
+
+or the old testnet configuration.
+
+This prevents accidentally pointing testnet tooling at the dev chain.
+
+============================================================
+8. UPDATE DEPLOYMENT SCRIPTS
+============================================================
+
+Inspect:
+
+contracts/script/DeployTestnet.s.sol
+
+and all testnet deployment scripts.
+
+Ensure they refuse deployment when:
+
+block.chainid != 77
+
+where the existing script uses a chain-ID safety check.
+
+Do not weaken existing safety checks.
+
+Do not accept arbitrary Chain IDs.
+
+============================================================
+9. UPDATE ENVIRONMENT FILES
+============================================================
+
+Update testnet-specific environment templates.
+
+Examples:
+
+CHAIN_ID=77
+VITE_CHAIN_ID=77
+
+Do NOT place secrets into tracked environment files.
+
+Do not modify production/mainnet environment files.
+
+============================================================
+10. UPDATE DOCUMENTATION
+============================================================
+
+Update current C14 testnet documentation wherever it states:
+
+77777
+
+Replace with:
+
+77
+
+ONLY where the reference describes the current testnet.
+
+Update:
+
+docs/PW-C14-TESTNET-ARCHITECTURE.md
+docs/PW-C14-TESTNET-GENESIS.md
+docs/PW-C14-VALIDATOR-ONBOARDING.md
+docs/PW-C14-DEPLOYMENT-RUNBOOK.md
+docs/PW-C14-SECURITY-CHECKLIST.md
+docs/PW-C14-FAILURE-RECOVERY.md
+docs/PW-C14-MONITORING.md
+docs/PW-C14-TEST-MATRIX.md
+docs/PW-C14-TEST-REPORT.md
+docs/PW-C14-TESTNET-DEPLOYMENT-MANIFEST.md
+docs/PW-C14-FINAL-REPORT.md
+
+If a document needs to preserve the historical value 77777 for
+audit/history purposes, explicitly label it as:
+
+Previous testnet Chain ID: 77777
+
+Do not silently erase historical information.
+
+============================================================
+11. UPDATE NETWORK REGISTRY / STATE
+============================================================
+
+Inspect:
+
+network-ids.env
+network-state.env
+
+and any equivalent testnet network-state files.
+
+Ensure testnet state points to the new generated testnet identity.
+
+Do NOT modify dev network state.
+
+Do NOT reuse the dev blockchain ID.
+
+============================================================
+12. REBUILD TESTNET ARTIFACTS
+============================================================
+
+Regenerate all artifacts that depend on genesis.
+
+This may include:
+
+- genesis
+- genesis hash
+- blockchain ID
+- network state
+- deployment state
+- contract deployment environment
+- PWCScan environment
+- health-check state
+
+Do not leave stale generated artifacts that still describe Chain ID
+77777.
+
+============================================================
+13. CONTRACT ADDRESSES
+============================================================
+
+Determine whether changing Chain ID/genesis affects the deployment
+environment or precomputed contract addresses.
+
+Do not assume addresses remain unchanged.
+
+If contracts are redeployed on the regenerated testnet:
+
+- record the actual addresses
+- update testnet deployment manifest
+- update PWCScan configuration/indexer configuration if required
+
+Do NOT change contract source code merely because the Chain ID changed.
+
+============================================================
+14. PWCScan INDEXER
+============================================================
+
+Update C12/C13 testnet configuration if it contains:
+
+Chain ID
+Blockchain ID
+RPC endpoint
+network metadata
+
+Do not change the C12 API contract unnecessarily.
+
+Verify the indexer can identify the new testnet correctly.
+
+============================================================
+15. REGRESSION
+============================================================
+
+Run:
+
+- Forge full regression
+- C11 Keeper tests
+- C12 Indexer Jest
+- C13 frontend tests
+- testnet genesis validation
+- testnet configuration validation
+
+Known baselines:
+
+Forge:
+792/792
+
+Keeper:
+20/20
+
+Indexer:
+57/57
+
+C13 integration:
+PASS
+
+No previous test may be weakened or removed to accommodate Chain ID 77.
+
+============================================================
+16. TESTNET BOOTSTRAP VALIDATION
+============================================================
+
+If the current environment can actually instantiate the testnet
+locally, perform a fresh testnet bootstrap using Chain ID 77.
+
+Verify:
+
+1. Node starts
+2. RPC responds
+3. eth_chainId = 0x4d
+4. net_version = 77
+5. block production works
+6. native PW exists
+7. NativeMinter remains disabled
+8. 100M supply invariant remains intact
+9. RewardManager configuration remains correct
+10. deployment scripts recognize Chain ID 77
+
+If external cloud/P-Chain infrastructure is not currently available,
+do NOT pretend a public testnet has been deployed.
+
+Instead validate everything that can be validated locally and report
+the remaining external deployment step.
+
+============================================================
+17. CRITICAL SECURITY CHECK
+============================================================
+
+Confirm that:
+
+- 77 is used ONLY for testnet
+- 73571 remains dev
+- mainnet remains TBD
+- no production credentials are created
+- no mainnet genesis is modified
+- no mainnet Chain ID is selected
+- no private keys are exposed
+- no protocol contracts are altered unnecessarily
+
+============================================================
+18. DO NOT DO THESE THINGS
+============================================================
+
+DO NOT:
+
+- choose a mainnet Chain ID
+- change mainnet configuration
+- change Chain ID 73571
+- implement PWC-20
+- implement PWUSD
+- implement PWSwap
+- implement PrimeWave Dex
+- modify tokenomics
+- modify RewardVault economics
+- modify FeeDistributor economics
+- modify staking rules
+- weaken chain-ID safety checks
+- delete historical C14 records
+- claim public testnet deployment if external infrastructure is absent
+
+============================================================
+19. ACCEPTANCE CRITERIA
+============================================================
+
+[ ] Testnet Chain ID = 77
+[ ] Development Chain ID remains 73571
+[ ] Mainnet Chain ID remains TBD
+[ ] Testnet genesis regenerated
+[ ] Genesis validation passes
+[ ] New testnet blockchain identity generated/recorded
+[ ] No stale active configuration points to 77777
+[ ] PWCScan testnet uses Chain ID 77
+[ ] PWCScan still displays Testnet badge
+[ ] Health checks expect 77
+[ ] Deployment scripts require 77
+[ ] Testnet environment files updated
+[ ] Documentation updated
+[ ] Network state updated
+[ ] Contract deployment configuration verified
+[ ] Indexer configuration verified
+[ ] NativeMinter remains disabled
+[ ] 100M PW supply invariant remains valid
+[ ] RewardManager remains correct
+[ ] Forge 792/792
+[ ] Keeper 20/20
+[ ] Indexer 57/57
+[ ] C13 frontend regression passes
+[ ] No mainnet configuration changed
+[ ] No protocol architecture changed
+[ ] No secrets exposed
+
+============================================================
+20. FINAL RESPONSE
+============================================================
+
+STOP after completing this change.
+
+DO NOT start C15.
+
+Return:
+
+PW-C14 TESTNET CHAIN ID CHANGE — COMPLETE
+
+Include:
+
+1. Previous Testnet Chain ID
+2. New Testnet Chain ID
+3. Development Chain ID
+4. Mainnet Chain ID status
+5. New testnet blockchain ID
+6. Genesis hash
+7. Files changed
+8. Genesis validation result
+9. PWCScan result
+10. Health-check result
+11. Forge result
+12. Keeper result
+13. Indexer result
+14. Frontend result
+15. Fresh bootstrap result, if possible
+16. External infrastructure still required
+17. Any remaining stale/historical 77777 references
+18. Confirmation that mainnet was untouched
+
+============================================================
+END
+============================================================

@@ -4,7 +4,7 @@
 # Sprint PW-C14 | TESTNET ONLY
 # ============================================================
 # Verifies all critical invariants on the live testnet:
-#   INV-G1:  Chain ID == 77777
+#   INV-G1:  Chain ID == 77
 #   INV-G2:  NativeMinter disabled (no mint possible)
 #   INV-G3:  Total supply == 100,000,000 PW
 #   INV-G4:  RewardVault.totalFunded == 15,000,000 PW
@@ -59,7 +59,7 @@ echo ""
 
 # INV-G1: Chain ID
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL" 2>/dev/null || echo "ERROR")
-check "INV-G1" "Chain ID == 77777" "$CHAIN_ID" "77777"
+check "INV-G1" "Chain ID == 77" "$CHAIN_ID" "77"
 
 # INV-G2: NativeMinter (precompile 0x0200000000000000000000000000000000000001)
 MINTER_CODE=$(cast code 0x0200000000000000000000000000000000000001 --rpc-url "$RPC_URL" 2>/dev/null || echo "ERROR")

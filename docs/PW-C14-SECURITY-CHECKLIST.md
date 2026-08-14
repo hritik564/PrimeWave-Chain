@@ -87,7 +87,7 @@
 | # | Check | Method | Result |
 |---|---|---|---|
 | L-01 | PWCScan shows "Testnet" environment label | Screenshot of explorer header | [ ] |
-| L-02 | Chain ID 77777 visible in explorer | Stats page or header | [ ] |
+| L-02 | Chain ID 77 visible in explorer | Stats page or header | [ ] |
 | L-03 | No production/mainnet labels anywhere in testnet | Visual audit of all pages | [ ] |
 | L-04 | API responses include environment metadata | `curl /health` → `"network":"testnet"` | [ ] |
 | L-05 | Documentation clearly labeled TESTNET throughout | Audit all C14 docs | [ ] |

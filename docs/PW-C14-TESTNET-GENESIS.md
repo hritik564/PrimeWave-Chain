@@ -1,7 +1,7 @@
 # PW-C14: Testnet Genesis
 **Sprint:** PW-C14
 **Status:** TEMPLATE COMPLETE — Pending ceremony addresses
-**Environment:** TESTNET ONLY — Chain ID 77777
+**Environment:** TESTNET ONLY — Chain ID **77** (Previous testnet Chain ID: 77777)
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Parameter | Value | Notes |
 |---|---|---|
-| Chain ID | **77777** | Testnet only — verify uniqueness before launch |
+| Chain ID | **77** | Testnet only — verify uniqueness before launch |
 | Total Supply | 100,000,000 PW | Immutable — no NativeMinter |
 | Block Gas Limit | 30,000,000 | Matches dev genesis |
 | Target Block Rate | 2 seconds | |
@@ -153,7 +153,7 @@ The same genesis file can be reproduced and verified by SHA-256 hash.
 
 | ID | Invariant | Verification |
 |---|---|---|
-| INV-G1 | Chain ID == 77777 | `jq '.config.chainId' genesis.json` |
+| INV-G1 | Chain ID == 77 | `jq '.config.chainId' genesis.json` |
 | INV-G2 | NativeMinter not in precompiles | `jq '.config.precompiles' genesis.json \| grep -i minter` |
 | INV-G3 | Total alloc == 100M PW | Python sum script (Step 3 above) |
 | INV-G4 | rewardManagerConfig.rewardAddress == FeeDistributor | `jq '.config.rewardManagerConfig.initialRewardConfig.rewardAddress'` |

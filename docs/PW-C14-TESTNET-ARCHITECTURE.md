@@ -1,7 +1,7 @@
 # PW-C14: Testnet Architecture
 **Sprint:** PW-C14 — Public Testnet + Deployment Rehearsal
 **Status:** IN PROGRESS
-**Environment:** TESTNET ONLY — Chain ID 77777
+**Environment:** TESTNET ONLY — Chain ID **77** (Previous testnet Chain ID: 77777)
 
 ---
 
@@ -16,7 +16,8 @@ PW-C14 moves PrimeWave Chain from local development validation to a real public 
 | Parameter | Value | Notes |
 |---|---|---|
 | Chain Name | PrimeWave Testnet | |
-| Chain ID (EVM) | **77777** | Verify on chainlist.org before launch |
+| Chain ID (EVM) | **77** | Verify on chainlist.org before launch |
+| Previous Testnet Chain ID | 77777 | Changed post-C14; genesis regenerated |
 | Blockchain ID | TBD — generated at subnet creation | Fuji P-Chain transaction |
 | Subnet ID | TBD — generated at subnet creation | Fuji P-Chain transaction |
 | Network | Avalanche Fuji (testnet) | |
@@ -26,7 +27,7 @@ PW-C14 moves PrimeWave Chain from local development validation to a real public 
 | Subnet-EVM | v1.14.2 (pinned) | |
 | ICM Relayer | icm-relayer-v1.7.5 (commit 40e1c89) | |
 
-**Why 77777:** The genesis spec document explicitly suggests 77777 as a candidate testnet ID ("e.g., 77777 or similar"). The number is clearly distinct from the dev ID (73571) and the mainnet ID (TBD). **Verify uniqueness on chainlist.org before finalizing the genesis.**
+**Why 77:** Changed from the initial C14 candidate (77777) post-C14. Chain ID 77 is used for PrimeWave Testnet. Dev ID 73571 and mainnet ID (TBD) are unaffected. **Verify uniqueness on chainlist.org before finalizing the genesis.**
 
 ---
 

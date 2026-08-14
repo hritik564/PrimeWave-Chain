@@ -1,6 +1,6 @@
 # PW-C14: Validator Onboarding Guide
 **Sprint:** PW-C14
-**Environment:** TESTNET ONLY — Chain ID 77777
+**Environment:** TESTNET ONLY — Chain ID **77** (Previous testnet Chain ID: 77777)
 **Target:** 5 initial testnet validators
 
 ---
