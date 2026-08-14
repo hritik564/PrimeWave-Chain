@@ -1,0 +1,973 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C05 — AVALANCHE VALIDATOR MANAGER INTEGRATION
+
+============================================================
+STATUS
+============================================================
+
+PW-C00:
+PASSED / LOCKED
+
+PW-C01:
+PASSED
+
+PW-C02:
+PASSED
+
+PW-C03:
+PASSED
+
+PW-C04:
+PASSED
+
+PW-C04 established and proved:
+
+Real transaction fees
+        ↓
+FeeDistributor
+        ↓
+70%
+        ↓
+ValidatorFeeVault
+        ↓
+Reward-index accounting
+        ↓
+Validator entitlement
+        ↓
+Validator claim
+
+C05 now addresses the missing production integration boundary:
+
+AVALANCHE VALIDATOR MANAGEMENT
+        ↓
+PrimeWave validator state
+        ↓
+ValidatorFeeVault accounting
+
+PRIMARY OBJECTIVE:
+
+Determine and, where technically possible, implement the secure integration between Avalanche's actual validator-management layer and the PrimeWave EVM-side validator fee accounting.
+
+============================================================
+1. CRITICAL RULE
+============================================================
+
+DO NOT invent a validator oracle.
+
+DO NOT create an arbitrary centralized contract that simply declares:
+
+"Validator X is active."
+
+DO NOT allow an unrestricted administrator to fabricate:
+
+- validator identity
+- validator status
+- validator weight
+- validator uptime
+
+The validator state must ultimately derive from, or be securely anchored to, the actual Avalanche validator-management architecture.
+
+If the required validator information cannot safely be exposed to the EVM layer:
+
+STOP.
+
+Document the exact interface limitation.
+
+Do not fake the integration.
+
+============================================================
+2. SCOPE
+============================================================
+
+C05 MAY implement:
+
+- Avalanche Validator Manager integration analysis
+- Validator identity adapter
+- Validator state adapter
+- Validator registration integration
+- Validator activation/deactivation integration
+- Validator weight integration where supported
+- Validator status synchronization where supported
+- EVM-side validator-state interface
+- Local integration contracts
+- Local validator-management tests
+- ValidatorFeeVault adapter/interface changes if necessary
+- Unit tests
+- Fuzz tests
+- Integration tests
+- Multi-node tests
+- Documentation
+
+C05 MUST NOT implement:
+
+- Phase 2 PoS
+- staking
+- delegation
+- staking deposits
+- unbonding
+- staking rewards
+- RewardVault
+- 15M PW emission
+- slashing implementation
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- MLM software
+- ROI
+- Binary income
+- Binary Orbit
+- level income
+- salary
+- P2P
+- bridges
+- BEP-20 migration
+- production governance
+- production multisigs
+- mainnet
+- public testnet
+
+============================================================
+3. PRESERVE C04
+============================================================
+
+DO NOT rewrite the proven C04 reward-index accounting architecture unless a genuine technical incompatibility requires it.
+
+C04 is already proven:
+
+- 113/113 tests passed
+- 18 live-chain integration assertions passed
+- O(1) fee accrual
+- O(1) claims
+- conservation invariants passed
+- 15-validator accounting passed
+
+Treat C04 as a stable accounting layer.
+
+Prefer:
+
+Avalanche Validator State
+        ↓
+Adapter / Integration Boundary
+        ↓
+C04 ValidatorFeeVault
+
+rather than replacing the accounting engine.
+
+============================================================
+4. READ THE SOURCE DOCUMENTATION
+============================================================
+
+Read:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PW-C04-VALIDATOR-FEE-ACCOUNTING-SPEC.md
+- docs/PW-C04-TEST-REPORT.md
+- docs/PW-C04-FINAL-REPORT.md
+- docs/PW-C03-FINAL-REPORT.md
+- docs/PRIMEWAVE_GENESIS_SPEC.md
+
+These are the authoritative PrimeWave design documents.
+
+Do not silently modify locked economic decisions.
+
+============================================================
+5. PINNED AVALANCHE SOURCE
+============================================================
+
+Use the exact Avalanche dependency baseline established during PW-C00.
+
+Do not silently upgrade dependencies.
+
+Inspect the actual source code of the pinned AvalancheGo release and relevant ICM/validator-management components.
+
+Do not rely solely on old tutorials.
+
+Do not assume an API exists because it appears in a different Avalanche release.
+
+For every interface used, document:
+
+- exact package/component
+- exact version/commit
+- interface name
+- function/event name
+- parameters
+- return values
+- authorization requirements
+- whether it is available on the EVM
+- whether it is P-Chain-only
+- whether it is available through a precompile
+- whether it requires Warp/ICM
+- whether it is suitable for production
+
+============================================================
+6. FIRST TASK — MAP THE ACTUAL VALIDATOR ARCHITECTURE
+============================================================
+
+Before writing integration code, create a precise architecture map.
+
+Determine:
+
+A. Where validator identity exists.
+
+B. Where validator membership is managed.
+
+C. Where validator status exists.
+
+D. Where validator weight exists.
+
+E. Where validator uptime/eligibility exists.
+
+F. Which layer owns each piece of information.
+
+G. Which information is available to EVM contracts.
+
+H. Which information is only available to the P-Chain.
+
+I. Which information can be communicated securely across layers.
+
+J. Whether PrimeWave can observe validator lifecycle events.
+
+Create a table:
+
+| Data | Source | Layer | EVM accessible? | Secure access method |
+|------|--------|-------|-----------------|----------------------|
+
+Do not guess.
+
+============================================================
+7. VALIDATOR IDENTITY
+============================================================
+
+Determine the canonical validator identity used by Avalanche.
+
+Do NOT assume it is:
+
+- an EVM address
+- a normal Ethereum address
+- a P-Chain address
+- a reward recipient address
+
+unless the source architecture proves it.
+
+Define the mapping:
+
+Avalanche Validator ID
+        ↓
+PrimeWave validator identifier
+        ↓
+Fee reward recipient
+
+The mapping must be deterministic and auditable.
+
+If one Avalanche validator can have multiple EVM reward addresses:
+
+document how the relationship works.
+
+If an EVM reward address is not inherently tied to validator identity:
+
+document the secure binding mechanism.
+
+============================================================
+8. VALIDATOR LIFECYCLE
+============================================================
+
+Map the lifecycle:
+
+Validator proposed/registered
+        ↓
+Validator active
+        ↓
+Validator weight/state changes
+        ↓
+Validator inactive/removed
+
+Determine exactly how PrimeWave can detect each transition.
+
+The accounting system must not continue allocating new fees to a validator that is no longer eligible.
+
+Previously accrued fees must remain claimable according to C04 rules unless the protocol explicitly specifies otherwise.
+
+============================================================
+9. PHASE 1 POA MODEL
+============================================================
+
+C05 is primarily about Phase 1.
+
+PrimeWave launches with:
+
+15 initial PoA validators.
+
+The C04 validator weights were development accounting parameters.
+
+C05 must determine how the actual Phase 1 validator set can safely drive those accounting records.
+
+For Phase 1:
+
+- no staking
+- no delegation
+- no staking weight
+- no staking rewards
+
+The validator set is the source of validator eligibility.
+
+============================================================
+10. WEIGHT MODEL
+============================================================
+
+Do NOT invent a staking weight model.
+
+For Phase 1 PoA:
+
+the accounting system should use the approved equal-weight model unless Avalanche's actual validator-management semantics require a different representation.
+
+Document:
+
+- what "weight" means in Avalanche
+- whether all 15 validators are equal
+- whether validator weight can change
+- who controls that change
+- how a weight change affects accumulated fees
+
+If Avalanche's validator manager does not expose an EVM-readable weight:
+
+STOP before inventing a substitute.
+
+============================================================
+11. UPTIME / ELIGIBILITY
+============================================================
+
+This is a particularly important investigation.
+
+Determine whether Avalanche provides an authoritative uptime/eligibility signal that can safely be consumed by the PrimeWave accounting layer.
+
+Investigate:
+
+- validator uptime
+- validator health
+- validator eligibility
+- validator active status
+- missed participation
+- reward eligibility
+
+Determine:
+
+1. Where the information originates.
+2. Whether it is consensus-derived.
+3. Whether it is exposed to EVM.
+4. Whether it can be authenticated.
+5. Whether it can be updated trustlessly.
+6. Whether it requires an off-chain service.
+7. Whether it requires a Warp/ICM message.
+8. Whether it requires a future custom component.
+
+IMPORTANT:
+
+Do NOT implement an off-chain uptime oracle in C05.
+
+If an oracle is required, document it as a future architecture requirement and STOP that portion.
+
+============================================================
+12. VALIDATOR STATE ADAPTER
+============================================================
+
+If the Avalanche architecture provides a safe integration mechanism:
+
+Create the minimum adapter required.
+
+Conceptually:
+
+Avalanche Validator Manager
+        │
+        ▼
+ValidatorStateAdapter
+        │
+        ├── validatorId
+        ├── active
+        ├── weight
+        └── eligibility
+        │
+        ▼
+ValidatorFeeVault
+
+The adapter must NOT become a second validator-management system.
+
+It should consume authoritative validator state.
+
+============================================================
+13. AUTHORITY BOUNDARIES
+============================================================
+
+Document exactly who can change:
+
+- validator registration
+- validator activation
+- validator deactivation
+- validator weight
+- validator reward recipient
+- validator eligibility
+
+For every action identify:
+
+- Avalanche authority
+- EVM authority
+- governance authority
+- emergency authority
+
+Do not create broad "owner" privileges merely to make integration easy.
+
+============================================================
+14. REWARD RECIPIENT SECURITY
+============================================================
+
+C04 has a rewardRecipient for each validator.
+
+C05 must determine how the reward recipient becomes securely associated with the actual validator.
+
+Potential attack:
+
+Attacker registers:
+
+Validator ID = legitimate validator
+Reward recipient = attacker
+
+This MUST NOT be possible.
+
+The integration must prevent unauthorized reward-recipient reassignment.
+
+If reward recipients are configured outside Avalanche's validator identity system:
+
+document the secure registration/binding ceremony.
+
+============================================================
+15. VALIDATOR REGISTRATION
+============================================================
+
+Implement local registration integration only if technically supported.
+
+For every validator registration verify:
+
+- canonical validator identity
+- reward recipient
+- active status
+- weight
+- eligibility
+
+Registration must not duplicate a validator.
+
+Attempting to register the same validator twice must fail safely.
+
+============================================================
+16. VALIDATOR DEACTIVATION
+============================================================
+
+Test:
+
+Validator becomes inactive.
+
+Expected behavior:
+
+- no new fee entitlement accrues after effective deactivation
+- previously accrued entitlement remains claimable
+- accounting state remains consistent
+- validator identity remains historically traceable
+
+Do NOT confiscate earned fees.
+
+============================================================
+17. VALIDATOR REACTIVATION
+============================================================
+
+If the underlying Avalanche architecture permits validator reactivation:
+
+test:
+
+inactive
+→ active
+
+Verify:
+
+- new fee accrual resumes correctly
+- old claim checkpoint is preserved
+- no historical fees are double-counted
+
+If reactivation is not applicable to the chosen Avalanche lifecycle:
+
+document that instead.
+
+============================================================
+18. WEIGHT CHANGE
+============================================================
+
+If actual validator weight can change:
+
+test:
+
+Weight 1
+→ Weight 2
+
+The implementation must correctly checkpoint accumulated fees before applying the new weight.
+
+Never retroactively apply a new weight to historical fees.
+
+This is critical.
+
+Example:
+
+Period A:
+weight = 1
+
+Period B:
+weight = 2
+
+Fees earned in Period A must remain calculated using weight 1.
+
+============================================================
+19. ACCOUNTING INTEGRATION
+============================================================
+
+The final C05 architecture should conceptually be:
+
+                 Avalanche Validator State
+                           │
+                           ▼
+                 ValidatorStateAdapter
+                           │
+                 ┌─────────┼─────────┐
+                 ▼         ▼         ▼
+              Identity   Weight   Eligibility
+                 │         │         │
+                 └─────────┼─────────┘
+                           ▼
+                  ValidatorFeeVault
+                           │
+                           ▼
+                    C04 Reward Index
+                           │
+                           ▼
+                       Claims
+
+Do not introduce a second accounting index.
+
+C04 remains authoritative for fee entitlement.
+
+============================================================
+20. REAL LOCAL INTEGRATION
+============================================================
+
+Use the actual local PrimeWave L1.
+
+Do not create a mock-only validator system and call it integration.
+
+Where possible:
+
+- create/use the actual local validator set
+- query actual validator state
+- bind it to the EVM accounting layer
+- generate actual fees
+- verify accounting state
+- claim validator fees
+
+If a component cannot be tested locally because it requires a real P-Chain environment:
+
+document the limitation precisely.
+
+Do not simulate the missing production mechanism without labeling it as simulation.
+
+============================================================
+21. MULTI-NODE TEST
+============================================================
+
+Use the local 3-node environment from C01.
+
+Verify:
+
+- validator set consistency
+- validator identity consistency
+- accounting consistency
+- validator status consistency
+
+All nodes must agree on the relevant state.
+
+============================================================
+22. SECURITY TESTS
+============================================================
+
+Test:
+
+1. Fake validator registration.
+
+2. Duplicate validator registration.
+
+3. Unauthorized validator deactivation.
+
+4. Unauthorized validator activation.
+
+5. Unauthorized weight change.
+
+6. Unauthorized reward-recipient change.
+
+7. Unauthorized eligibility change.
+
+8. Validator identity mismatch.
+
+9. Reward recipient mismatch.
+
+10. Stale validator state.
+
+11. Replay of validator-state updates.
+
+12. Conflicting validator-state updates.
+
+13. Historical weight manipulation.
+
+14. Claiming after deactivation.
+
+15. Re-activation double counting.
+
+All must fail safely or behave according to the documented lifecycle.
+
+============================================================
+23. REPLAY / MESSAGE SECURITY
+============================================================
+
+If validator state crosses from another Avalanche layer into the EVM using messages:
+
+analyze:
+
+- message authentication
+- source-chain identification
+- source-address verification
+- nonce
+- replay protection
+- ordering
+- duplicate messages
+- stale messages
+- malicious messages
+
+If Warp/ICM is required:
+
+use the pinned architecture and document the exact security boundary.
+
+Do not implement a custom insecure message-passing system.
+
+============================================================
+24. NO FAKE ORACLE
+============================================================
+
+Absolutely do NOT implement:
+
+setValidatorUptime(address validator, uint256 uptime)
+
+as an unrestricted admin function.
+
+Likewise do NOT implement:
+
+setValidatorWeight(...)
+setValidatorActive(...)
+setValidatorEligibility(...)
+
+with generic owner control simply to make tests pass.
+
+If development-only controls are necessary for isolated unit tests:
+
+clearly separate them from the production integration architecture.
+
+============================================================
+25. C04 REGRESSION
+============================================================
+
+All C04 tests must continue passing.
+
+Required baseline:
+
+- 60 ValidatorFeeVault unit tests
+- 8 invariant tests
+- 6 fuzz tests
+- 25 FeeDistributor regression tests
+- 14 FeeDistributor invariant tests
+- 18 C04 integration assertions
+
+Do not break the proven C04 accounting.
+
+============================================================
+26. FUZZ / INVARIANT TESTING
+============================================================
+
+Add fuzzing around validator state transitions.
+
+Fuzz:
+
+- validator activation
+- validator deactivation
+- weight changes
+- reward recipient binding
+- fee accrual
+- claims
+- state updates
+- duplicate updates
+- stale updates
+
+Verify:
+
+No unauthorized state mutation.
+
+No historical fee corruption.
+
+No double claim.
+
+No fee creation.
+
+No fee destruction.
+
+No validator can claim another validator's funds.
+
+============================================================
+27. GAS ANALYSIS
+============================================================
+
+Measure approximate gas for:
+
+- validator registration
+- state update
+- activation
+- deactivation
+- weight update
+- reward-recipient binding
+- validator fee claim
+
+Do not optimize prematurely.
+
+Document results.
+
+============================================================
+28. PRODUCTION VS DEVELOPMENT
+============================================================
+
+C05 remains a development/testnet architecture sprint.
+
+DO NOT:
+
+- generate production validator keys
+- create production multisigs
+- deploy mainnet
+- deploy public testnet
+- assign real validator operators
+- configure production governance
+
+Development validator identities only.
+
+============================================================
+29. NO PHASE 2 POS
+============================================================
+
+Do NOT implement:
+
+- staking
+- delegation
+- unbonding
+- staking rewards
+- Phase 2 PrimeWaveStakingManager
+
+C05 must only establish the validator-management integration boundary needed by the existing fee-accounting system.
+
+Phase 2 PoS comes later.
+
+============================================================
+30. NO REWARDVAULT
+============================================================
+
+Do NOT implement the 15M PW RewardVault.
+
+Do not connect staking emissions to validator fees.
+
+They remain separate systems.
+
+============================================================
+31. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+
+Include:
+
+1. Avalanche validator architecture
+2. Validator identity
+3. Validator lifecycle
+4. Validator state source
+5. EVM accessibility
+6. ValidatorStateAdapter
+7. Reward recipient binding
+8. Weight model
+9. Eligibility model
+10. Uptime model
+11. Message security if applicable
+12. Authorization
+13. Replay protection
+14. Failure modes
+15. C04 integration
+16. Future Phase 2 integration
+17. Known limitations
+
+Create:
+
+docs/PW-C05-VALIDATOR-INTEGRATION-TEST-REPORT.md
+
+Include:
+
+- unit tests
+- integration tests
+- multi-node tests
+- validator lifecycle tests
+- security tests
+- replay tests
+- fuzz tests
+- invariant tests
+- gas measurements
+
+Create:
+
+docs/PW-C05-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. What was implemented
+C. What Avalanche actually exposes
+D. Validator identity mapping
+E. Validator lifecycle
+F. Validator state accessibility
+G. Uptime/eligibility findings
+H. C04 integration
+I. Security findings
+J. Tests
+K. Limitations
+L. Architecture required for C06
+M. Open questions
+N. Explicit statement whether C05 integration is production-viable
+
+============================================================
+32. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C05 PASSES only when:
+
+[ ] Actual Avalanche validator architecture has been mapped.
+
+[ ] Canonical validator identity is identified.
+
+[ ] Validator lifecycle is documented.
+
+[ ] Validator state source is identified.
+
+[ ] EVM accessibility is proven or explicitly shown unavailable.
+
+[ ] Reward-recipient binding is secure.
+
+[ ] Validator registration is secure.
+
+[ ] Validator activation/deactivation behavior is correct.
+
+[ ] Weight behavior is documented.
+
+[ ] Historical fee accounting survives weight changes.
+
+[ ] Eligibility behavior is documented.
+
+[ ] Uptime behavior is documented.
+
+[ ] No fake unrestricted validator oracle exists.
+
+[ ] C04 accounting remains intact.
+
+[ ] C04 regression tests pass.
+
+[ ] Validator lifecycle tests pass.
+
+[ ] Security tests pass.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] Multi-node verification passes.
+
+[ ] Real local integration is demonstrated where technically possible.
+
+[ ] Any unavailable production integration is explicitly documented.
+
+[ ] No staking is implemented.
+
+[ ] No RewardVault is implemented.
+
+[ ] No production keys exist.
+
+[ ] No production deployment exists.
+
+[ ] Documentation is complete.
+
+============================================================
+33. CRITICAL STOP CONDITION
+============================================================
+
+If the Avalanche validator-management layer cannot safely expose the required validator state to the EVM:
+
+DO NOT invent a workaround.
+
+STOP.
+
+Report:
+
+1. What information is unavailable.
+2. Which layer owns it.
+3. Why EVM cannot safely access it.
+4. What official Avalanche mechanism could expose it.
+5. Whether Warp/ICM is required.
+6. Whether a custom Avalanche component is required.
+7. Security implications.
+8. Cost implications.
+
+Then wait for approval.
+
+Likewise, if integrating the validator state requires modifying a locked architectural decision:
+
+STOP.
+
+Do not modify the decision silently.
+
+============================================================
+34. FINAL STOP
+============================================================
+
+When C05 is complete:
+
+STOP.
+
+Do NOT begin C06.
+
+Do NOT implement:
+
+- Phase 2 PoS
+- staking
+- delegation
+- RewardVault
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+
+Report:
+
+PW-C05 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C05
+============================================================

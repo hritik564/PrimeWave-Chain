@@ -171,6 +171,9 @@ contract ValidatorFeeVault {
     /// @notice New fees checkpointed into a validator's pendingReward.
     event FeeAccrued(bytes32 indexed validationId, uint256 amount);
 
+    /// @notice A validator's reward recipient was updated by admin.
+    event ValidatorRecipientUpdated(bytes32 indexed validationId, address indexed newRecipient);
+
     /// @notice A validator's accumulated fees were claimed.
     event ValidatorFeeClaimed(
         bytes32 indexed validationId,
@@ -428,6 +431,25 @@ contract ValidatorFeeVault {
     /// @notice Cumulative fees received minus claimed. Equals balance exactly.
     function netReceived() external view returns (uint256) {
         return totalReceived - totalClaimed;
+    }
+
+    /// @notice Update the reward recipient for a registered validator.
+    ///         Admin-only. Old recipient should claim any earned fees first.
+    ///         Future fee claims will be sent to newRecipient.
+    /// @dev    Added in C05 for PrimeWaveValidatorRegistry recipient-rotation support.
+    function setRewardRecipient(bytes32 validationId, address newRecipient) external onlyAdmin {
+        require(newRecipient != address(0), "VFV: zero recipient");
+        ValidatorInfo storage v = validators[validationId];
+        require(v.rewardRecipient != address(0), "VFV: not registered");
+        v.rewardRecipient = newRecipient;
+        emit ValidatorRecipientUpdated(validationId, newRecipient);
+    }
+
+    /// @notice Whether a validator is currently active (accruing fees).
+    ///         Convenience view for PrimeWaveValidatorRegistry.syncValidator().
+    /// @dev    Added in C05 to avoid cross-contract struct decoding.
+    function isActive(bytes32 validationId) external view returns (bool) {
+        return validators[validationId].active;
     }
 
     /// @notice Conservation check: balance − claimable − unallocated ≥ 0 (rounding dust).
