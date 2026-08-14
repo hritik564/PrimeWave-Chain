@@ -14,4 +14,4 @@
 - [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source
 - [PrimeWave Chain PW-C13](primewave-pw-c13.md) — C13 COMPLETE; PWCScan explorer; 15 routes; design subagent; stats hook unwraps (no .data); 792/792+57/57+20/20
 - [PrimeWave Chain PW-C14](primewave-pw-c14.md) — C14 COMPLETE; testnet Chain ID 77 (was 77777); fuzz/em-dash pitfalls; genesis validated; 792/792+57/57+20/20
-- [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 IN PROGRESS; infra audit complete; testnet-deployer key generated; 64-item gate (11 PASS/51 BLOCKED); provisioning guide written
+- [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 COMPLETE; 62/0 preflight; 8 bugs fixed; security clean; DB restore pass; genesis 9/9; 792/792+57/57+20/20; §27 report written

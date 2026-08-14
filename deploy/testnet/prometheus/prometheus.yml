@@ -23,16 +23,16 @@ scrape_configs:
   - job_name: 'avalanchego'
     static_configs:
       - targets:
-          - 'validator-1:9090'
-          - 'validator-2:9090'
-          - 'validator-3:9090'
-          - 'validator-4:9090'
-          - 'validator-5:9090'
-          - 'rpc-node-1:9090'
+          - '__REPLACE_VALIDATOR_1_IP__:9090'
+          - '__REPLACE_VALIDATOR_2_IP__:9090'
+          - '__REPLACE_VALIDATOR_3_IP__:9090'
+          - '__REPLACE_VALIDATOR_4_IP__:9090'
+          - '__REPLACE_VALIDATOR_5_IP__:9090'
+          - '__REPLACE_RPC_NODE_IP__:9090'
         labels:
           role: 'validator'
       - targets:
-          - 'rpc-node-1:9090'
+          - '__REPLACE_RPC_NODE_IP__:9090'
         labels:
           role: 'rpc'
     metrics_path: /ext/metrics
@@ -41,23 +41,23 @@ scrape_configs:
   # Keeper service metrics
   - job_name: 'primewave-keeper'
     static_configs:
-      - targets: ['sentinel:8080']
+      - targets: ['__REPLACE_INFRA_IP__:8080']
     metrics_path: /metrics
 
   # PostgreSQL metrics (via postgres_exporter)
   - job_name: 'postgresql'
     static_configs:
-      - targets: ['indexer-host:9187']
+      - targets: ['__REPLACE_INFRA_IP__:9187']
 
   # Node exporter (system metrics) on all hosts
   - job_name: 'node_exporter'
     static_configs:
       - targets:
-          - 'validator-1:9100'
-          - 'validator-2:9100'
-          - 'validator-3:9100'
-          - 'validator-4:9100'
-          - 'validator-5:9100'
-          - 'rpc-node-1:9100'
-          - 'indexer-host:9100'
-          - 'sentinel:9100'
+          - '__REPLACE_VALIDATOR_1_IP__:9100'
+          - '__REPLACE_VALIDATOR_2_IP__:9100'
+          - '__REPLACE_VALIDATOR_3_IP__:9100'
+          - '__REPLACE_VALIDATOR_4_IP__:9100'
+          - '__REPLACE_VALIDATOR_5_IP__:9100'
+          - '__REPLACE_RPC_NODE_IP__:9100'
+          - '__REPLACE_INFRA_IP__:9100'
+          - '__REPLACE_INFRA_IP__:9100'

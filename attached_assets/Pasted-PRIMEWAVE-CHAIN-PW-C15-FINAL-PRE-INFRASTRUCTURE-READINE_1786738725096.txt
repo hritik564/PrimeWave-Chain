@@ -1,0 +1,779 @@
+PRIMEWAVE CHAIN
+PW-C15 — FINAL PRE-INFRASTRUCTURE READINESS PASS
+
+============================================================
+MISSION
+============================================================
+
+STOP AFTER THIS PASS.
+
+Do NOT attempt to deploy the public testnet.
+
+Do NOT start C16.
+
+Do NOT provision cloud infrastructure.
+
+Do NOT fabricate PASS results for infrastructure-dependent tests.
+
+C15-External audit has established:
+
+Forge: 792/792 PASS
+Indexer: 57/57 PASS
+Keeper: 20/20 PASS
+
+C15 Entry Gate:
+
+64 total
+11 PASS
+51 BLOCKED
+1 DEFERRED
+0 FAIL
+
+The 51 BLOCKED items all depend on external infrastructure.
+
+The purpose of this final pass is ONLY to make the repository
+100% deployment-ready so that when external infrastructure is
+available, deployment can be executed with minimal ambiguity.
+
+============================================================
+1. READ THE CURRENT STATE
+============================================================
+
+Read:
+
+docs/PW-C15-INFRA-PROVISIONING-GUIDE.md
+docs/PW-C15-C16-ENTRY-GATE.md
+docs/PW-C15-FINAL-REPORT.md
+
+and all relevant C14/C15 deployment documentation.
+
+Inspect:
+
+config/testnet/
+scripts/testnet/
+deploy/testnet/
+contracts/script/
+indexer/
+PWCScan frontend
+
+Do not redesign the architecture.
+
+============================================================
+2. CREATE ONE MASTER DEPLOYMENT CHECKLIST
+============================================================
+
+Create:
+
+docs/PW-C15-TESTNET-DAY-0-CHECKLIST.md
+
+This must be a literal operator checklist for the day external
+infrastructure becomes available.
+
+Organize it:
+
+PHASE 0 — Prerequisites
+PHASE 1 — Fuji funding
+PHASE 2 — Key ceremony
+PHASE 3 — Cloud provisioning
+PHASE 4 — DNS
+PHASE 5 — TLS
+PHASE 6 — Fuji P-Chain
+PHASE 7 — Genesis
+PHASE 8 — PrimeWave contracts
+PHASE 9 — Validators
+PHASE 10 — ACP-99
+PHASE 11 — ICM/Warp
+PHASE 12 — Keeper
+PHASE 13 — RPC
+PHASE 14 — PostgreSQL
+PHASE 15 — Indexer
+PHASE 16 — PWCScan
+PHASE 17 — Monitoring
+PHASE 18 — C15 acceptance tests
+PHASE 19 — Gate review
+
+Every step must contain:
+
+COMMAND / ACTION
+EXPECTED RESULT
+FAILURE CONDITION
+ROLLBACK / RECOVERY
+
+Do not leave vague instructions.
+
+============================================================
+3. CREATE A DEPLOYMENT VARIABLE MANIFEST
+============================================================
+
+Create:
+
+docs/PW-C15-TESTNET-VARIABLE-MANIFEST.md
+
+Document every value that must exist before deployment.
+
+Example categories:
+
+CHAIN_ID
+NETWORK_ID
+SUBNET_ID
+BLOCKCHAIN_ID
+GENESIS_HASH
+RPC_URL
+PWCScan_URL
+DATABASE_URL
+VALIDATOR_IDENTITIES
+DEPLOYER_ADDRESS
+KEEPER_ADDRESS
+GOVERNANCE_ADDRESSES
+CONTRACT_ADDRESSES
+ICM_ENDPOINTS
+BOOTSTRAP_NODES
+
+For every variable specify:
+
+SOURCE
+WHEN GENERATED
+WHO PROVIDES IT
+SECRET? YES/NO
+WHERE STORED
+WHERE USED
+
+NEVER put actual private keys or passwords into this document.
+
+============================================================
+4. CREATE DEPLOYMENT PRE-FLIGHT SCRIPT
+============================================================
+
+Create:
+
+scripts/testnet/preflight-testnet.sh
+
+It must verify everything that can be verified WITHOUT deploying
+the public testnet.
+
+Examples:
+
+- required binaries exist
+- correct versions
+- required scripts executable
+- Chain ID = 77
+- no active testnet config uses 77777
+- dev Chain ID remains 73571
+- mainnet remains TBD
+- genesis template valid
+- no unresolved placeholders are accidentally used as final genesis
+- expected environment variables exist
+- required config files exist
+- required directories exist
+- required ports are documented
+- Docker/systemd/nginx configs syntactically valid where applicable
+- PostgreSQL connectivity if available
+- Foundry version
+- Solidity version
+- Node/npm versions
+- Avalanche CLI version
+- AvalancheGo version
+- subnet-evm version
+
+The script must distinguish:
+
+READY
+WARNING
+BLOCKED
+
+It must NEVER claim the public testnet is live.
+
+============================================================
+5. CREATE EXTERNAL INFRASTRUCTURE PRE-FLIGHT
+============================================================
+
+Create:
+
+scripts/testnet/check-external-prerequisites.sh
+
+This script should check what can actually be checked from the
+environment.
+
+Examples:
+
+- Fuji P-Chain RPC reachable
+- deployer address visible
+- deployer Fuji balance
+- DNS resolution
+- TLS endpoint
+- SSH reachability
+- required ports
+- cloud node connectivity
+
+If infrastructure doesn't exist:
+
+return a clear BLOCKED report.
+
+Do not fail mysteriously.
+
+============================================================
+6. VALIDATE ALL SCRIPTS OFFLINE
+============================================================
+
+Inspect every script under:
+
+scripts/testnet/
+
+Verify:
+
+- shell syntax
+- executable bit
+- required binaries
+- environment variable handling
+- error handling
+- set -euo pipefail where appropriate
+- no hardcoded secrets
+- no dev chain accidentally accepted
+- Chain ID 77 enforced where appropriate
+- dangerous commands require explicit confirmation
+
+Run shellcheck if available.
+
+Fix only genuine issues.
+
+Do not redesign working scripts.
+
+============================================================
+7. VALIDATE SYSTEMD CONFIGURATION
+============================================================
+
+Inspect all:
+
+deploy/testnet/*.service
+
+Verify:
+
+- paths are correct
+- users are correct
+- WorkingDirectory is correct
+- environment files are correct
+- restart policies exist
+- dependencies are sensible
+- private services bind privately
+- logs are accessible
+- no secrets are embedded
+
+Run systemd/analyze validation if possible.
+
+============================================================
+8. VALIDATE NGINX
+============================================================
+
+Inspect:
+
+deploy/testnet/nginx/
+
+Verify:
+
+- public RPC routes
+- PWCScan routes
+- TLS placeholders
+- rate limits
+- admin method blocking
+- security headers
+- upstream configuration
+- health endpoints
+- no database exposure
+- no validator admin exposure
+
+Run nginx config validation if nginx is available.
+
+Do NOT deploy nginx externally.
+
+============================================================
+9. VALIDATE MONITORING
+============================================================
+
+Inspect:
+
+deploy/testnet/prometheus/
+
+Verify:
+
+- targets are correct
+- alert expressions are syntactically valid
+- NodeDown
+- KeeperStalled
+- IndexerSyncLag
+- disk alerts
+- RPC alerts
+- validator alerts
+
+No alert should contain an impossible hostname/IP.
+
+Use placeholders where infrastructure values do not yet exist.
+
+============================================================
+10. VALIDATE DATABASE RECOVERY PROCEDURE
+============================================================
+
+Review:
+
+scripts/testnet/
+database backup/restore procedure
+
+Perform only a LOCAL/Replit-safe backup/restore test if possible.
+
+Do not destroy anything important.
+
+Verify:
+
+backup created
+→ restore works
+→ schema intact
+→ indexes intact
+→ data integrity intact
+
+Record result.
+
+============================================================
+11. VALIDATE GENESIS PIPELINE
+============================================================
+
+Do NOT create the final public testnet genesis because the six
+ceremony addresses do not yet exist.
+
+Instead:
+
+1. validate the template
+2. validate placeholder detection
+3. validate allocation math
+4. validate Chain ID 77
+5. validate NativeMinter disabled
+6. validate RewardManager configuration
+7. validate expected allocation totals
+8. validate that final generation REFUSES unresolved placeholders
+
+The final genesis generator MUST FAIL CLOSED if placeholders remain.
+
+============================================================
+12. VALIDATE CONTRACT DEPLOYMENT SAFETY
+============================================================
+
+Inspect:
+
+contracts/script/DeployTestnet.s.sol
+
+Confirm it:
+
+- requires Chain ID 77
+- rejects 73571
+- rejects unknown networks
+- rejects dev deployer
+- verifies expected deployment prerequisites
+- funds RewardVault with exactly 15M PW
+- writes deployment state
+- does not expose private keys
+- does not silently deploy to the wrong RPC
+
+If a deployment prerequisite cannot be checked before execution,
+document it rather than weakening the guard.
+
+============================================================
+13. VERIFY ADDRESS PREDICTION
+============================================================
+
+Review all testnet precomputed-address logic.
+
+Confirm that:
+
+- deployment nonce assumptions are documented
+- predicted addresses are verified
+- genesis placeholders use the correct addresses
+- deployment order is deterministic
+
+Do not leave hidden nonce assumptions.
+
+============================================================
+14. CREATE CONTRACT ADDRESS VERIFIER
+============================================================
+
+Create:
+
+scripts/testnet/verify-deployed-contracts.sh
+
+It should accept:
+
+RPC URL
++
+deployment manifest
+
+and verify on a REAL testnet later:
+
+- contract has code
+- expected bytecode hash where appropriate
+- expected addresses
+- expected Chain ID
+- critical configuration
+- RewardVault funding
+- FeeDistributor configuration
+- governance addresses
+
+It should fail loudly on mismatches.
+
+If RPC is unavailable now, the script must report BLOCKED rather
+than fabricate results.
+
+============================================================
+15. CREATE TESTNET HEALTH GATE
+============================================================
+
+Review:
+
+scripts/testnet/testnet-health-check.sh
+
+Make sure it checks:
+
+Chain ID = 77
+RPC
+block height
+block production
+peer count
+contract code
+FeeDistributor
+RewardVault
+ValidatorManager
+Registry
+Keeper
+Indexer
+PWCScan
+
+Use explicit PASS/FAIL/BLOCKED states.
+
+============================================================
+16. CREATE C15 EXECUTION RUNNER
+============================================================
+
+Create:
+
+scripts/testnet/run-c15-live-gate.sh
+
+This should NOT magically run destructive tests.
+
+Instead, create a safe orchestrator that runs the appropriate
+acceptance checks in order.
+
+It must stop on critical failure.
+
+Structure:
+
+PRE-FLIGHT
+↓
+NETWORK IDENTITY
+↓
+GENESIS
+↓
+RPC
+↓
+VALIDATORS
+↓
+ACP-99
+↓
+ICM
+↓
+KEEPER
+↓
+FEES
+↓
+REWARDS
+↓
+STAKING
+↓
+GOVERNANCE
+↓
+INDEXER
+↓
+PWCScan
+↓
+FAILURE RECOVERY
+↓
+MONITORING
+↓
+FINAL GATE
+
+Include a --dry-run mode.
+
+Default behavior must be SAFE.
+
+============================================================
+17. SECURITY / SECRET SCAN
+============================================================
+
+Run repository-wide scans for:
+
+- private keys
+- seed phrases
+- API secrets
+- passwords
+- database credentials
+- cloud credentials
+
+Exclude known public test fixtures where appropriate.
+
+Pay special attention to:
+
+ewoq
+
+Confirm the publicly-known ewoq key is NEVER used by deployment
+scripts.
+
+Do not print secrets in the report.
+
+============================================================
+18. MAINNET SAFETY AUDIT
+============================================================
+
+Perform a final repository scan confirming:
+
+- no mainnet private keys
+- no mainnet deployment scripts accidentally callable
+- no mainnet Chain ID locked
+- no production RPC endpoints
+- no production DNS
+- no mainnet treasury
+- no production governance addresses
+
+Mainnet remains:
+
+CHAIN ID = TBD
+
+============================================================
+19. CHAIN ID DOCUMENTATION
+============================================================
+
+Current:
+
+Dev = 73571
+Testnet = 77
+Mainnet = TBD
+
+Do NOT change testnet.
+
+Do NOT lock mainnet.
+
+Keep the candidate list:
+
+149
+209
+229
+235
+241
+
+but clearly label it:
+
+UNLOCKED CANDIDATES
+
+============================================================
+20. C15 GATE CLEANUP
+============================================================
+
+Update:
+
+docs/PW-C15-C16-ENTRY-GATE.md
+
+Keep infrastructure-dependent items BLOCKED.
+
+Do NOT convert blocked items to PASS.
+
+However, after this pass, each blocked item must reference the
+EXACT external dependency required.
+
+Example:
+
+BLOCKED:
+"Cloud validator nodes unavailable."
+
+not:
+
+"Pending."
+
+============================================================
+21. COST / INFRASTRUCTURE PLAN
+============================================================
+
+Review:
+
+docs/PW-C15-INFRA-PROVISIONING-GUIDE.md
+
+Create:
+
+docs/PW-C15-INFRASTRUCTURE-BUDGET.md
+
+Provide:
+
+MINIMUM topology
+RECOMMENDED topology
+FULL 15-validator topology
+
+For each:
+
+- node count
+- CPU
+- RAM
+- storage
+- bandwidth
+- estimated monthly cost
+- purpose
+
+Do not purchase anything.
+
+Do not provision anything.
+
+This is documentation only.
+
+============================================================
+22. RECOMMENDATION ON TOPOLOGY
+============================================================
+
+Give a recommendation for the smallest topology that can genuinely
+prove:
+
+- multi-node consensus
+- validator failure
+- RPC separation
+- keeper
+- indexer
+- PWCScan
+- ICM
+
+Then give the recommended path to scale toward 15 validators.
+
+Do not call a 3-validator network equivalent to the intended
+15-validator production topology.
+
+============================================================
+23. CREATE EXTERNAL DEPENDENCY HANDOFF
+============================================================
+
+Create:
+
+docs/PW-C15-EXTERNAL-HANDOFF.md
+
+This must be a concise handoff document for the infrastructure
+operator.
+
+Include:
+
+WHAT YOU NEED TO PROVIDE
+
+1. Fuji AVAX
+2. cloud servers
+3. SSH access
+4. DNS
+5. TLS
+6. secure key ceremony environment
+
+Then:
+
+EXACT COMMANDS TO RUN
+
+Then:
+
+EXPECTED OUTPUT
+
+Then:
+
+WHAT TO SEND BACK
+
+Never request private keys to be pasted into ChatGPT/Replit.
+
+============================================================
+24. FINAL REGRESSION
+============================================================
+
+Run:
+
+Forge:
+792/792
+
+Indexer:
+57/57
+
+Keeper:
+20/20
+
+Run all new preflight tests.
+
+No regressions.
+
+============================================================
+25. NO NEW FEATURES
+============================================================
+
+Do NOT implement:
+
+- PWC-20
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- new tokenomics
+- new governance features
+- new staking features
+- new protocol contracts
+
+Do NOT modify locked protocol behavior.
+
+============================================================
+26. FINAL STOP CONDITION
+============================================================
+
+After completing this pass:
+
+STOP.
+
+Do NOT:
+
+- provision servers
+- spend cloud money
+- create mainnet keys
+- deploy mainnet
+- start C16
+
+The repository should now be in:
+
+"WAITING FOR EXTERNAL INFRASTRUCTURE"
+
+state.
+
+============================================================
+27. FINAL REPORT
+============================================================
+
+Return:
+
+PW-C15 PRE-INFRASTRUCTURE READINESS — COMPLETE
+
+Include:
+
+1. Files created
+2. Files changed
+3. Scripts validated
+4. Genesis pipeline status
+5. Contract deployment safety status
+6. Systemd status
+7. Nginx status
+8. Monitoring status
+9. Database recovery status
+10. Secret scan status
+11. Mainnet safety status
+12. Chain ID status
+13. Cost/topology recommendation
+14. External handoff
+15. Forge regression
+16. Indexer regression
+17. Keeper regression
+18. Exact external blockers
+19. Exact next operator actions
+
+End with:
+
+"WAITING FOR EXTERNAL INFRASTRUCTURE — C16 REMAINS BLOCKED"
+
+============================================================
+END PW-C15 FINAL PRE-INFRASTRUCTURE PASS
+============================================================

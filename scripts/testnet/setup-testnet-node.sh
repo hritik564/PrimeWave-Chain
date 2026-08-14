@@ -126,7 +126,7 @@ LimitNPROC=65536
 WantedBy=multi-user.target
 EOF
 
-systemd daemon-reload
+systemctl daemon-reload
 echo "[OK]    Systemd service installed: $SERVICE_FILE"
 echo ""
 echo "  Start node:  systemctl start primewave-testnet-node"
