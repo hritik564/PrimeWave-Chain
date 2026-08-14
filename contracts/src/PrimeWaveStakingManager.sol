@@ -67,6 +67,17 @@ contract PrimeWaveStakingManager is StakingManager {
     /// @notice Emitted when a validator's stake is returned on removal.
     event StakeReturned(address indexed to, uint256 amount);
 
+    // ── Phase-transition events (PW-C10 — §37) ────────────────────────────────
+
+    /// @notice Emitted at the start of initialize(), marking Phase-2 activation.
+    ///         Signals that the StakingManager is initializing and Phase-2 PoS
+    ///         is being activated. Required for PWCScan indexing.
+    event PhaseTransitionInitiated(address indexed stakingManager, address indexed rewardVault);
+
+    /// @notice Emitted at the end of initialize() once all state is committed.
+    ///         Signals that Phase-2 is fully active and staking is open.
+    event PhaseTransitionCompleted(address indexed stakingManager, address indexed rewardVault);
+
     // ── Initializer ───────────────────────────────────────────────────────────
 
     /// @notice Initialize the PrimeWaveStakingManager.
@@ -82,8 +93,10 @@ contract PrimeWaveStakingManager is StakingManager {
         RewardVault _rewardVault
     ) external initializer {
         if (address(_rewardVault) == address(0)) revert ZeroVaultAddress();
+        emit PhaseTransitionInitiated(address(this), address(_rewardVault));
         __StakingManager_init(settings);
         rewardVault = _rewardVault;
+        emit PhaseTransitionCompleted(address(this), address(_rewardVault));
     }
 
     // ── Public entry points ───────────────────────────────────────────────────

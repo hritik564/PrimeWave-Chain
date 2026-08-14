@@ -1,0 +1,1400 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C10 — PoS HARDENING + PHASE TRANSITION + ECONOMIC/SECURITY AUDIT
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 through PW-C09 are LOCKED.
+
+Current verified baseline:
+
+C00 — Architecture / Decisions
+C01 — Avalanche L1 Foundation
+C02 — Native PW / Gas / Fee Architecture
+C03 — FeeDistributor
+C04 — ValidatorFeeVault
+C05 — ValidatorManager Integration
+C06 — RewardVault
+C07 — Governance
+C08 — Integrated Architecture / Security
+C09 — Phase-2 PoS + PrimeWaveStakingManager
+
+C09 final gate:
+586/586 PASS
+
+C00-C08 regression:
+535/535 PASS
+
+DO NOT weaken, remove, skip, or rewrite previous invariants merely
+to make C10 pass.
+
+============================================================
+0. C10 OBJECTIVE
+============================================================
+
+C10 is NOT a feature-development sprint.
+
+C10 is a HARDENING + ATTACK + ECONOMIC VALIDATION sprint.
+
+The question is:
+
+"Can the Phase-2 PoS architecture, its transition from Phase-1 PoA,
+its staking economics, governance boundaries, validator lifecycle,
+and RewardVault integration survive hostile and pathological behavior?"
+
+Assume every external participant is potentially malicious.
+
+Test the system aggressively.
+
+Do not invent new economic rules.
+
+Do not change locked economics.
+
+Do not silently modify the architecture.
+
+If a genuine architectural or economic ambiguity is discovered:
+
+STOP and report it.
+
+============================================================
+1. READ ALL EXISTING DOCUMENTATION FIRST
+============================================================
+
+Read at minimum:
+
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+docs/PRIMEWAVE_TOKENOMICS.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_REWARD_ECONOMICS.md
+docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+
+C03:
+docs/PW-C03-FEEDISTRIBUTOR-SPEC.md
+docs/PW-C03-FINAL-REPORT.md
+
+C04:
+docs/PW-C04-VALIDATOR-FEE-ACCOUNTING-SPEC.md
+docs/PW-C04-FINAL-REPORT.md
+
+C05:
+docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+docs/PW-C05-FINAL-REPORT.md
+
+C06:
+docs/PW-C06-REWARDVAULT-SPEC.md
+docs/PW-C06-FINAL-REPORT.md
+
+C07:
+docs/PW-C07-GOVERNANCE-INTEGRATION-SPEC.md
+docs/PW-C07-FINAL-REPORT.md
+
+C08:
+docs/PW-C08-INTEGRATED-ARCHITECTURE-SPEC.md
+docs/PW-C08-INTEGRATED-SECURITY-REVIEW.md
+docs/PW-C08-FINAL-REPORT.md
+
+C09:
+docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md
+docs/PW-C09-STAKING-SPEC.md
+docs/PW-C09-STAKING-TEST-REPORT.md
+docs/PW-C09-FINAL-REPORT.md
+docs/PW-C09-GATE-REPORT.md
+
+Also inspect the actual current source code.
+
+Do not rely solely on documentation.
+
+============================================================
+2. HARD LOCKED ECONOMICS
+============================================================
+
+The following MUST NOT change:
+
+Maximum PW supply:
+100,000,000 PW
+
+Staking RewardVault reserve:
+15,000,000 PW
+
+Maximum annual staking emissions:
+3,000,000 PW/year
+
+Maximum daily equivalent:
+~8,219.18 PW/day
+
+Unbonding:
+14 days
+=
+1,209,600 seconds
+
+Transaction fee distribution:
+
+70% → ValidatorFeeVault
+20% → DevTreasury
+10% → Burn / inaccessible destination
+
+Emergency Multisig:
+3-of-5
+
+Emergency powers:
+pause/unpause/freeze only where already defined
+
+Timelock:
+48 hours
+
+No native PW minting.
+
+Do NOT increase any of these limits.
+
+============================================================
+3. PHASE-1 → PHASE-2 TRANSITION
+============================================================
+
+This is the highest-priority area of C10.
+
+Read PRIMEWAVE_POS_TRANSITION_SPEC.md and the actual implementation.
+
+Establish exactly:
+
+Phase 1:
+PoA active
+
+Phase 2:
+PoS active
+
+Test the transition from every relevant state.
+
+At minimum:
+
+1. transition before all prerequisites → FAIL
+2. unauthorized transition → FAIL
+3. duplicate transition → FAIL
+4. transition replay → FAIL
+5. transition after valid prerequisites → PASS
+6. transition after partial validator state → FAIL
+7. transition with inactive validator → correct behavior
+8. transition with pending removal → correct behavior
+9. transition with pending unbonding → correct behavior
+10. transition with outstanding rewards → preserved
+11. transition with outstanding fees → preserved
+12. transition cannot create duplicate validators
+13. transition cannot duplicate staking positions
+14. transition cannot duplicate rewards
+15. transition cannot alter total supply
+16. transition cannot bypass governance
+17. transition cannot bypass ValidatorManager
+18. transition cannot bypass EmergencyMultisig
+19. transition cannot bypass Timelock
+
+============================================================
+4. TRANSITION ATOMICITY
+============================================================
+
+Determine whether transition is:
+
+- atomic
+- staged
+- resumable
+- one-way
+
+Then test failure halfway through any transition process.
+
+If the transition is multi-step:
+
+test every intermediate state.
+
+A failed transition must NOT leave the chain in a state where:
+
+- both PoA and PoS reward systems operate simultaneously
+- validators are counted twice
+- rewards are counted twice
+- fees are counted twice
+- validators disappear
+- stake disappears
+- governance is bypassed
+
+============================================================
+5. 15 INITIAL VALIDATORS
+============================================================
+
+Phase 1 contains 15 initial validators.
+
+Verify exact identity continuity into Phase 2.
+
+For every validator:
+
+Phase 1 identity
+=
+Phase 2 identity
+
+Test:
+
+- all 15 active
+- one inactive
+- multiple inactive
+- pending removal
+- changed weight
+- synchronized/unsynchronized registry state
+
+No new fake validator may appear simply because Phase 2 activates.
+
+No existing validator may disappear without an authoritative reason.
+
+============================================================
+6. VALIDATOR CHURN ATTACKS
+============================================================
+
+Stress validator lifecycle:
+
+join
+leave
+reactivate
+weight increase
+weight decrease
+stake increase
+stake decrease
+unbond
+withdraw
+re-stake
+
+Perform rapid repeated cycles.
+
+Test:
+
+A → B → A → B
+
+and:
+
+stake
+→ unbond
+→ restake
+→ unbond
+→ restake
+
+Verify:
+
+- no stale reward entitlement
+- no retroactive rewards
+- no duplicate rewards
+- no lost principal
+- no duplicate validator
+- no historical accounting corruption
+
+============================================================
+7. REWARD ACCOUNTING ATTACKS
+============================================================
+
+Attack the RewardVault / PrimeWaveStakingManager integration.
+
+Test:
+
+- claim immediately after stake
+- claim before reward accrues
+- repeated claim
+- claim after partial reward
+- claim after unbond
+- claim after withdrawal
+- claim after validator deactivation
+- claim after reactivation
+- claim immediately before rate change
+- claim immediately after rate change
+- claim at emission boundary
+- claim after vault exhaustion
+
+Verify no reward can be claimed twice.
+
+Verify rewards cannot exceed actual vault-funded balance.
+
+============================================================
+8. REWARD INDEX ATTACKS
+============================================================
+
+If reward-index accounting is used, aggressively test:
+
+- zero index
+- one wei index increment
+- extremely large index
+- repeated tiny distributions
+- repeated large distributions
+- alternating large/small distributions
+- participant joins between distributions
+- participant leaves between distributions
+- participant changes weight between distributions
+
+Verify:
+
+No retroactive rewards.
+
+No double rewards.
+
+No negative accounting.
+
+No overflow.
+
+No underflow.
+
+No reward leakage.
+
+No participant can obtain more than their mathematically
+entitled share.
+
+============================================================
+9. ROUNDING / DUST ANALYSIS
+============================================================
+
+Perform adversarial rounding tests.
+
+Use:
+
+1 wei
+2 wei
+3 wei
+7 wei
+10 wei
+99 wei
+100 wei
+999 wei
+1 ether
+large values
+
+Use unequal weights.
+
+Example:
+
+Alice = 1
+Bob = 3
+Charlie = 7
+
+Then repeat thousands of distributions.
+
+Measure:
+
+total distributed
++
+remaining dust
++
+claimed rewards
+
+against the actual RewardVault balance.
+
+There must be no unaccounted PW.
+
+Document exactly where rounding dust remains.
+
+Do not simply introduce a tolerance to hide accounting errors.
+
+============================================================
+10. 3M PW ANNUAL EMISSION ATTACK
+============================================================
+
+Try to exceed:
+
+3,000,000 PW/year.
+
+Attack via:
+
+- repeated claims
+- validator churn
+- stake churn
+- weight manipulation
+- timestamp manipulation
+- rate changes
+- zero-duration periods
+- boundary timestamps
+- multiple participants
+
+The system MUST reject or prevent over-emission.
+
+Test:
+
+3,000,000 PW - 1 wei
+3,000,000 PW
+3,000,000 PW + 1 wei
+
+Do not allow the last case.
+
+============================================================
+11. 15M REWARDVAULT ATTACK
+============================================================
+
+Assume the RewardVault starts with:
+
+15,000,000 PW.
+
+Attempt to extract:
+
+15,000,000 PW + 1 wei
+
+through every available reward path.
+
+Verify impossible.
+
+Simulate:
+
+Year 1
+Year 2
+Year 3
+Year 4
+Year 5
+
+at maximum permitted emission.
+
+Verify:
+
+total rewards <= 15M PW.
+
+Then test:
+
+vault partially exhausted
+vault exactly exhausted
+vault completely exhausted
+
+Verify no negative balance and no phantom rewards.
+
+============================================================
+12. REWARD RATE CHANGE ATTACKS
+============================================================
+
+Test every legal rate reduction boundary.
+
+Attempt:
+
+increase rate
+same rate
+reduce rate by 1 wei
+reduce rate to zero
+multiple reductions
+rapid reductions
+
+The existing rule remains:
+
+rate may be reduced.
+
+Rate may NEVER be increased above the locked maximum.
+
+Verify checkpointing is correct.
+
+No rewards before/after rate changes may be double-counted.
+
+============================================================
+13. TIMESTAMP ATTACKS
+============================================================
+
+Test:
+
+- exact reward boundary
+- one second before
+- exact timestamp
+- one second after
+- exact 14-day boundary
+- one second before 14 days
+- one second after 14 days
+- year boundary
+- leap-year-adjacent timestamps where relevant
+
+Use absolute timestamps.
+
+IMPORTANT:
+
+Foundry `via_ir = true` is enabled.
+
+NEVER use repeated:
+
+vm.warp(block.timestamp + N)
+
+inside the same via_ir test function.
+
+Precompute absolute timestamps:
+
+t0
+t1
+t2
+t3
+
+and use:
+
+vm.warp(t1)
+vm.warp(t2)
+vm.warp(t3)
+
+============================================================
+14. UNBONDING ATTACKS
+============================================================
+
+Attempt:
+
+- withdraw immediately
+- withdraw 1 second early
+- withdraw exactly at 14 days
+- withdraw 1 second after
+- duplicate withdrawal
+- withdraw after account transfer if applicable
+- withdraw from another participant
+- modify amount during pending unbond
+- create multiple conflicting unbond requests
+
+Verify the locked 14-day rule cannot be bypassed.
+
+============================================================
+15. PRINCIPAL CONSERVATION
+============================================================
+
+For every participant:
+
+Deposited principal
+=
+active principal
++
+pending withdrawal principal
++
+withdrawn principal
+
+subject only to explicitly documented architecture.
+
+Run thousands of random stake/unbond/withdraw cycles.
+
+No principal may disappear.
+
+No principal may be created.
+
+============================================================
+16. FEE SYSTEM ISOLATION
+============================================================
+
+C10 must prove that PoS operations cannot alter:
+
+FeeDistributor
+ValidatorFeeVault
+DevTreasury
+Burn accounting
+
+Run transactions while simultaneously:
+
+- staking
+- claiming staking rewards
+- unbonding
+- withdrawing
+- changing validator weights
+
+Verify the 70/20/10 distribution remains unchanged.
+
+Staking rewards MUST NOT consume validator transaction fees.
+
+Validator transaction fees MUST NOT become staking rewards.
+
+============================================================
+17. GOVERNANCE ATTACKS
+============================================================
+
+Attempt unauthorized:
+
+- reward rate changes
+- validator changes
+- staking manager changes
+- RewardVault changes
+- phase transition
+- pause
+- unpause
+- upgrade
+- recipient changes
+
+Test:
+
+- random EOA
+- staker
+- validator
+- reward recipient
+- FeeDistributor
+- ValidatorFeeVault
+- malicious contract
+
+Verify access control.
+
+============================================================
+18. EMERGENCY MULTISIG ATTACKS
+============================================================
+
+Locked:
+
+3-of-5.
+
+Test:
+
+1 signer
+2 signers
+3 signers
+4 signers
+5 signers
+
+Verify:
+
+<3 approvals → FAIL
+3 valid approvals → PASS
+
+Test:
+
+- duplicate approval
+- wrong signer
+- reused nonce
+- replayed transaction
+- changed transaction data
+- changed target
+- changed value
+- changed nonce
+
+Emergency multisig must not gain:
+
+- mint authority
+- RewardVault withdrawal authority
+- staking withdrawal authority
+- arbitrary governance authority
+
+============================================================
+19. TIMELOCK ATTACKS
+============================================================
+
+Locked:
+
+48 hours.
+
+Test:
+
+- execute immediately → FAIL
+- 1 second before → FAIL
+- exact 48 hours → PASS
+- after 48 hours → PASS
+- cancel before execution
+- replay execution
+- modified calldata
+- modified target
+- modified value
+
+Verify the timelock cannot be bypassed.
+
+============================================================
+20. GOVERNANCE + EMERGENCY INTERACTION
+============================================================
+
+Test combinations:
+
+- emergency pause + timelock operation
+- emergency pause + staking claim
+- emergency pause + withdrawal
+- emergency pause + validator transition
+- timelock + emergency pause
+- unpause + timelock
+- multiple pause/unpause cycles
+
+Verify emergency authority cannot become a hidden governance mechanism.
+
+Verify timelock cannot acquire emergency-only powers.
+
+============================================================
+21. MALICIOUS PARTICIPANT
+============================================================
+
+Create attacker contracts.
+
+Attacker must attempt:
+
+- reentrancy during reward claim
+- reentrancy during withdrawal
+- callback abuse
+- forced native PW transfers
+- malicious fallback
+- gas griefing
+- repeated calls
+- state manipulation between external calls
+
+Verify no funds can be stolen.
+
+============================================================
+22. MALICIOUS REWARD RECIPIENT
+============================================================
+
+Create a malicious reward recipient contract that:
+
+- reenters
+- reverts
+- consumes gas
+- self-destructs if supported
+- receives forced native transfers
+
+Verify one malicious recipient cannot:
+
+- block everyone else's rewards
+- steal another participant's reward
+- corrupt global reward accounting
+
+============================================================
+23. MALICIOUS VALIDATOR
+============================================================
+
+Attempt:
+
+- fake validator registration
+- fake validator ID
+- fake weight
+- forged status
+- duplicate validator
+- unauthorized weight update
+- unauthorized deactivation
+
+ValidatorManager remains the sole validator authority.
+
+============================================================
+24. MALICIOUS VAULT / DEPENDENCY
+============================================================
+
+Where feasible, create mocks that:
+
+- return false
+- revert
+- return unexpected values
+- attempt reentrancy
+- return incorrect balances
+
+Verify PrimeWaveStakingManager fails safely.
+
+Do not weaken production code merely to accommodate malicious mocks.
+
+============================================================
+25. FORCED NATIVE TRANSFERS
+============================================================
+
+Send PW directly to PrimeWaveStakingManager without using stake().
+
+Verify those funds cannot accidentally become:
+
+- staking principal
+- staking rewards
+- claimable participant balance
+
+Document how forced/native transfers are treated.
+
+Do the same analysis for RewardVault where appropriate.
+
+============================================================
+26. STORAGE / UPGRADE SECURITY
+============================================================
+
+Review the actual storage layout.
+
+Verify:
+
+- no collision
+- no overwritten inherited storage
+- no uninitialized critical state
+- no accidental admin slot
+- no upgrade bypass
+
+If the staking manager is immutable, document that.
+
+If any upgradeability exists, test:
+
+- unauthorized upgrade
+- timelock bypass
+- storage compatibility
+- implementation replacement
+
+============================================================
+27. PHASE TRANSITION ECONOMIC ACCOUNTING
+============================================================
+
+This is critical.
+
+At the exact Phase-1 → Phase-2 boundary:
+
+Record:
+
+- total PW supply
+- RewardVault balance
+- ValidatorFeeVault balance
+- Treasury balance
+- burn/inaccessible accounting
+- total staked principal
+- pending unbondings
+- claimable rewards
+- active validators
+- validator weights
+
+Perform transition.
+
+Record everything again.
+
+Verify no accounting system changes unexpectedly.
+
+There must be no:
+
+- duplicated reward
+- duplicated stake
+- duplicated validator
+- duplicated fee
+- lost balance
+
+============================================================
+28. PHASE TRANSITION WITH OUTSTANDING REWARDS
+============================================================
+
+Create:
+
+Alice with accrued but unclaimed reward.
+
+Transition phases.
+
+Verify:
+
+Alice retains exactly the reward she earned.
+
+No additional retroactive reward appears.
+
+No reward disappears.
+
+============================================================
+29. PHASE TRANSITION WITH PENDING UNBONDS
+============================================================
+
+Create:
+
+Alice:
+stake active
+
+Then:
+
+request unbond
+
+Before 14 days:
+
+transition Phase 1 → Phase 2
+
+Verify the pending unbond remains valid and cannot be bypassed.
+
+After 14 days:
+
+withdraw normally.
+
+============================================================
+30. PHASE TRANSITION WITH VALIDATOR CHURN
+============================================================
+
+Before transition:
+
+- add validator
+- change weight
+- deactivate validator
+- reactivate validator
+- create pending removal
+
+Then transition.
+
+Verify exact validator continuity.
+
+============================================================
+31. REWARD/FEES SIMULTANEOUSLY
+============================================================
+
+Run a simulation where:
+
+- blocks generate transaction fees
+- ValidatorFeeVault receives 70%
+- validators stake PW
+- RewardVault emits staking rewards
+- participants claim rewards
+- validators claim transaction fees
+
+Verify the two accounting systems remain completely separate.
+
+============================================================
+32. LONG-RUN SIMULATION
+============================================================
+
+Run a simulated long-term environment.
+
+At minimum model:
+
+- many validators
+- many stakers
+- thousands of blocks
+- repeated rewards
+- validator churn
+- stake churn
+- fee generation
+- claims
+- unbonding
+- withdrawals
+- rate reductions
+
+Track:
+
+- supply
+- stake
+- rewards
+- fees
+- vault balances
+- participant balances
+
+No conservation invariant may break.
+
+Use bounded simulations if necessary for cost.
+
+Do NOT make simulations artificially huge simply to consume compute.
+
+============================================================
+33. FUZZ TESTING
+============================================================
+
+Add targeted fuzz tests for:
+
+- stake amount
+- reward amount
+- weight
+- timestamp
+- participant count
+- validator count
+- rate
+- unbond timing
+- transition timing
+- claim timing
+
+Use meaningful bounds.
+
+Do not use overly broad fuzz domains that produce only irrelevant reverts.
+
+============================================================
+34. STATEFUL INVARIANT TESTING
+============================================================
+
+Create/extend a stateful invariant suite.
+
+Required invariants:
+
+INV-1:
+Total native PW supply never increases.
+
+INV-2:
+Stake principal is conserved.
+
+INV-3:
+Rewards never exceed RewardVault-funded capacity.
+
+INV-4:
+Annual staking emissions never exceed 3M PW.
+
+INV-5:
+Total staking rewards never exceed 15M PW reserve.
+
+INV-6:
+14-day unbonding cannot be bypassed.
+
+INV-7:
+Unauthorized participant cannot withdraw another participant's stake.
+
+INV-8:
+Unauthorized participant cannot claim another participant's rewards.
+
+INV-9:
+ValidatorManager remains validator authority.
+
+INV-10:
+FeeDistributor remains independent.
+
+INV-11:
+70/20/10 fee accounting remains conserved.
+
+INV-12:
+Emergency multisig cannot mint or withdraw staking principal.
+
+INV-13:
+Timelock cannot bypass emergency-only authority.
+
+INV-14:
+Phase transition cannot duplicate validator/reward/stake state.
+
+INV-15:
+Reward accounting remains non-negative.
+
+INV-16:
+No participant can receive more reward than mathematically entitled.
+
+INV-17:
+RewardVault cannot become insolvent.
+
+============================================================
+35. REGRESSION
+============================================================
+
+Run the complete previous test suites.
+
+Minimum baseline:
+
+C00-C08:
+535/535
+
+C09:
+586/586
+
+Do NOT merely run a subset.
+
+Any regression is a C10 failure.
+
+If a previous test is genuinely incompatible with a locked architecture
+change:
+
+STOP.
+
+Do not rewrite the previous test silently.
+
+============================================================
+36. GAS / PERFORMANCE REVIEW
+============================================================
+
+Measure:
+
+- stake
+- add stake
+- unbond
+- withdraw
+- claim
+- validator sync
+- transition
+- governance operations
+
+Check for:
+
+- unbounded loops
+- per-validator loops
+- per-staker loops
+- storage-heavy operations
+
+The protocol must remain practical at scale.
+
+Do not prematurely micro-optimize.
+
+============================================================
+37. EVENT / INDEXER REVIEW
+============================================================
+
+Verify all important Phase-2 and transition events are emitted.
+
+At minimum:
+
+- StakeDeposited
+- StakeIncreased
+- UnbondRequested
+- StakeWithdrawn
+- RewardAccrued
+- RewardClaimed
+- ValidatorActivated
+- ValidatorDeactivated
+- ValidatorSynchronized
+- PhaseTransitionInitiated
+- PhaseTransitionCompleted
+
+Events must contain enough information for future PWCScan indexing.
+
+Do NOT build PWCScan in C10.
+
+============================================================
+38. LOCAL INTEGRATION
+============================================================
+
+Create:
+
+contracts/script/IntegrationC10.s.sol
+
+Perform one comprehensive local scenario:
+
+1. Start Phase-1 chain.
+2. Verify 15 validators.
+3. Verify fee routing.
+4. Deploy/initialize Phase-2 components.
+5. Stake PW.
+6. Generate blocks/fees.
+7. Generate staking rewards.
+8. Claim staking reward.
+9. Claim validator fee.
+10. Request unbond.
+11. Attempt early withdrawal → FAIL.
+12. Advance exactly 14 days.
+13. Withdraw → PASS.
+14. Perform validator churn.
+15. Perform governance operation.
+16. Pause.
+17. Verify pause behavior.
+18. Unpause.
+19. Perform Phase transition if supported.
+20. Verify validator continuity.
+21. Verify outstanding rewards.
+22. Verify pending unbond.
+23. Verify 70/20/10.
+24. Verify total supply.
+25. Verify RewardVault balance.
+26. Verify ValidatorFeeVault balance.
+
+============================================================
+39. SECURITY REPORT
+============================================================
+
+Create:
+
+docs/PW-C10-SECURITY-AUDIT.md
+
+Include:
+
+- threat model
+- attack surfaces
+- attacks attempted
+- results
+- failed attacks
+- mitigations
+- residual risks
+- centralization risks
+- operational risks
+- timing risks
+- validator risks
+- governance risks
+- reward risks
+- transition risks
+
+Classify findings:
+
+CRITICAL
+HIGH
+MEDIUM
+LOW
+INFORMATIONAL
+
+Do not hide findings merely because tests pass.
+
+============================================================
+40. ECONOMIC REPORT
+============================================================
+
+Create:
+
+docs/PW-C10-ECONOMIC-AUDIT.md
+
+Include:
+
+- 100M supply
+- 15M reward reserve
+- 3M annual cap
+- 14-day unbonding
+- reward distribution model
+- validator fee model
+- 70/20/10 model
+- rounding
+- dust
+- exhaustion
+- rate reduction
+- phase transition
+- long-run simulation
+
+Show actual numerical examples.
+
+============================================================
+41. TRANSITION REPORT
+============================================================
+
+Create:
+
+docs/PW-C10-PHASE-TRANSITION-AUDIT.md
+
+Document:
+
+- Phase 1 state
+- prerequisites
+- transition mechanism
+- intermediate states
+- failure handling
+- Phase 2 state
+- validator continuity
+- reward continuity
+- stake continuity
+- fee continuity
+- governance continuity
+- recovery procedure
+
+============================================================
+42. FINAL REPORT
+============================================================
+
+Create:
+
+docs/PW-C10-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Scope
+C. Security findings
+D. Economic findings
+E. Phase transition findings
+F. Validator findings
+G. RewardVault findings
+H. Governance findings
+I. Fee-system findings
+J. Supply invariants
+K. Fuzz testing
+L. Stateful invariants
+M. Long-run simulation
+N. Integration testing
+O. Regression
+P. Gas/performance
+Q. Explorer/indexer compatibility
+R. Residual risks
+S. Unresolved questions
+T. Exact prerequisites for C11
+
+============================================================
+43. COST CONTROL
+============================================================
+
+This is a hard requirement.
+
+Reuse all existing:
+
+- Foundry configuration
+- test helpers
+- deployment scripts
+- mocks
+- local Avalanche chain
+- existing contracts
+
+Do NOT:
+
+- rebuild existing tests from scratch
+- deploy public testnet
+- deploy mainnet
+- generate production keys
+- build PWCScan
+- build PWSwap
+- build PrimeWave Dex
+- implement PWUSD
+- implement MLM software
+
+Run broad regression once.
+
+Prefer targeted attack suites over redundant tests.
+
+Do not create separate micro-sprints.
+
+Everything in this prompt belongs to ONE C10 execution.
+
+============================================================
+44. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP immediately if any of the following occurs:
+
+1. Phase transition cannot be made atomic/safe.
+2. Phase transition duplicates validators.
+3. Phase transition duplicates rewards.
+4. Phase transition duplicates stake.
+5. Phase transition loses principal.
+6. RewardVault can be overdrawn.
+7. 3M annual emission cap can be exceeded.
+8. 15M reserve can be exceeded.
+9. Native PW can be minted.
+10. 14-day unbonding can be bypassed.
+11. ValidatorManager can be bypassed.
+12. FeeDistributor and staking rewards become mixed.
+13. Emergency multisig gains unauthorized powers.
+14. Timelock can be bypassed.
+15. Unauthorized withdrawal is possible.
+16. Unauthorized reward claim is possible.
+17. Reentrancy can steal or corrupt funds.
+18. A previous C00-C09 invariant must be weakened.
+19. A production dependency must be changed without approval.
+20. A new economic rule must be invented.
+21. Storage collision is detected.
+22. A production upgrade path bypasses security controls.
+
+Do NOT patch around these silently.
+
+Report the exact issue and STOP.
+
+============================================================
+45. C10 ACCEPTANCE CRITERIA
+============================================================
+
+C10 passes only if:
+
+[ ] Phase transition fully tested
+[ ] Validator continuity proven
+[ ] Reward continuity proven
+[ ] Stake continuity proven
+[ ] Fee continuity proven
+[ ] Transition replay prevented
+[ ] Transition authorization enforced
+[ ] Transition failure states safe
+[ ] 14-day unbonding fully stress-tested
+[ ] Reward index stress-tested
+[ ] Rounding/dust analyzed
+[ ] 3M annual cap proven
+[ ] 15M reserve proven
+[ ] Rate reduction proven
+[ ] No rate increase above cap
+[ ] Supply invariant proven
+[ ] Stake conservation proven
+[ ] Reward conservation proven
+[ ] Fee isolation proven
+[ ] Governance attacks fail
+[ ] Emergency multisig attacks fail
+[ ] Timelock attacks fail
+[ ] Reentrancy attacks fail
+[ ] Malicious participant attacks fail
+[ ] Malicious recipient attacks fail
+[ ] Malicious validator attacks fail
+[ ] Forced-transfer behavior documented
+[ ] Storage reviewed
+[ ] Gas reviewed
+[ ] Events reviewed
+[ ] Long-run simulation passes
+[ ] Stateful invariants pass
+[ ] Fuzz tests pass
+[ ] Integration passes
+[ ] C00-C09 regression passes
+[ ] Security report complete
+[ ] Economic report complete
+[ ] Transition report complete
+[ ] Final report complete
+[ ] No critical/high unresolved security issue
+[ ] No unresolved economic invariant
+[ ] No unresolved phase-transition blocker
+
+============================================================
+46. FINAL RULE
+============================================================
+
+C10 is an AUDIT/HARDENING sprint.
+
+Do not add unrelated features.
+
+Do not start C11 automatically.
+
+When complete, STOP and report:
+
+PW-C10 COMPLETE
+
+with:
+
+- total tests
+- new tests
+- regression tests
+- security findings by severity
+- economic findings
+- transition findings
+- unresolved risks
+- C11 prerequisites
+
+Wait for explicit approval.
+
+============================================================
+END PW-C10
+============================================================
