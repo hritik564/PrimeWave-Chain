@@ -17,6 +17,9 @@
 # Solidity version — LOCKED. Do not change without a documented compatibility review.
 solc = "0.8.30"
 
+# Allow scripts to write contract addresses to local-data/ (used by DevDeploy.s.sol)
+fs_permissions = [{ access = "write", path = "local-data/" }]
+
 # EVM target — Shanghai (required by icm-services / OZ v5.6.1)
 evm_version = "shanghai"
 

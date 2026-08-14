@@ -1,42 +1,32 @@
 ---
 name: PrimeWave Chain PW-C13
-description: C13 COMPLETE — PWCScan blockchain explorer frontend; design subagent build; typecheck clean; all regressions pass
+description: PWCScan explorer (C13) — live data connection post-gate fix; known pitfalls and fixes
 ---
 
-# PW-C13: PWCScan Blockchain Explorer
+## C13 COMPLETE (Post-Gate Integration)
 
-## Status: COMPLETE AND LOCKED
+PWCScan is connected to the C12 indexer and showing live blockchain data.
 
-## Key Facts
-- Artifact: `artifacts/pwcscan/` — React + TypeScript + Vite, preview path `/`
-- Workflow: `artifacts/pwcscan: web`
-- Chain ID: 73571
-- API source: C12 indexer REST API (no OpenAPI codegen — hand-written client)
-- Dev env var: `VITE_INDEXER_API_URL=http://localhost:4000` in `.env.development`
+### Startup sequence (each Replit session)
+1. **PrimeWave Chain** workflow starts `bash scripts/start-chain.sh` — kills stale processes, starts avalanchego
+2. **PrimeWave Indexer** workflow starts `bash scripts/start-indexer.sh` — waits for RPC, deploys contracts (if needed), runs migrations, starts indexer on port 4000
+3. **artifacts/pwcscan: web** workflow — Vite dev server, proxy `/indexer-api/*` → `http://127.0.0.1:4000`
 
-## Architecture Decisions
-- **No codegen**: C12 is standalone npm, not workspace OpenAPI. `src/lib/api.ts` has typed fetch client + 17 React Query hooks written directly.
-- **BigInt-safe**: `src/lib/format.ts` uses BigInt throughout. Never `Number(wei_string)`.
-- **Stats hook unwraps**: `useStats()` returns `Stats` directly (unwrapped via `.then(res => res.data)`). Pages must use `const stats = statsRes` NOT `statsRes?.data`.
-- **Paginated hooks do NOT unwrap**: `useBlocks()`, `useTransactions()`, etc. return `PaginatedApiResponse<T>` — access `.data` to get the array.
-- **Dark mode**: class-based Tailwind dark strategy; ThemeProvider in `src/lib/settings.tsx`
-- **Native balance not shown**: C12 doesn't index eth_getBalance; address pages show `—`
+### Critical: Correct blockchain ID
+- Blockchain ID deployed by Avalanche CLI: `2F3BHmNJWP4DNaBbMFQog3TvfcF6GRY7PX99r7Xzae4cRwAv6a`
+- `local-data/network-ids.env` and `local-data/network-state.env` must reflect this
+- The chain stores state in `~/.avalanche-cli/local/` — blockchain ID does NOT change on restart unless genesis changes
 
-## TypeCheck Pitfalls Fixed
-- Radix dropdown-menu: `inset` prop needs `& { inset?: boolean }` on forwardRef type
-- `apiRequest` params type: `Record<string, string | number | boolean>` (not just string|number)
-- `useStats` data is already unwrapped — pages must NOT access `.data` on the result
+### Known pitfalls fixed in post-gate
+1. **Unicode em dash in Solidity string literal** — `DevDeploy.s.sol` had `—` (em dash) which solc 0.8.30 rejects; use ASCII `-` only
+2. **SQL migrations not copied by tsc** — `indexer/package.json` build must be `tsc && cp -r src/db/migrations dist/db/`
+3. **Missing `GET /transactions` list endpoint** — original router only had `GET /transactions/:hash`; added list endpoint with cursor pagination
+4. **Wrong column name in list query** — transactions table has `gas_limit` not `gas`; TX_COLS must not reference `t.gas`
+5. **Stale avalanchego process** — if chain workflow fails to start, kill all `avalanchego` processes (`pkill -9 -x avalanchego`) and remove `local-data/node.pid`
 
-## Test Results
-- TypeScript typecheck: 0 errors
-- C12 Indexer Jest: 57/57
-- Forge (contracts): 792/792
-- Keeper Jest: 20/20 (unchanged)
+**Why:** Browser accesses indexer via Vite proxy path `/indexer-api/*` → port 4000; direct `localhost:4000` is unreachable from browser in Replit (resolves to user's machine).
 
-## Files
-- `artifacts/pwcscan/src/lib/api.ts` — API client + all hooks + TypeScript interfaces
-- `artifacts/pwcscan/src/lib/format.ts` — BigInt-safe formatting utilities
-- `artifacts/pwcscan/src/lib/settings.tsx` — Theme/settings context
-- `artifacts/pwcscan/src/components/pwcscan/` — 13 domain-specific components
-- `artifacts/pwcscan/src/pages/` — 15 pages (all routes implemented)
-- `docs/PW-C13-PWCSCAN-*.md` — 5 locked documentation files
+### Regression baseline
+- Forge: 792/792
+- Indexer Jest: 57/57
+- Keeper Jest: 20/20

@@ -14,16 +14,22 @@ export function formatApiUrl(base: string, path: string): string {
 }
 
 const getApiBase = () => {
-  return import.meta.env.VITE_INDEXER_API_URL ?? '';
+  // VITE_INDEXER_API_URL can be:
+  //   - A relative path like '/indexer-api' (default for local dev via Vite proxy)
+  //   - An absolute URL like 'https://api.example.com' (for production)
+  // In local dev the Vite proxy forwards /indexer-api/* → http://127.0.0.1:4000/*
+  // so the browser never needs to reach localhost:4000 directly.
+  return import.meta.env.VITE_INDEXER_API_URL ?? '/indexer-api';
 };
 
 export async function apiRequest<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
   const base = getApiBase();
-  if (!base) {
-    throw new ApiError(503, 'Indexer API URL is not configured. Please set VITE_INDEXER_API_URL.');
-  }
 
-  const url = new URL(formatApiUrl(base, path));
+  // Handle both absolute URLs (http://...) and relative paths (/indexer-api)
+  const urlStr = formatApiUrl(base, path);
+  const url = urlStr.startsWith('http')
+    ? new URL(urlStr)
+    : new URL(urlStr, window.location.origin);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {

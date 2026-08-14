@@ -11,6 +11,35 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "PrimeWave Chain"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "PrimeWave Indexer"
+
+[[workflows.workflow]]
+name = "PrimeWave Chain"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/start-chain.sh"
+
+[[workflows.workflow]]
+name = "PrimeWave Indexer"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/start-indexer.sh"
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true

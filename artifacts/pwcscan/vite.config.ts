@@ -72,6 +72,17 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: {
+      // Proxy /indexer-api/* → C12 indexer REST API at localhost:4000
+      // This is required in Replit: the browser cannot reach localhost:4000
+      // directly (it resolves to the user's machine, not the container).
+      // Vite proxies the request server-side within the Replit container.
+      '/indexer-api': {
+        target: 'http://127.0.0.1:4000',
+        changeOrigin: false,
+        rewrite: (path: string) => path.replace(/^\/indexer-api/, ''),
+      },
+    },
   },
   preview: {
     port,

@@ -1,0 +1,341 @@
+C13 POST-GATE FIX — PWCScan LIVE DATA CONNECTION
+
+Do NOT start C14.
+
+PWCScan frontend loads correctly, but the current preview shows:
+
+"Cannot connect to PrimeWave indexer"
+
+The C13 UI is therefore currently operating in its offline/error state.
+
+We need to fix and PROVE the complete local integration:
+
+PrimeWave Chain
+    ↓
+C12 Indexer
+    ↓
+PostgreSQL
+    ↓
+C12 REST API
+    ↓
+PWCScan frontend
+
+============================================================
+1. DIAGNOSE FIRST
+============================================================
+
+Inspect the existing C12 indexer and C13 frontend configuration.
+
+Determine:
+
+- Which port the C12 API actually listens on
+- Which host/interface it binds to
+- Which port PWCScan runs on
+- Current VITE_INDEXER_API_URL
+- Whether Replit exposes the C12 API to the PWCScan preview
+- Whether CORS is correctly configured
+- Whether the indexer process is actually running
+- Whether PostgreSQL is running
+- Whether the indexer has successfully synced data
+
+Do NOT immediately modify code.
+
+First identify the actual failure.
+
+============================================================
+2. REPLIT WORKFLOW
+============================================================
+
+The PWCScan preview must have a reliable way to start:
+
+1. PostgreSQL
+2. PrimeWave local chain
+3. C12 indexer/API
+4. PWCScan frontend
+
+Do not require the user to manually execute:
+
+cd indexer && npm start
+
+every time they open the preview.
+
+Use the existing Replit workflow architecture where possible.
+
+Do not create unnecessary infrastructure.
+
+============================================================
+3. API BINDING
+============================================================
+
+If the indexer currently binds only to:
+
+127.0.0.1
+
+determine whether the Replit frontend process can actually reach it.
+
+If required for the Replit environment, bind the API to the appropriate
+interface such as 0.0.0.0.
+
+Do not expose the API publicly beyond what is necessary for the
+development preview.
+
+============================================================
+4. CORS
+============================================================
+
+Verify CORS.
+
+PWCScan must be allowed to make read-only requests to the C12 API from
+the actual Replit preview origin.
+
+Do not use:
+
+Access-Control-Allow-Origin: *
+
+as a lazy permanent production solution.
+
+Use an appropriate development configuration.
+
+Document the production CORS configuration separately.
+
+============================================================
+5. ENVIRONMENT CONFIGURATION
+============================================================
+
+Verify:
+
+VITE_INDEXER_API_URL
+
+against the ACTUAL reachable C12 API URL.
+
+Do not assume localhost:4000 is correct merely because C12 documentation
+says the API runs on :4000.
+
+Test the URL from the actual PWCScan runtime.
+
+If Replit requires a different internal/public routing mechanism,
+configure that correctly.
+
+Do not hardcode a temporary Replit URL into application source code.
+
+============================================================
+6. HEALTH CHECK
+============================================================
+
+Verify:
+
+GET /health
+
+from the PWCScan runtime.
+
+The response must be successful.
+
+Then verify:
+
+GET /stats
+
+and at least:
+
+GET /blocks
+
+GET /transactions
+
+============================================================
+7. REAL DATA PROOF
+============================================================
+
+Do NOT use mocked frontend data.
+
+The homepage must display actual C12 data.
+
+Prove at least:
+
+- current block
+- transaction count
+- latest transactions
+- latest blocks
+
+Then open:
+
+- one transaction
+- its block
+- its sender address
+
+All data must come from C12.
+
+============================================================
+8. PROTOCOL DATA PROOF
+============================================================
+
+Verify at least:
+
+Validators page
+RewardVault page
+Fees page
+
+are receiving real indexed data.
+
+If a page legitimately has no data yet, display the existing empty state.
+
+Do NOT fabricate values merely to make the page look populated.
+
+============================================================
+9. RESTART TEST
+============================================================
+
+Test:
+
+1. Start chain
+2. Start PostgreSQL
+3. Start indexer
+4. Start PWCScan
+5. Confirm data works
+6. Stop/restart indexer
+7. Confirm PWCScan handles temporary API outage gracefully
+8. Restart indexer
+9. Confirm PWCScan reconnects
+10. Confirm data remains correct
+
+============================================================
+10. NETWORK ERROR UX
+============================================================
+
+Keep the existing polished offline/error state.
+
+It should only appear when the API genuinely cannot be reached.
+
+When the API is healthy, it MUST NOT appear.
+
+Add retry/reconnect behavior if already supported.
+
+Do not remove the error state just to hide the problem.
+
+============================================================
+11. CORS / HOST / PORT REGRESSION
+============================================================
+
+Add an integration test proving:
+
+PWCScan
+    →
+C12 API
+    →
+database
+
+is reachable in the actual development environment.
+
+Do not rely solely on unit tests.
+
+============================================================
+12. VISUAL VERIFICATION
+============================================================
+
+Once connected, visually inspect:
+
+Homepage
+Blocks
+Block Detail
+Transactions
+Transaction Detail
+Address
+Validators
+Validator Detail
+Staking
+Rewards
+Fees
+Governance
+Stats
+Search
+
+The current screenshot is NOT sufficient because it shows the
+offline state.
+
+Take/inspect the connected state.
+
+Check that:
+
+- numbers render correctly
+- PW amounts are correct
+- hashes are correct
+- tables populate
+- pagination works
+- loading states work
+- no console errors occur
+- no excessive API requests occur
+
+============================================================
+13. IMPORTANT — DO NOT CHANGE PROTOCOL
+============================================================
+
+Do NOT modify:
+
+- PrimeWave contracts
+- genesis economics
+- validator architecture
+- RewardVault
+- FeeDistributor
+- staking manager
+- governance
+
+This is an infrastructure/integration fix only.
+
+============================================================
+14. ACCEPTANCE CRITERIA
+============================================================
+
+C13 POST-GATE FIX PASSES ONLY IF:
+
+[ ] PostgreSQL starts
+[ ] PrimeWave local chain starts
+[ ] C12 indexer starts
+[ ] C12 API is reachable
+[ ] PWCScan frontend starts
+[ ] PWCScan successfully connects to C12
+[ ] Homepage displays REAL blockchain data
+[ ] Blocks display REAL data
+[ ] Transactions display REAL data
+[ ] Transaction detail works
+[ ] Address detail works
+[ ] Validators page works
+[ ] RewardVault page works
+[ ] Fees page works
+[ ] Search works
+[ ] Pagination works
+[ ] API failure state still works
+[ ] Restart/reconnect works
+[ ] No fabricated data
+[ ] No protocol changes
+[ ] C12 tests remain 57/57
+[ ] Forge remains 792/792
+[ ] Keeper remains 20/20
+[ ] No new Critical/High issue
+
+============================================================
+15. FINAL RESPONSE
+============================================================
+
+Return:
+
+PW-C13 POST-GATE INTEGRATION: PASS
+
+Include:
+
+- Root cause
+- Exact fix
+- C12 API URL/port architecture
+- Replit workflow changes
+- CORS result
+- Database result
+- Indexer result
+- API health result
+- Real data proof
+- PWCScan connected-state result
+- Restart/reconnect result
+- Test results
+- Any remaining limitation
+
+DO NOT start C14.
+
+============================================================
+END
+============================================================
