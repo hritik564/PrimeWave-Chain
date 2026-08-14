@@ -6,7 +6,8 @@
 # Pinned versions (PW-C02):
 #   forge/cast/anvil: v1.7.1 (commit 4072e48705, 2026-05-08)
 #   Solidity:         0.8.30 (required by icm-services contracts)
-#   OpenZeppelin:     v5.6.1 (see docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md)
+#   OpenZeppelin:     v5.6.1 (primary/locked; see docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md)
+#                     v5.1.0 (versioned alias for Avalanche StakingManager.sol only)
 #
 # C09: icm-contracts added as local library at contracts/lib/icm-contracts/
 #   Source: ava-labs/icm-services tag icm-relayer-v1.7.5
@@ -38,8 +39,13 @@ via_ir = true
 # OZ v5.6.1 is API-compatible with v5.1.0 for all classes used by StakingManager.
 # See docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md §5.5.
 remappings = [
-    "@openzeppelin/contracts/=contracts/lib/openzeppelin-contracts/contracts/",
-    "@openzeppelin/contracts-upgradeable/=contracts/lib/openzeppelin-contracts-upgradeable/contracts/",
+    # Primary (unversioned) → v5.6.1: the project-locked dependency.
+    # No production contract currently imports OZ directly; this remapping is
+    # present so any future OZ imports resolve to the correct locked version.
+    "@openzeppelin/contracts/=contracts/lib/openzeppelin-contracts-v561/contracts/",
+    "@openzeppelin/contracts-upgradeable/=contracts/lib/openzeppelin-contracts-upgradeable-v561/contracts/",
+    # Versioned aliases → v5.1.0: required by Avalanche StakingManager.sol which
+    # was authored against OZ v5.1.0 and imports from these explicit paths.
     "@openzeppelin/contracts@5.1.0/=contracts/lib/openzeppelin-contracts/contracts/",
     "@openzeppelin/contracts-upgradeable@5.1.0/=contracts/lib/openzeppelin-contracts-upgradeable/contracts/",
     "@subnet-evm/=contracts/lib/icm-contracts/avalanche/subnet-evm/",

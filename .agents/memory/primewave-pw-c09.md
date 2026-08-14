@@ -20,7 +20,7 @@ C09 COMPLETE. 574/574 tests pass (535 baseline + 39 new). Date: 2026-08-14.
 
 ## Pitfalls — Must Know for C10+
 
-**Zero-reward removal:** `StakingManager.initiateValidatorRemoval` reverts `ValidatorIneligibleForRewards` when computed reward = 0. Use `forceInitiateValidatorRemoval` for validators with no uptime proof. This is Avalanche upstream behaviour, not a bug.
+**Zero-reward removal:** `StakingManager.initiateValidatorRemoval` reverts `ValidatorIneligibleForRewards` when computed reward = 0. Use `forceInitiateValidatorRemoval` for validators with no uptime proof. This is Avalanche upstream behaviour, not a bug. Force path still enforces ownership + 14-day unbonding — it only skips the revert-on-zero-reward.
 
 **vm.prank consumed by argument evaluation:** `vm.prank(x); foo.bar(baz.qux())` — `qux()` fires first and consumes the prank; `bar()` then has wrong msg.sender. Always capture arguments into local variables BEFORE `vm.prank`.
 
@@ -29,6 +29,10 @@ C09 COMPLETE. 574/574 tests pass (535 baseline + 39 new). Date: 2026-08-14.
 **IWarpMessenger calldata return:** Real precompile returns `WarpMessage calldata`; mock must use `memory`. Changed local copy of IWarpMessenger.sol — do not reset to calldata.
 
 **OZ upgradeable v5.1.0 clone:** Must be explicitly cloned (`git clone --depth 1 --branch v5.1.0`). Previous session left directory empty (silent failure). Always verify `ls contracts/lib/openzeppelin-contracts-upgradeable/contracts/` before build.
+
+**Sub-ether stake dust in fuzz tests:** `bound(x, MIN_STAKE, MAX_STAKE)` can return non-round values. `valueToWeight` truncates sub-ether wei → `weightToValue(valueToWeight(x)) < x`. Align fuzz stake amounts to 1-ether boundary BEFORE `vm.deal`: `stakeAmount = (stakeAmount / 1 ether) * 1 ether`.
+
+**OZ version remapping (dual-version setup):** Primary `@openzeppelin/contracts/` must point to v5.6.1 (`contracts/lib/openzeppelin-contracts-v561/`). The v5.1.0 alias `@openzeppelin/contracts@5.1.0/` points to `contracts/lib/openzeppelin-contracts/` (for StakingManager.sol). Never swap these — StakingManager.sol hardcodes the `@5.1.0` import path.
 
 ## Test Infrastructure Added (C09)
 

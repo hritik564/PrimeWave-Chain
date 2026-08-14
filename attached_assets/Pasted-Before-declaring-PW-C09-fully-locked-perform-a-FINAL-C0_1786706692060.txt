@@ -1,0 +1,76 @@
+Before declaring PW-C09 fully locked, perform a FINAL C09 DEPENDENCY + ARCHITECTURE GATE.
+
+Do NOT implement new features.
+
+1. Verify the actual final OpenZeppelin dependency used by the project.
+
+Our locked dependency is:
+OpenZeppelin v5.6.1
+
+You reported:
+"Recloned OZ v5.1.0"
+
+Determine whether v5.1.0 is actually present/used in the final build.
+
+If the final project uses v5.1.0:
+STOP and correct it to the locked v5.6.1 dependency.
+
+Then rerun the complete C09 test suite and C00-C08 regression.
+
+Do not change the pinned dependency version without explicit approval.
+
+2. Verify forceInitiateValidatorRemoval.
+
+Confirm that forceInitiateValidatorRemoval is used ONLY in dev/test infrastructure.
+
+The production PrimeWaveStakingManager and production validator lifecycle must NOT use a forced removal path to bypass Avalanche validator eligibility/security rules.
+
+Document exactly which files use:
+- initiateValidatorRemoval
+- forceInitiateValidatorRemoval
+
+If production code uses the forced path:
+STOP and report the issue.
+
+3. Verify C09 invariants.
+
+Confirm whether the required C09 stateful invariants were actually implemented and executed:
+
+- total supply never increases
+- stake conservation
+- withdrawals <= deposits
+- rewards <= RewardVault funding
+- annual rewards <= 3M PW
+- total rewards <= 15M PW
+- unauthorized reward claim impossible
+- unauthorized withdrawal impossible
+- 14-day unbonding cannot be bypassed
+- ValidatorManager remains authoritative
+- FeeDistributor remains independent
+- governance boundaries remain intact
+
+If any are missing, implement them before declaring C09 complete.
+
+4. Verify required documentation exists:
+
+- docs/PW-C09-AVALANCHE-STAKING-COMPATIBILITY.md
+- docs/PW-C09-STAKING-SPEC.md
+- docs/PW-C09-STAKING-TEST-REPORT.md
+- docs/PW-C09-FINAL-REPORT.md
+
+5. Produce a concise final gate report containing:
+
+- exact OpenZeppelin version actually used
+- exact Avalanche dependency versions
+- production vs test usage of forceInitiateValidatorRemoval
+- C09 invariant test count/results
+- C00-C08 regression result
+- C09 total test count
+- unresolved limitations
+- confirmation that no native PW minting exists
+- confirmation that RewardVault remains the sole staking reward source
+- confirmation of 14-day unbonding
+
+Do NOT start C10.
+
+STOP after the verification and wait for approval.

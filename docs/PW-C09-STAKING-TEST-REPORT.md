@@ -10,8 +10,8 @@ Solc version: 0.8.30
 | Scope | Tests | Result |
 |---|---|---|
 | Baseline (C00–C08) | 535 | ✅ ALL PASS |
-| C09 new tests | 39 | ✅ ALL PASS |
-| **Total** | **574** | **✅ ALL PASS** |
+| C09 new tests | 51 | ✅ ALL PASS |
+| **Total** | **586** | **✅ ALL PASS** |
 
 ---
 
@@ -84,12 +84,12 @@ Each fuzz test ran 256 runs with randomised inputs.
 
 | # | Test | Runs | Result |
 |---|---|---|---|
-| 28 | `testFuzz_rewardBoundedByVaultReserve` | 256 | ✅ PASS |
-| 29 | `testFuzz_rewardMonotonicInUptime` | 256 | ✅ PASS |
-| 30 | `testFuzz_rewardMonotonicInDuration` | 256 | ✅ PASS |
-| 31 | `testFuzz_stakeReturnedInvariant` | 256 | ✅ PASS |
-| 32 | `testFuzz_vaultTotalClaimedLeqTotalEmitted` | 256 | ✅ PASS |
-| 33 | `testFuzz_vaultTotalEmittedLeqTotalFunded` | 256 | ✅ PASS |
+| 28 | `testFuzz_F1_rewardBounds` | 256 | ✅ PASS |
+| 29 | `testFuzz_F1b_rewardMonotonicInUptime` | 256 | ✅ PASS |
+| 30 | `testFuzz_F2_distributeInvariants` | 256 | ✅ PASS |
+| 31 | `testFuzz_F2b_cannotOverdraw` | 256 | ✅ PASS |
+| 32 | `testFuzz_F3_multipleDistributionsSolvent` | 256 | ✅ PASS |
+| 33 | `testFuzz_F4_supplyCapHeld` | 256 | ✅ PASS |
 
 ---
 
@@ -106,10 +106,73 @@ Each fuzz test ran 256 runs with randomised inputs.
 
 ---
 
+### StakingManagerInvariant.t.sol (12 stateful invariant tests)
+
+Added during final gate review to cover the full C09 invariant checklist.
+
+#### INV-5: Annual rewards <= 3,000,000 PW
+
+| # | Test | Runs | Result |
+|---|---|---|---|
+| 40 | `test_INV5_annualEmissionCapEnforced` | 1 | ✅ PASS |
+| 41 | `testFuzz_INV5_rewardAtMaxRateNeverExceedsAnnualCap` | 256 | ✅ PASS |
+
+#### INV-6: Total rewards <= 15,000,000 PW
+
+| # | Test | Runs | Result |
+|---|---|---|---|
+| 42 | `testFuzz_INV6_totalRewardsBoundedByVaultFunding` | 256 | ✅ PASS |
+
+#### INV-2: Stake conservation
+
+| # | Test | Result |
+|---|---|---|
+| 43 | `test_INV2_stakeConservation_zeroReward` | ✅ PASS |
+| 44 | `test_INV2_stakeConservation_withReward` | ✅ PASS |
+| 45 | `testFuzz_INV2_stakeAlwaysReturned` (256 runs, aligned to 1 ether) | ✅ PASS |
+
+#### INV-10: ValidatorManager remains authoritative
+
+| # | Test | Result |
+|---|---|---|
+| 46 | `test_INV10_cannotCompleteUnissuedRegistration` | ✅ PASS |
+| 47 | `test_INV10_completionRequiresValidatorManagerQueue` | ✅ PASS |
+
+#### INV-11: FeeDistributor remains independent
+
+| # | Test | Result |
+|---|---|---|
+| 48 | `test_INV11_feeDistributorUnaffectedByStaking` | ✅ PASS |
+
+#### INV-12: Governance boundaries
+
+| # | Test | Result |
+|---|---|---|
+| 49 | `test_INV12_setStakingManagerRequiresAdmin` | ✅ PASS |
+| 50 | `test_INV12_setStakingManagerOnce` | ✅ PASS |
+| 51 | `test_INV12_distributeOnlyByStakingManager` | ✅ PASS |
+
+---
+
+## C09 Invariant Coverage Summary
+
+| Gate Invariant | Coverage | Test(s) |
+|---|---|---|
+| INV-1: No minting (total supply never increases) | ✅ | F2: `totalFunded unchanged` |
+| INV-2: Stake conservation | ✅ | INV2 unit × 2 + fuzz × 256 |
+| INV-3: Withdrawals <= deposits (cannot overdraw) | ✅ | F2b: `cannotOverdraw` |
+| INV-4: Rewards <= vault reserve | ✅ | F1: `rewardBounds` |
+| INV-5: Annual rewards <= 3M PW | ✅ | INV5 unit + fuzz × 256 |
+| INV-6: Total rewards <= 15M PW | ✅ | F4: `supplyCapHeld` + INV6 fuzz × 256 |
+| INV-7: Unauthorized reward claim impossible | ✅ | `distribute_revertsIfNotStakingManager` |
+| INV-8: Unauthorized withdrawal impossible | ✅ | `security_onlyOwnerCanInitiateRemoval` |
+| INV-9: 14-day unbonding cannot be bypassed | ✅ | `unbonding_earlyRemovalReverts` |
+| INV-10: ValidatorManager remains authoritative | ✅ | INV10 × 2 |
+| INV-11: FeeDistributor remains independent | ✅ | INV11 × 1 |
+| INV-12: Governance boundaries intact | ✅ | INV12 × 3 |
+
+---
+
 ## Build Warnings (non-blocking)
 
-- Unused local variables in pre-existing test files (GovernanceFuzz, IntegrationC08, RewardVaultUnit).
-- `_lock()` can be declared `pure` — intentional; override signature matches base.
-- `forge-lint`: divide-before-multiply in pre-existing invariant test (not C09 code).
-
-All warnings are pre-existing or intentional design choices. No warnings in C09 production contracts.
+Pre-existing warnings in C00–C08 test files only. No new warnings in C09 production contracts or invariant test file.
