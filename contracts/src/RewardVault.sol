@@ -157,7 +157,40 @@ contract RewardVault {
         _;
     }
 
+    // ── Pause state (C07 Emergency Governance) ────────────────────────────────
+
+    /// @notice Whether reward claims are currently paused.
+    ///         When true: claim() reverts. Emission accrual and all admin ops unaffected.
+    bool public paused;
+
+    /// @notice Address authorized to pause() / unpause().
+    ///         Set via setPauseController() by admin or current pauseController.
+    ///         address(0) = no pause capability; pause() always reverts.
+    address public pauseController;
+
+    modifier onlyPauseController() {
+        require(
+            msg.sender == pauseController && pauseController != address(0),
+            "RV: not pause controller"
+        );
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "RV: paused");
+        _;
+    }
+
     // ── Events ────────────────────────────────────────────────────────────────
+
+    /// @notice Reward claims are paused.
+    event Paused(address indexed by);
+
+    /// @notice Reward claims are unpaused.
+    event Unpaused(address indexed by);
+
+    /// @notice The pauseController was updated.
+    event PauseControllerUpdated(address indexed oldController, address indexed newController);
 
     /// @notice PW was funded into the vault.
     event RewardVaultFunded(address indexed funder, uint256 amount, uint256 newTotalFunded);
@@ -202,6 +235,36 @@ contract RewardVault {
         admin                = _admin;
         emissionRatePerSecond = _initialRate;
         lastUpdateTime       = block.timestamp;
+    }
+
+    // ── Pause functions (C07) ─────────────────────────────────────────────────
+
+    /// @notice Authorize a new pause controller.
+    ///         Callable by admin (to initialize) OR current pauseController (to rotate).
+    function setPauseController(address newController) external {
+        require(
+            msg.sender == admin ||
+            (pauseController != address(0) && msg.sender == pauseController),
+            "RV: unauthorized"
+        );
+        address old = pauseController;
+        pauseController = newController;
+        emit PauseControllerUpdated(old, newController);
+    }
+
+    /// @notice Pause reward claims. Only callable by pauseController.
+    ///         Emission accrual, rate changes, and admin ops continue normally.
+    function pause() external onlyPauseController {
+        require(!paused, "RV: already paused");
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /// @notice Resume reward claims. Only callable by pauseController.
+    function unpause() external onlyPauseController {
+        require(paused, "RV: not paused");
+        paused = false;
+        emit Unpaused(msg.sender);
     }
 
     // ── Funding ───────────────────────────────────────────────────────────────
@@ -401,7 +464,7 @@ contract RewardVault {
     ///         CEI pattern. Caller must be the registered rewardAddress.
     /// @param  id  The recipient ID.
     /// @return amount  PW transferred to rewardAddress.
-    function claim(bytes32 id) external nonReentrant returns (uint256 amount) {
+    function claim(bytes32 id) external nonReentrant whenNotPaused returns (uint256 amount) {
         require(isRegistered[id], "RV: not registered");
         RecipientInfo storage r = recipients[id];
         require(msg.sender == r.rewardAddress, "RV: caller is not rewardAddress");

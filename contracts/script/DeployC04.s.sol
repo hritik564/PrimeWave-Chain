@@ -71,7 +71,8 @@ contract DeployC04 is Script {
         // ── Nonce 2: FeeDistributor ───────────────────────────────────────
         FeeDistributor distributor = new FeeDistributor(
             payable(address(vault)),
-            payable(address(treasury))
+            payable(address(treasury)),
+            address(0) // pauseController: set via governance after deployment
         );
         console.log("FeeDistributor deployed:   ", address(distributor));
 

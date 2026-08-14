@@ -64,7 +64,8 @@ contract DeployC03 is Script {
         // Nonce 2: FeeDistributor
         FeeDistributor distributor = new FeeDistributor(
             payable(EXPECTED_VAULT),
-            payable(EXPECTED_TREASURY)
+            payable(EXPECTED_TREASURY),
+            address(0) // pauseController: set via governance after deployment
         );
         require(address(distributor) == EXPECTED_DIST,
             "DeployC03: FeeDistributor address mismatch");

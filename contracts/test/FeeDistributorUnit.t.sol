@@ -71,7 +71,7 @@ contract FeeDistributorUnitTest is Test {
 
         vault       = new ValidatorFeeVault(expectedDist);
         treasury    = new DevTreasury(expectedDist);
-        distributor = new FeeDistributor(payable(expectedVault), payable(expectedTreasury));
+        distributor = new FeeDistributor(payable(expectedVault), payable(expectedTreasury), address(0));
 
         // Sanity: verify addresses matched
         assertEq(address(vault),       expectedVault,    "vault addr");
@@ -92,12 +92,12 @@ contract FeeDistributorUnitTest is Test {
 
     function test_constructor_rejectsZeroVault() public {
         vm.expectRevert("FeeDistributor: zero vault");
-        new FeeDistributor(payable(address(0)), payable(address(treasury)));
+        new FeeDistributor(payable(address(0)), payable(address(treasury)), address(0));
     }
 
     function test_constructor_rejectsZeroTreasury() public {
         vm.expectRevert("FeeDistributor: zero treasury");
-        new FeeDistributor(payable(address(vault)), payable(address(0)));
+        new FeeDistributor(payable(address(vault)), payable(address(0)), address(0));
     }
 
     // ── receive() ─────────────────────────────────────────────────────────────
@@ -325,7 +325,8 @@ contract FeeDistributorUnitTest is Test {
 
         FeeDistributor malDist = new FeeDistributor(
             payable(address(attacker)),
-            payable(address(treasury))
+            payable(address(treasury)),
+            address(0)
         );
 
         attacker.setTarget(payable(address(malDist)));

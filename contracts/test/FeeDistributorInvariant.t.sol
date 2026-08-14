@@ -39,7 +39,7 @@ contract FeeDistributorInvariantTest is Test {
 
         vault       = new ValidatorFeeVault(expectedDist);
         treasury    = new DevTreasury(expectedDist);
-        distributor = new FeeDistributor(payable(expectedVault), payable(expectedTreasury));
+        distributor = new FeeDistributor(payable(expectedVault), payable(expectedTreasury), address(0));
     }
 
     // ── INV-1: No wei lost — sum of parts equals whole ────────────────────────

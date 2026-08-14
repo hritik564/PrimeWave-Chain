@@ -1,0 +1,1131 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C07 — PHASE-1 POA HARDENING + GOVERNANCE INTEGRATION
+
+============================================================
+STATUS
+============================================================
+
+COMPLETED AND LOCKED:
+
+PW-C00 — Architecture / decisions
+PW-C01 — Avalanche L1 foundation
+PW-C02 — Native PW + fee validation
+PW-C03 — 70/20/10 FeeDistributor
+PW-C04 — ValidatorFeeVault accounting
+PW-C05 — Avalanche ValidatorManager integration
+PW-C06 — Finite 15M PW RewardVault
+
+Current validated test baseline:
+
+PW-C03: 40/40
+PW-C04: 113/113
+PW-C05: 190/190
+PW-C06: 282/282
+
+Do not regress any of these.
+
+============================================================
+1. PRIMARY OBJECTIVE
+============================================================
+
+Harden the Phase-1 PrimeWave PoA validator architecture.
+
+C07 is NOT a staking sprint.
+
+C07 is NOT Phase-2 PoS.
+
+The objective is to make the existing Phase-1 PoA validator system:
+
+- operationally coherent
+- permission-safe
+- governance-compatible
+- validator-set aware
+- emergency-safe
+- auditable
+- resistant to unauthorized validator manipulation
+
+The target architecture is:
+
+Avalanche ValidatorManager
+        ↓
+PrimeWaveValidatorRegistry
+        ↓
+ValidatorFeeVault
+        ↓
+Validator fee accounting
+
+while governance/security controls operate around the protocol without becoming a second validator authority.
+
+============================================================
+2. ABSOLUTE SCOPE BOUNDARY
+============================================================
+
+C07 MAY implement:
+
+- Phase-1 PoA hardening
+- validator lifecycle hardening
+- governance integration required for Phase-1 controls
+- emergency pause integration
+- protocol admin boundary
+- 3-of-5 emergency multisig interface
+- 48-hour timelock integration
+- validator registry hardening
+- validator state synchronization hardening
+- deployment configuration validation
+- validator-set consistency checks
+- security checks
+- operational safeguards
+- local multi-node tests
+- failure/recovery tests
+- Foundry unit/fuzz/invariant tests
+- documentation
+
+C07 MUST NOT implement:
+
+- Phase-2 PoS
+- PrimeWaveStakingManager
+- staking
+- delegation
+- staking deposits
+- unbonding implementation
+- staking rewards
+- RewardVault changes except required integration interfaces
+- new emission mechanisms
+- validator staking weight
+- delegator rewards
+- slashing implementation
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- MLM software
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- Salary
+- P2P
+- bridges
+- BEP-20 migration
+- public deployment
+- mainnet
+- production key generation
+
+============================================================
+3. SOURCE DOCUMENTATION
+============================================================
+
+Read all of these before implementation:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_GENESIS_SPEC.md
+- docs/PRIMEWAVE_INFRASTRUCTURE.md
+- docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+- docs/PW-C05-VALIDATOR-INTEGRATION-SPEC.md
+- docs/PW-C05-FINAL-REPORT.md
+- docs/PW-C06-REWARDVAULT-SPEC.md
+- docs/PW-C06-FINAL-REPORT.md
+
+Also inspect the actual current implementation rather than relying only on documentation.
+
+Locked decisions take precedence over assumptions.
+
+============================================================
+4. LOCKED GOVERNANCE PARAMETERS
+============================================================
+
+The following are already locked:
+
+Emergency multisig:
+3-of-5
+
+Emergency multisig powers:
+PAUSE / UNPAUSE / FREEZE ONLY
+
+The emergency multisig MUST NOT be able to:
+
+- mint PW
+- change total supply
+- change validator weights arbitrarily
+- redirect validator rewards
+- withdraw Treasury
+- withdraw RewardVault funds
+- change RewardVault emission cap
+- bypass timelock
+- change governance membership through emergency powers
+- upgrade arbitrary contracts
+
+Governance timelock:
+48 hours
+
+The timelock applies only to the actions explicitly defined in:
+
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+
+Do not broaden its authority.
+
+============================================================
+5. FIRST TASK — AUDIT CURRENT GOVERNANCE IMPLEMENTATION
+============================================================
+
+Before coding:
+
+Inspect what actually exists.
+
+Create a matrix:
+
+| Action | Current authority | Intended authority | Timelock? | Emergency bypass? |
+|--------|-------------------|--------------------|-----------|--------------------|
+
+Include at minimum:
+
+- validator registration
+- validator activation
+- validator deactivation
+- validator weight changes
+- reward-recipient changes
+- emission-rate reduction
+- pause
+- unpause
+- freeze
+- contract upgrades if any
+- configuration changes
+- Treasury actions
+- RewardVault actions
+
+Do NOT implement missing powers automatically.
+
+The goal is to identify gaps between the locked governance policy and the current implementation.
+
+============================================================
+6. GOVERNANCE PRINCIPLE
+============================================================
+
+There must NOT be multiple competing authorities.
+
+The architecture must distinguish:
+
+A. Avalanche ValidatorManager
+   → authoritative validator state
+
+B. Protocol governance
+   → authorized protocol configuration
+
+C. Emergency multisig
+   → pause/unpause/freeze only
+
+D. Timelock
+   → delayed governance actions
+
+No component should silently override another.
+
+============================================================
+7. EMERGENCY MULTISIG
+============================================================
+
+Implement or integrate the 3-of-5 emergency control boundary only where necessary.
+
+The emergency mechanism must support:
+
+- pause
+- unpause
+- freeze
+
+according to the existing governance policy.
+
+Determine exactly what "pause" means for each relevant protocol component.
+
+Possible components:
+
+- FeeDistributor
+- ValidatorFeeVault
+- RewardVault
+- ValidatorRegistry
+
+Do NOT blindly pause everything.
+
+For every component define:
+
+- what operations stop
+- what operations remain available
+- whether claims remain available
+- whether fee receipt remains available
+- whether funds remain withdrawable
+- whether the emergency action is reversible
+
+Document this precisely.
+
+============================================================
+8. FREEZE VS PAUSE
+============================================================
+
+Do not treat "freeze" and "pause" as synonyms.
+
+Determine the intended semantics from:
+
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+
+If the existing documentation does not define the difference precisely:
+
+STOP and document the ambiguity before implementing new semantics.
+
+Do not invent governance behavior.
+
+============================================================
+9. 3-OF-5 SECURITY
+============================================================
+
+The emergency mechanism must require:
+
+3 approvals out of 5 authorized signers.
+
+Test:
+
+- 1 signer → fail
+- 2 signers → fail
+- 3 signers → succeed
+- 4 signers → succeed
+- 5 signers → succeed
+- duplicate signer approval → must not count twice
+- unauthorized signer → fail
+- replayed execution → fail
+
+Use development-only keys.
+
+DO NOT generate production keys.
+
+============================================================
+10. EMERGENCY AUTHORITY LIMITS
+============================================================
+
+Explicitly test that emergency authority cannot:
+
+- mint native PW
+- alter max supply
+- modify 3M PW/year cap
+- transfer RewardVault funds
+- transfer ValidatorFeeVault funds
+- transfer Treasury funds
+- alter validator reward recipients
+- alter validator weight
+- add arbitrary validators
+- remove arbitrary validators
+- bypass the 48-hour timelock
+- upgrade arbitrary implementation contracts
+
+If any of these are currently possible:
+
+STOP.
+
+Report the privilege escalation.
+
+============================================================
+11. 48-HOUR TIMELOCK
+============================================================
+
+Integrate the approved 48-hour timelock where the governance policy requires it.
+
+Use:
+
+48 hours = 172,800 seconds
+
+But do not simply add a generic timelock to every function.
+
+Use the exact action list from:
+
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+
+For each timelocked operation:
+
+1. queue
+2. wait minimum delay
+3. execute
+4. emit appropriate events
+
+Test:
+
+- execution before 48h → fail
+- execution at/after valid delay → succeed
+- cancellation if permitted → correct behavior
+- duplicate execution → fail
+- altered parameters → fail
+- replay → fail
+
+============================================================
+12. TIMELOCK IMMUTABILITY
+============================================================
+
+Determine whether the timelock itself can be changed.
+
+If it can be changed:
+
+document who can change it and whether changing it is itself timelocked.
+
+Do not create a governance mechanism where the administrator can simply reduce:
+
+48 hours → 1 second
+
+and then immediately execute a sensitive action.
+
+That would defeat the security purpose.
+
+============================================================
+13. VALIDATOR REGISTRY HARDENING
+============================================================
+
+C05 established:
+
+ValidatorManager is the source of truth.
+
+C07 must ensure governance does not become a parallel validator authority.
+
+The registry must NOT allow governance to invent:
+
+- fake validator IDs
+- fake active status
+- fake validator weight
+
+Any validator state must remain anchored to ValidatorManager.
+
+Test:
+
+- fake validator
+- removed validator
+- stale validator
+- duplicate validator
+- invalid state
+- validator-manager mismatch
+
+============================================================
+14. VALIDATOR REWARD RECIPIENT SECURITY
+============================================================
+
+C04 introduced reward-recipient management.
+
+C07 must audit:
+
+Who can change:
+
+rewardRecipient
+
+for a validator?
+
+A governance account must not be able to redirect validator earnings arbitrarily unless the locked architecture explicitly authorizes that capability.
+
+If reward-recipient changes require a secure validator-binding mechanism:
+
+implement only the minimum required boundary.
+
+Test:
+
+Old recipient
+    ↓
+change attempt
+    ↓
+unauthorized → FAIL
+
+Authorized legitimate update
+    ↓
+new recipient
+    ↓
+future rewards only
+
+Historical rewards must remain associated correctly.
+
+============================================================
+15. VALIDATOR LIFECYCLE HARDENING
+============================================================
+
+Test the complete Phase-1 lifecycle:
+
+Validator exists
+      ↓
+active
+      ↓
+earns fees
+      ↓
+inactive
+      ↓
+claims previously earned fees
+      ↓
+reactivated if supported
+      ↓
+earns future fees
+
+Verify:
+
+- no retroactive rewards
+- no double accounting
+- no loss of earned rewards
+- no reward redirection
+- no unauthorized lifecycle change
+
+============================================================
+16. MULTI-NODE CONSISTENCY
+============================================================
+
+Use the existing local multi-node environment.
+
+Perform governance and validator lifecycle actions.
+
+Verify all nodes agree on:
+
+- validator state
+- validator registry state
+- pause state
+- freeze state
+- FeeDistributor state
+- ValidatorFeeVault state
+- RewardVault state
+- governance state
+
+A governance transaction must produce deterministic state across nodes.
+
+============================================================
+17. PAUSE TESTS
+============================================================
+
+For every component with pause functionality:
+
+Test:
+
+normal operation
+→ pause
+→ affected operation fails
+→ unaffected operation remains correct
+→ unpause
+→ normal operation resumes
+
+Do NOT pause the entire chain.
+
+This is contract/application-level emergency control.
+
+============================================================
+18. FREEZE TESTS
+============================================================
+
+Test the exact freeze semantics from the governance policy.
+
+Verify:
+
+- frozen state
+- prohibited actions
+- permitted recovery actions
+- unauthorized unfreeze failure
+- authorized unfreeze behavior
+
+If freeze semantics cannot be implemented without contradicting the governance policy:
+
+STOP.
+
+============================================================
+19. FUND SAFETY
+============================================================
+
+Governance integration must not create new fund-withdrawal authority.
+
+Verify:
+
+ValidatorFeeVault
+RewardVault
+Treasury
+FeeDistributor
+
+cannot be drained by:
+
+- Protocol Admin
+- Emergency Multisig
+- Timelock
+- arbitrary validator
+
+unless the specific action is explicitly authorized by the locked architecture.
+
+============================================================
+20. SUPPLY SAFETY
+============================================================
+
+C07 must preserve:
+
+Maximum supply:
+100,000,000 PW
+
+No governance action may:
+
+- mint PW
+- increase supply
+- create hidden native PW
+- invoke NativeMinter
+
+Run a supply invariant regression.
+
+============================================================
+21. REWARDVAULT SAFETY
+============================================================
+
+C06 is already proven.
+
+C07 must NOT redesign RewardVault.
+
+Only verify governance interactions.
+
+Specifically:
+
+Emergency controls MUST NOT allow:
+
+- emission rate > 3,000,000 PW/year
+- unauthorized withdrawals
+- minting
+- reserve redirection
+
+A legitimate rate reduction must preserve C06 accounting.
+
+============================================================
+22. FEEDISTRIBUTOR SAFETY
+============================================================
+
+C03 is already proven.
+
+C07 must not alter:
+
+70% ValidatorFeeVault
+20% Treasury
+10% Burn
+
+unless the existing locked architecture explicitly requires a governance-controlled configuration.
+
+Run C03 regression.
+
+Verify:
+
+70/20/10 remains exact.
+
+============================================================
+23. VALIDATORFEEVAULT SAFETY
+============================================================
+
+C04 is already proven.
+
+C07 must preserve:
+
+- reward-index accounting
+- claims
+- conservation
+- no double claim
+- validator isolation
+
+Run C04 regression.
+
+============================================================
+24. PAUSE / CLAIM INTERACTION
+============================================================
+
+This requires an explicit decision based on the governance policy.
+
+Determine whether:
+
+- validator claims remain possible during pause
+- validator claims stop during pause
+- previously earned claims remain available during freeze
+
+Do not assume.
+
+Use the locked governance policy.
+
+Document the reasoning and exact behavior.
+
+============================================================
+25. GOVERNANCE EVENT LOGGING
+============================================================
+
+Ensure governance actions are indexer-friendly.
+
+At minimum:
+
+EmergencyActionQueued
+EmergencyActionExecuted
+EmergencyActionCancelled
+
+or equivalent names consistent with the existing implementation.
+
+Also emit:
+
+Pause
+Unpause
+Freeze
+Unfreeze
+
+where appropriate.
+
+Timelock events must identify:
+
+- action
+- target
+- parameters/hash
+- proposer
+- execution timestamp
+
+Do not emit secrets or private-key material.
+
+============================================================
+26. GOVERNANCE REPLAY PROTECTION
+============================================================
+
+Every governance action must be uniquely identifiable.
+
+Test:
+
+- replay
+- duplicate execution
+- parameter modification
+- altered target
+- altered calldata
+- stale action
+
+No action may execute twice.
+
+============================================================
+27. GOVERNANCE FAILURE MODES
+============================================================
+
+Test:
+
+- signer unavailable
+- insufficient signatures
+- expired proposal if applicable
+- cancelled proposal
+- invalid target
+- invalid calldata
+- already executed
+- already queued
+- unauthorized caller
+
+Document expected behavior.
+
+============================================================
+28. DEVELOPMENT-ONLY GOVERNANCE
+============================================================
+
+Use development-only identities.
+
+DO NOT:
+
+- generate production multisig keys
+- store production private keys
+- commit secrets
+- create real governance signer backups
+- deploy production governance
+
+Follow:
+
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+
+Production key ceremony remains outside this sprint.
+
+============================================================
+29. SECURITY REVIEW
+============================================================
+
+Perform a focused privilege/security review covering:
+
+- privilege escalation
+- multisig bypass
+- timelock bypass
+- replay
+- signature duplication
+- signer replacement
+- unauthorized pause
+- unauthorized unpause
+- unauthorized freeze
+- unauthorized unfreeze
+- validator manipulation
+- reward redirection
+- treasury access
+- RewardVault access
+- FeeDistributor access
+- NativeMinter access
+- upgrade authority
+
+Produce a privilege matrix:
+
+| Actor | Action | Allowed? | Delay? |
+|------|--------|----------|--------|
+
+============================================================
+30. FUZZ TESTING
+============================================================
+
+Fuzz:
+
+- signer combinations
+- action hashes
+- timelock timestamps
+- validator lifecycle
+- pause/unpause sequences
+- freeze/unfreeze sequences
+- duplicate execution
+- invalid targets
+- invalid calldata
+
+Verify:
+
+No unauthorized state transition.
+
+No replay.
+
+No privilege escalation.
+
+No fund loss.
+
+============================================================
+31. INVARIANT TESTING
+============================================================
+
+Implement stateful invariants.
+
+At minimum:
+
+INVARIANT 1:
+3-of-5 cannot be bypassed.
+
+INVARIANT 2:
+Emergency authority cannot mint PW.
+
+INVARIANT 3:
+Maximum supply remains 100M PW.
+
+INVARIANT 4:
+RewardVault emission cap remains <=3M PW/year.
+
+INVARIANT 5:
+70/20/10 fee routing remains intact.
+
+INVARIANT 6:
+ValidatorFeeVault conservation remains intact.
+
+INVARIANT 7:
+Governance cannot claim validator rewards.
+
+INVARIANT 8:
+Timelocked actions cannot execute before delay.
+
+INVARIANT 9:
+Executed governance action cannot execute twice.
+
+INVARIANT 10:
+ValidatorManager remains authoritative for validator existence/status/weight.
+
+============================================================
+32. FULL REGRESSION
+============================================================
+
+At minimum:
+
+C03:
+40/40
+
+C04:
+113/113
+
+C05:
+190/190
+
+C06:
+282/282
+
+All must continue passing.
+
+If any regression fails:
+
+STOP.
+
+Do not modify earlier architecture merely to force C07 green.
+
+============================================================
+33. LOCAL END-TO-END SCENARIO
+============================================================
+
+Run a complete development scenario:
+
+1. Start local PrimeWave network.
+
+2. Verify validator set.
+
+3. Verify governance state.
+
+4. Execute normal PW transaction.
+
+5. Verify 70/20/10.
+
+6. Verify ValidatorFeeVault accounting.
+
+7. Verify RewardVault remains separate.
+
+8. Queue a timelocked governance action.
+
+9. Attempt early execution → MUST FAIL.
+
+10. Advance 48 hours.
+
+11. Execute → MUST SUCCEED.
+
+12. Trigger approved emergency pause.
+
+13. Verify affected operations stop.
+
+14. Verify prohibited emergency actions fail.
+
+15. Unpause.
+
+16. Verify normal operation resumes.
+
+17. Verify validator state remains anchored to ValidatorManager.
+
+18. Verify all nodes agree.
+
+============================================================
+34. COST CONTROL
+============================================================
+
+Reuse existing:
+
+- Foundry
+- local Avalanche binaries
+- local multi-node setup
+- existing contracts
+- existing tests
+
+Do NOT rebuild infrastructure.
+
+Do NOT deploy public infrastructure.
+
+Do NOT use production RPCs.
+
+Do NOT generate production keys.
+
+Do NOT implement unrelated features.
+
+============================================================
+35. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C07-GOVERNANCE-INTEGRATION-SPEC.md
+
+Include:
+
+1. Phase-1 governance architecture
+2. Authority model
+3. Emergency multisig
+4. Timelock
+5. Validator authority boundary
+6. Pause semantics
+7. Freeze semantics
+8. Fund safety
+9. Supply safety
+10. RewardVault interaction
+11. FeeDistributor interaction
+12. ValidatorFeeVault interaction
+13. Event model
+14. Replay protection
+15. Security model
+16. Future Phase-2 implications
+
+Create:
+
+docs/PW-C07-GOVERNANCE-TEST-REPORT.md
+
+Include:
+
+- unit tests
+- fuzz tests
+- invariant tests
+- multisig tests
+- timelock tests
+- pause tests
+- freeze tests
+- validator lifecycle tests
+- privilege tests
+- fund-safety tests
+- supply tests
+- full regression
+- multi-node tests
+- end-to-end test
+
+Create:
+
+docs/PW-C07-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Current governance architecture
+C. What was implemented
+D. Authority matrix
+E. Emergency controls
+F. Timelock
+G. Validator authority
+H. Security review
+I. Tests
+J. Regression results
+K. Known limitations
+L. Remaining Phase-1 requirements
+M. Exact prerequisites for C08
+
+============================================================
+36. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C07 PASSES only when:
+
+[ ] Phase-1 PoA governance architecture is documented.
+
+[ ] Avalanche ValidatorManager remains validator source of truth.
+
+[ ] No fake validator oracle exists.
+
+[ ] Validator lifecycle is secure.
+
+[ ] Reward-recipient manipulation is protected.
+
+[ ] 3-of-5 emergency authority works.
+
+[ ] 1/5 and 2/5 approvals fail.
+
+[ ] 3/5 approvals succeed.
+
+[ ] Duplicate approvals do not count twice.
+
+[ ] Unauthorized signers fail.
+
+[ ] Emergency authority cannot mint.
+
+[ ] Emergency authority cannot alter supply.
+
+[ ] Emergency authority cannot drain RewardVault.
+
+[ ] Emergency authority cannot drain ValidatorFeeVault.
+
+[ ] Emergency authority cannot drain Treasury.
+
+[ ] 48-hour timelock works.
+
+[ ] Early execution fails.
+
+[ ] Valid delayed execution succeeds.
+
+[ ] Governance replay fails.
+
+[ ] Parameter tampering fails.
+
+[ ] Pause behavior is correct.
+
+[ ] Unpause behavior is correct.
+
+[ ] Freeze behavior is correct.
+
+[ ] Supply remains <=100M PW.
+
+[ ] RewardVault cap remains <=3M PW/year.
+
+[ ] 70/20/10 remains intact.
+
+[ ] C04 accounting remains intact.
+
+[ ] C05 validator integration remains intact.
+
+[ ] C06 RewardVault remains intact.
+
+[ ] Multi-node state agrees.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] Full regression passes.
+
+[ ] No production keys exist.
+
+[ ] No public deployment exists.
+
+[ ] Documentation is complete.
+
+============================================================
+37. FAILURE POLICY
+============================================================
+
+If the existing governance policy does not define pause/freeze semantics precisely:
+
+STOP and report the ambiguity.
+
+If 3-of-5 emergency authority requires powers beyond the locked policy:
+
+STOP.
+
+If the timelock can be bypassed:
+
+STOP.
+
+If governance can arbitrarily alter validator identity/status/weight:
+
+STOP.
+
+If governance can redirect validator rewards:
+
+STOP.
+
+If governance can drain RewardVault:
+
+STOP.
+
+If governance can mint PW:
+
+STOP.
+
+If 70/20/10 breaks:
+
+STOP.
+
+If any C03-C06 regression fails:
+
+STOP.
+
+Do not weaken an existing invariant to obtain a green test suite.
+
+============================================================
+38. FINAL STOP CONDITION
+============================================================
+
+When all acceptance criteria pass:
+
+STOP.
+
+Do NOT begin C08 automatically.
+
+Do NOT implement:
+
+- Phase-2 PoS
+- staking
+- delegation
+- PrimeWaveStakingManager
+- slashing
+- PWC-20 token standard
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- Block Explorer
+- production deployment
+
+Report:
+
+PW-C07 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C07
+============================================================

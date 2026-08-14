@@ -100,6 +100,41 @@ contract ValidatorFeeVault {
         _;
     }
 
+    // ── Pause state (C07 Emergency Governance) ────────────────────────────────
+
+    /// @notice Whether fee claims are currently paused.
+    ///         When true: claimFees() reverts. Accounting (receive, register, etc.) unaffected.
+    bool public paused;
+
+    /// @notice Address authorized to call pause() and unpause().
+    ///         Set via setPauseController() by protocolAdmin or current pauseController.
+    ///         address(0) = no pause controller; pause() and unpause() always revert.
+    address public pauseController;
+
+    modifier onlyPauseController() {
+        require(
+            msg.sender == pauseController && pauseController != address(0),
+            "VFV: not pause controller"
+        );
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "VFV: paused");
+        _;
+    }
+
+    // ── Events (C07 additions) ────────────────────────────────────────────────
+
+    /// @notice Emitted when fee claims are paused.
+    event Paused(address indexed by);
+
+    /// @notice Emitted when fee claims are unpaused.
+    event Unpaused(address indexed by);
+
+    /// @notice Emitted when the pauseController is updated.
+    event PauseControllerUpdated(address indexed oldController, address indexed newController);
+
     // ── Validator registry ─────────────────────────────────────────────────────
 
     /// @notice Per-validator accounting record.
@@ -240,6 +275,37 @@ contract ValidatorFeeVault {
         v.rewardDebt = accFeePerWeight;
     }
 
+    // ── Pause functions (C07) ─────────────────────────────────────────────────
+
+    /// @notice Authorize a new pause controller.
+    ///         Callable by protocolAdmin (to initialize) OR by current pauseController
+    ///         (to rotate). Setting to address(0) disables pause capability.
+    function setPauseController(address newController) external {
+        require(
+            msg.sender == protocolAdmin ||
+            (pauseController != address(0) && msg.sender == pauseController),
+            "VFV: unauthorized"
+        );
+        address old = pauseController;
+        pauseController = newController;
+        emit PauseControllerUpdated(old, newController);
+    }
+
+    /// @notice Pause fee claims. Only callable by pauseController.
+    ///         Accounting (receive, register, sync, weight updates) is NOT affected.
+    function pause() external onlyPauseController {
+        require(!paused, "VFV: already paused");
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /// @notice Resume fee claims. Only callable by pauseController.
+    function unpause() external onlyPauseController {
+        require(paused, "VFV: not paused");
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
     // ── Admin: validator lifecycle ─────────────────────────────────────────────
 
     /// @notice Register a new validator. Immediately active from current index.
@@ -373,6 +439,7 @@ contract ValidatorFeeVault {
     function claimFees(bytes32 validationId)
         external
         nonReentrant
+        whenNotPaused
         returns (uint256 amount)
     {
         ValidatorInfo storage v = validators[validationId];

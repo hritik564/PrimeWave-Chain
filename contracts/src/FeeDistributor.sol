@@ -117,6 +117,16 @@ contract FeeDistributor {
     /// @notice Total PW sent to BURN_ADDRESS (all-time).
     uint256 public totalBurnShare;
 
+    // ── Pause state ──────────────────────────────────────────────────────────
+
+    /// @notice Whether distribution is currently paused (Emergency Multisig only).
+    bool public paused;
+
+    /// @notice Address authorized to call pause() and unpause().
+    ///         Set at construction. Use address(0) to disable pause entirely.
+    ///         Only changeable by current pauseController (self-transfer).
+    address public pauseController;
+
     // ── Reentrancy guard ──────────────────────────────────────────────────────
 
     /// @dev Set to true during distribute() execution to prevent reentrant calls.
@@ -131,6 +141,15 @@ contract FeeDistributor {
         uint256 blockNumber,
         address indexed sender
     );
+
+    /// @notice Emitted when distribution is paused by the pauseController.
+    event Paused(address indexed by);
+
+    /// @notice Emitted when distribution is resumed by the pauseController.
+    event Unpaused(address indexed by);
+
+    /// @notice Emitted when the pauseController address is updated.
+    event PauseControllerUpdated(address indexed oldController, address indexed newController);
 
     /// @notice Emitted once per distribute() call. Primary event for indexing.
     /// @param  amount          Total PW distributed in this call.
@@ -150,7 +169,12 @@ contract FeeDistributor {
 
     /// @param _validatorFeeVault  Address of the ValidatorFeeVault contract.
     /// @param _treasury           Address of the DevTreasury contract.
-    constructor(address payable _validatorFeeVault, address payable _treasury) {
+    /// @param _pauseController    Address authorized to pause/unpause (address(0) = no pause).
+    constructor(
+        address payable _validatorFeeVault,
+        address payable _treasury,
+        address _pauseController
+    ) {
         require(
             _validatorFeeVault != address(0),
             "FeeDistributor: zero vault"
@@ -161,6 +185,46 @@ contract FeeDistributor {
         );
         validatorFeeVault = _validatorFeeVault;
         treasury          = _treasury;
+        pauseController   = _pauseController;
+    }
+
+    // ── Pause control (Emergency Multisig only) ───────────────────────────────
+
+    modifier onlyPauseController() {
+        require(
+            msg.sender == pauseController && pauseController != address(0),
+            "FeeDistributor: not pause controller"
+        );
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "FeeDistributor: paused");
+        _;
+    }
+
+    /// @notice Transfer the pauseController role to a new address.
+    ///         Only callable by the current pauseController.
+    function setPauseController(address newController) external onlyPauseController {
+        address old = pauseController;
+        pauseController = newController;
+        emit PauseControllerUpdated(old, newController);
+    }
+
+    /// @notice Pause fee distribution. Only callable by pauseController.
+    ///         While paused: distribute() reverts; fees accumulate in contract.
+    ///         All other state (accounting, balances) is unchanged.
+    function pause() external onlyPauseController {
+        require(!paused, "FeeDistributor: already paused");
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /// @notice Resume fee distribution. Only callable by pauseController.
+    function unpause() external onlyPauseController {
+        require(paused, "FeeDistributor: not paused");
+        paused = false;
+        emit Unpaused(msg.sender);
     }
 
     // ── Receive ───────────────────────────────────────────────────────────────
@@ -184,7 +248,7 @@ contract FeeDistributor {
     ///
     /// @dev    ROUNDING: validatorShare and treasuryShare use floor division.
     ///         burnShare absorbs the remainder (≤ 2 wei above exact 10%).
-    function distribute() external {
+    function distribute() external whenNotPaused {
         // ── Reentrancy guard ──────────────────────────────────────────────────
         require(!_distributing, "FeeDistributor: reentrant call");
         _distributing = true;
@@ -277,7 +341,7 @@ contract FeeDistributor {
     //   NO setValidatorFeeVault()    — destinations are immutable
     //   NO setTreasury()             — destinations are immutable
     //   NO setSplit()                — split constants are compile-time immutable
-    //   NO pause()                   — no pause/resume
+    //   NO ownerWithdraw()           — no admin drain (pause does NOT add this)
     //   NO upgrade proxy             — not upgradeable
-    //   NO owner                     — no owner
+    //   NO owner                     — no owner (pauseController != owner)
 }
