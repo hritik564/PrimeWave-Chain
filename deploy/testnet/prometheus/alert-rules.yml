@@ -1,0 +1,97 @@
+# PrimeWave Testnet — Alert Rules
+# TESTNET ONLY | Sprint PW-C14
+
+groups:
+  - name: primewave_testnet_node
+    interval: 30s
+    rules:
+      - alert: NodeDown
+        expr: up{job="avalanchego"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: testnet
+        annotations:
+          summary: "AvalancheGo node down"
+          description: "Node {{ $labels.instance }} has been unreachable for 2+ minutes."
+
+      - alert: BlockHeightStalled
+        expr: |
+          (
+            avalanche_network_node_uptime > 0
+            and
+            changes(avalanche_X_db_size_sum[10m]) == 0
+          )
+        for: 10m
+        labels:
+          severity: warning
+          environment: testnet
+        annotations:
+          summary: "Block height not advancing"
+          description: "Node {{ $labels.instance }} block height has not changed in 10 minutes."
+
+      - alert: NoPeers
+        expr: avalanche_network_peers < 1
+        for: 5m
+        labels:
+          severity: warning
+          environment: testnet
+        annotations:
+          summary: "Node has no peers"
+          description: "Node {{ $labels.instance }} has 0 peers for 5+ minutes."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          environment: testnet
+        annotations:
+          summary: "Disk space below 15%"
+          description: "Host {{ $labels.instance }} disk is {{ $value | humanizePercentage }} full."
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.05
+        for: 1m
+        labels:
+          severity: critical
+          environment: testnet
+        annotations:
+          summary: "Disk space below 5% — CRITICAL"
+          description: "Host {{ $labels.instance }} disk is critically low."
+
+  - name: primewave_testnet_keeper
+    interval: 60s
+    rules:
+      - alert: KeeperDown
+        expr: up{job="primewave-keeper"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          environment: testnet
+        annotations:
+          summary: "Keeper service down"
+          description: "PrimeWave keeper has been unreachable for 5+ minutes."
+
+      - alert: KeeperStalled
+        expr: time() - primewave_keeper_last_poll_timestamp_seconds > 120
+        for: 5m
+        labels:
+          severity: warning
+          environment: testnet
+        annotations:
+          summary: "Keeper not polling"
+          description: "Keeper last polled >2 minutes ago."
+
+  - name: primewave_testnet_indexer
+    interval: 60s
+    rules:
+      - alert: IndexerSyncLag
+        expr: primewave_indexer_chain_head - primewave_indexer_latest_indexed > 100
+        for: 10m
+        labels:
+          severity: warning
+          environment: testnet
+        annotations:
+          summary: "Indexer sync lag >100 blocks"
+          description: "Indexer is {{ $value }} blocks behind chain head."

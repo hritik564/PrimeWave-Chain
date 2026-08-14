@@ -1,0 +1,30 @@
+[Unit]
+Description=PrimeWave Testnet Indexer
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+User=indexer
+Group=indexer
+Type=simple
+Restart=always
+RestartSec=10s
+TimeoutStopSec=30s
+
+EnvironmentFile=/etc/primewave/testnet-indexer.env
+WorkingDirectory=/opt/primewave/indexer
+
+ExecStart=/usr/bin/node /opt/primewave/indexer/dist/main.js
+
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=16384
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/primewave
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

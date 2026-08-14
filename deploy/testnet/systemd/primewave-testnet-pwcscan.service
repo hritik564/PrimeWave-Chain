@@ -1,0 +1,27 @@
+[Unit]
+Description=PrimeWave Testnet PWCScan Explorer
+After=network-online.target primewave-testnet-indexer.service
+Wants=network-online.target
+
+[Service]
+User=pwcscan
+Group=pwcscan
+Type=simple
+Restart=always
+RestartSec=5s
+
+EnvironmentFile=/etc/primewave/testnet-pwcscan.env
+WorkingDirectory=/opt/primewave/pwcscan
+
+# Serves the built Vite static files via a lightweight HTTP server
+ExecStart=/usr/bin/node /opt/primewave/pwcscan/server.js
+
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

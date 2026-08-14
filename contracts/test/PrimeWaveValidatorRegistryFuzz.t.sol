@@ -316,6 +316,8 @@ contract PrimeWaveValidatorRegistryFuzz is Test {
         vm.assume(newRecipient != address(mockVM));
         // Exclude Foundry's VM contract address — it rejects native transfers
         vm.assume(newRecipient != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        // Exclude the test contract's own address — no payable receive(), ETH transfer reverts
+        vm.assume(newRecipient != address(this));
         feeAmount = uint128(bound(feeAmount, 1, 100 ether));
 
         bytes32 vid = vids[0];

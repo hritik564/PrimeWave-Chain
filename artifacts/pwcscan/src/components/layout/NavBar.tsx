@@ -59,6 +59,11 @@ export function NavBar() {
             <span className="font-display font-bold text-xl hidden sm:inline-block tracking-tight text-foreground">
               PWCScan
             </span>
+            {import.meta.env.VITE_NETWORK_LABEL && (
+              <span className="hidden sm:inline-flex items-center rounded-full border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                {import.meta.env.VITE_NETWORK_LABEL}
+              </span>
+            )}
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

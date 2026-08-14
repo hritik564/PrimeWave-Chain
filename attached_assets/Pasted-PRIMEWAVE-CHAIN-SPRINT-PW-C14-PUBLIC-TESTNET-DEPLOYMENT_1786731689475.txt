@@ -1,0 +1,1375 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C14 — PUBLIC TESTNET + DEPLOYMENT REHEARSAL
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 through PW-C13 are LOCKED.
+
+C00–C13 have established and verified:
+
+- PrimeWave Avalanche L1 architecture
+- Fixed 100M PW supply model
+- PW native gas
+- 70/20/10 fee architecture
+- FeeDistributor
+- ValidatorFeeVault
+- PrimeWaveValidatorRegistry
+- RewardVault
+- Governance
+- EmergencyMultisig
+- 48-hour Timelock
+- PrimeWaveStakingManager / Phase-2 PoS architecture
+- Production infrastructure
+- Keeper
+- Genesis validation
+- C12 indexer + PostgreSQL + API
+- C13 PWCScan
+
+Latest verified baselines:
+
+C10 Forge:
+745/745 PASS
+
+C11 Forge:
+792/792 PASS
+
+C11 Keeper:
+20/20 PASS
+
+C12 Indexer:
+57/57 PASS
+
+C13:
+PWCScan connected to real C12 data
+792/792 Forge
+57/57 Indexer
+20/20 Keeper
+
+C13 POST-GATE:
+PASS
+
+============================================================
+0. C14 OBJECTIVE
+============================================================
+
+C14 moves PrimeWave Chain from:
+
+LOCAL / DEVELOPMENT VALIDATION
+
+to:
+
+A REAL PUBLIC TESTNET REHEARSAL.
+
+The goal is to prove that PrimeWave Chain can operate as an
+independent blockchain network using real infrastructure rather than
+a single Replit/local development environment.
+
+C14 MUST produce a reproducible public testnet deployment procedure.
+
+The testnet must have:
+
+- testnet genesis
+- real testnet validator infrastructure
+- real validator keys
+- P-Chain integration
+- ACP-99 validator registration
+- ICM/Warp infrastructure
+- public RPC
+- bootstrap/seed infrastructure
+- keeper
+- indexer
+- PostgreSQL
+- PWCScan
+- monitoring
+- backups
+- recovery procedures
+- deployment verification
+
+============================================================
+1. ABSOLUTE BOUNDARIES
+============================================================
+
+C14 IS:
+
+PUBLIC TESTNET INFRASTRUCTURE
++
+DEPLOYMENT REHEARSAL
++
+VALIDATOR ONBOARDING
++
+OPERATIONAL VALIDATION
+
+C14 IS NOT:
+
+- Mainnet
+- Mainnet genesis
+- Mainnet production keys
+- PWC-20 implementation
+- PWSwap
+- PrimeWave Dex
+- MLM software
+- New token economics
+- Protocol redesign
+- Explorer redesign
+
+DO NOT start C15 automatically.
+
+DO NOT start C16 automatically.
+
+============================================================
+2. CHAIN ID POLICY
+============================================================
+
+IMPORTANT:
+
+Current development Chain ID:
+
+73571
+
+This is NOT automatically the testnet Chain ID.
+
+Mainnet Chain ID remains TBD.
+
+Testnet Chain ID must be explicitly selected and documented before
+testnet genesis is finalized.
+
+Before choosing:
+
+- inspect existing project configuration
+- inspect current Avalanche conventions
+- check for conflicts with known chain IDs
+- document the reason for the selected testnet ID
+
+DO NOT casually reuse 73571 for testnet.
+
+DO NOT select the mainnet Chain ID.
+
+The final mainnet Chain ID remains a future C15/C16 decision.
+
+============================================================
+3. BLOCKCHAIN ID
+============================================================
+
+Current development blockchain ID after genesis changes:
+
+2F3BHmNJWP4DNaBbMFQog3TvfcF6GRY7PX99r7Xzae4cRwAv6a
+
+This is a DEVELOPMENT blockchain ID.
+
+The testnet will have its own blockchain identity because the testnet
+genesis/configuration is distinct.
+
+Never confuse:
+
+Chain ID
+Blockchain ID
+Subnet ID
+Network ID
+
+Document all four separately where applicable.
+
+============================================================
+4. READ ALL EXISTING DOCUMENTATION
+============================================================
+
+Before implementation, read:
+
+docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+docs/PRIMEWAVE_TOKENOMICS.md
+docs/PRIMEWAVE_VALIDATOR_SPEC.md
+docs/PRIMEWAVE_PWUSD_ARCHITECTURE.md
+docs/PRIMEWAVE_INFRASTRUCTURE.md
+docs/PRIMEWAVE_GENESIS_SPEC.md
+docs/PRIMEWAVE_DEPENDENCY_MAP.md
+docs/PRIMEWAVE_DEPENDENCY_COMPATIBILITY.md
+docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+docs/PRIMEWAVE_REWARD_ECONOMICS.md
+
+Read:
+
+docs/PW-C08-PRODUCTION-CONFIG-CHECKLIST.md
+
+Read all relevant:
+
+PW-C09
+PW-C10
+PW-C11
+PW-C12
+PW-C13
+
+Also inspect the ACTUAL repository configuration.
+
+Do not overwrite established architecture.
+
+============================================================
+5. KEY SECURITY — CRITICAL
+============================================================
+
+C14 is the first sprint involving REAL TESTNET KEYS.
+
+TESTNET KEYS ARE NOT MAINNET KEYS.
+
+However, treat testnet key generation as a production-style rehearsal.
+
+Follow:
+
+docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+
+Requirements:
+
+- deterministic documented procedure
+- secure generation
+- no plaintext secrets committed to Git
+- no secrets in frontend
+- no secrets in logs
+- no secrets in public documentation
+- appropriate file permissions
+- documented backup/recovery procedure
+- key inventory
+- validator identity inventory
+- testnet-only labeling
+
+NEVER generate or use mainnet production keys.
+
+============================================================
+6. KEY INVENTORY
+============================================================
+
+Create a testnet key inventory.
+
+Document:
+
+- validator identity
+- node identity
+- BLS identity where required
+- P-Chain credentials where required
+- EVM deployer/testnet authority
+- keeper signer
+- governance testnet signers
+
+DO NOT publish private keys.
+
+Only publish:
+
+- public addresses
+- public identities
+- fingerprints where appropriate
+
+Use placeholders in documentation for secrets.
+
+============================================================
+7. VALIDATOR TOPOLOGY
+============================================================
+
+The testnet must NOT rely on one validator machine.
+
+Target:
+
+15 initial testnet validators
+
+matching the Phase-1 architecture where practical.
+
+Each validator should have:
+
+- node
+- validator identity
+- network connectivity
+- persistent data
+- monitoring
+- restart procedure
+
+If 15 independent machines cannot be provisioned in the current
+environment, DO NOT fake 15 validators.
+
+Instead:
+
+1. document the actual available topology
+2. build the reproducible multi-validator configuration
+3. run as many independent nodes as infrastructure allows
+4. clearly mark the limitation
+
+Never claim a 15-validator public testnet exists unless it actually does.
+
+============================================================
+8. NODE INFRASTRUCTURE
+============================================================
+
+Build the testnet node architecture.
+
+At minimum define:
+
+- validator nodes
+- bootstrap/seed nodes
+- RPC node(s)
+- indexer node
+- monitoring
+- keeper
+
+Separate RPC infrastructure from validator infrastructure where
+practical.
+
+Validators should not require public RPC exposure.
+
+============================================================
+9. NETWORK BOOTSTRAP
+============================================================
+
+Test:
+
+fresh node
+→ bootstrap
+→ discover peers
+→ synchronize
+→ reach latest block
+
+Document:
+
+- bootstrap node addresses
+- ports
+- peer configuration
+- network ID
+- subnet ID
+- blockchain ID
+- Chain ID
+- protocol versions
+
+Do not expose unnecessary administrative ports.
+
+============================================================
+10. TESTNET GENESIS
+============================================================
+
+Create a dedicated testnet genesis.
+
+Do NOT reuse the dev genesis unchanged.
+
+Genesis must contain:
+
+- correct Chain ID
+- correct native PW configuration
+- fixed-supply rules
+- NativeMinter disabled
+- RewardManager configuration
+- FeeDistributor configuration
+- governance configuration where appropriate
+- required contract allocations
+- testnet allocations
+- validator/bootstrap configuration as required
+
+Validate:
+
+100M total PW supply invariant.
+
+No hidden minting path.
+
+No accidental production addresses.
+
+============================================================
+11. 15M REWARDVAULT FUNDING
+============================================================
+
+The locked staking reserve is:
+
+15,000,000 PW.
+
+C14 must prove the testnet funding mechanism.
+
+Use the architecture established in C09.
+
+If the chosen production/testnet mechanism is:
+
+GENESIS ALLOCATION
+or
+POST-DEPLOY FUNDS → RewardVault
+
+document exactly which mechanism is being rehearsed.
+
+The vault must be funded before staking rewards are tested.
+
+Verify:
+
+totalFunded == expected testnet reserve
+
+Do NOT mint tokens to achieve this.
+
+NativeMinter remains disabled.
+
+============================================================
+12. TESTNET ALLOCATIONS
+============================================================
+
+Create explicit testnet allocations.
+
+Clearly distinguish:
+
+- validator operational balances
+- test users
+- test treasury
+- staking reserve
+- protocol contracts
+
+Do not use mainnet treasury addresses.
+
+Do not use mainnet governance addresses.
+
+Do not accidentally reuse production credentials.
+
+Document all public testnet allocations.
+
+============================================================
+13. P-CHAIN INTEGRATION
+============================================================
+
+C14 must exercise the real Avalanche P-Chain workflow required for
+the PrimeWave L1 architecture.
+
+Verify:
+
+CreateSubnetTx
+→ CreateChainTx
+→ ConvertSubnetToL1Tx
+→ validator initialization / registration as applicable
+
+Use the correct pinned Avalanche tooling and versions already documented.
+
+Do not invent an alternative bootstrap process.
+
+============================================================
+14. ACP-99 VALIDATOR REGISTRATION
+============================================================
+
+Use the real ACP-99 flow.
+
+Do not use:
+
+MockValidatorManager
+devActivate
+test-only validator shortcuts
+
+for the final public testnet validation.
+
+Verify actual:
+
+validator registration
+validator activation
+validator status
+validator weight
+validator removal where practical
+
+The authoritative source remains Avalanche ValidatorManager.
+
+============================================================
+15. BLS / WARP / ICM
+============================================================
+
+C14 must test the real production-style path:
+
+P-Chain validator action
+        ↓
+Warp message
+        ↓
+ICM infrastructure
+        ↓
+ACP-99 ValidatorManager
+        ↓
+PrimeWaveValidatorRegistry
+        ↓
+ValidatorFeeVault
+
+Verify the complete path where infrastructure permits.
+
+Document:
+
+- ICM services version
+- pinned commit
+- relayer configuration
+- Warp requirements
+- failure behavior
+- retry behavior
+
+Do NOT customize upstream ICM services without documenting exactly
+why.
+
+============================================================
+16. VALIDATOR SYNCHRONIZATION
+============================================================
+
+C09 identified:
+
+syncValidator() has no automatic production caller.
+
+C14 MUST resolve the operational implementation.
+
+Preferred architecture:
+
+lightweight keeper/service watches authoritative validator events
+and calls:
+
+syncValidator()
+
+as required.
+
+The keeper must:
+
+- detect validator changes
+- avoid duplicate sync
+- retry failed transactions
+- persist state
+- survive restart
+- expose health
+- never become validator authority
+
+ValidatorManager remains authoritative.
+
+Test:
+
+validator joins
+→ keeper detects
+→ syncValidator
+→ registry updates
+→ ValidatorFeeVault updates
+
+And:
+
+validator leaves
+→ keeper detects
+→ syncValidator
+→ registry updates
+→ vault accounting stops appropriately
+
+============================================================
+17. KEEPER DEPLOYMENT
+============================================================
+
+Deploy the C11 keeper against the testnet.
+
+Verify:
+
+- RPC connectivity
+- database/state store
+- signer
+- validator monitoring
+- retry
+- restart recovery
+- duplicate protection
+- health status
+
+Do not expose private keeper credentials.
+
+============================================================
+18. FEE ARCHITECTURE
+============================================================
+
+Verify on the real testnet:
+
+transaction
+→ gas fee
+→ RewardManager / fee routing
+→ FeeDistributor
+→ 70% ValidatorFeeVault
+→ 20% Treasury
+→ 10% Burn/inaccessible
+
+Use actual on-chain balances/events.
+
+Do not infer success from local unit tests.
+
+Perform conservation check:
+
+validator + treasury + burn = total received
+
+within exact documented rounding semantics.
+
+============================================================
+19. REWARD ARCHITECTURE
+============================================================
+
+Verify:
+
+RewardVault
+→ PrimeWaveStakingManager
+→ validator/staker reward
+
+No minting.
+
+Verify:
+
+totalFunded
+remains fixed except legitimate funding operations
+
+and:
+
+totalEmitted <= 15M PW
+
+and annual emission rate:
+
+<= 3M PW/year
+
+The locked maximum is:
+
+3,000,000 PW/year
+≈ 8,219.18 PW/day
+
+Unused emissions remain in the vault.
+
+============================================================
+20. POA → POS TESTNET TRANSITION
+============================================================
+
+Do NOT perform a real mainnet transition.
+
+On testnet, rehearse:
+
+Phase 1 PoA
+→ governance-controlled transition
+→ Phase 2 custom PoS
+
+Verify:
+
+- transition authorization
+- validator state
+- staking manager
+- reward source
+- unbonding
+- governance controls
+- no inflation
+
+If the full transition cannot safely be exercised in C14, document
+exactly what remains for C15.
+
+============================================================
+21. GOVERNANCE
+============================================================
+
+Deploy testnet governance using TESTNET keys only.
+
+Verify:
+
+EmergencyMultisig:
+3-of-5
+
+Timelock:
+48 hours
+
+Verify:
+
+pause
+unpause
+allowed governance operations
+timelocked actions
+
+Verify emergency powers remain limited to the locked policy.
+
+The EmergencyMultisig MUST NOT gain arbitrary protocol administration.
+
+============================================================
+22. PUBLIC RPC
+============================================================
+
+Create a public read-only RPC endpoint.
+
+Minimum:
+
+eth_chainId
+eth_blockNumber
+eth_gasPrice
+eth_getBlockByNumber
+eth_getTransactionByHash
+eth_getTransactionReceipt
+eth_call
+eth_getLogs
+net_version
+web3_clientVersion
+
+Test:
+
+- normal requests
+- invalid requests
+- rate behavior
+- restart
+- node synchronization
+- CORS where applicable
+
+Do NOT expose admin/private RPC methods publicly.
+
+============================================================
+23. RPC SECURITY
+============================================================
+
+Audit exposed ports.
+
+Publicly expose ONLY required services.
+
+Do NOT expose:
+
+- node admin APIs
+- database
+- private keystore
+- SSH without proper controls
+- unrestricted debug/admin interfaces
+
+Document:
+
+public ports
+private ports
+firewall rules
+TLS requirements
+RPC rate limiting
+
+============================================================
+24. PWCScan TESTNET
+============================================================
+
+Deploy C12 + C13 against the real testnet.
+
+PWCScan must display:
+
+- current testnet block
+- transactions
+- addresses
+- validators
+- RewardVault
+- fees
+- contracts
+- search
+- stats
+
+Clearly identify the environment:
+
+TESTNET
+
+Do NOT make users believe they are looking at mainnet.
+
+Recommended visible indicator:
+
+PrimeWave Testnet
+
+Do not permanently hardcode "Mainnet."
+
+============================================================
+25. TESTNET INDEXER
+============================================================
+
+Deploy C12 indexer against testnet.
+
+Verify:
+
+- genesis indexing
+- block synchronization
+- transaction indexing
+- receipt indexing
+- event decoding
+- validator state
+- RewardVault
+- fee distribution
+- governance
+
+Run restart test.
+
+Run reindex test.
+
+Verify no duplicates.
+
+============================================================
+26. DATABASE
+============================================================
+
+Use PostgreSQL.
+
+Do not expose PostgreSQL publicly.
+
+Back up testnet database.
+
+Verify restore.
+
+Document:
+
+backup schedule
+restore procedure
+retention
+storage location
+
+Test:
+
+backup
+→ destroy test database
+→ restore
+→ resume indexing
+
+============================================================
+27. MONITORING
+============================================================
+
+Implement practical monitoring.
+
+Monitor:
+
+- node health
+- peer count
+- block height
+- block lag
+- RPC health
+- disk usage
+- memory
+- CPU
+- indexer sync lag
+- keeper health
+- database health
+- validator state
+
+Alerts should exist for:
+
+node down
+RPC down
+indexer stalled
+keeper stalled
+disk nearly full
+large block-height divergence
+
+Do not build an enormous observability platform.
+
+Use the simplest reliable stack.
+
+============================================================
+28. LOGGING
+============================================================
+
+Logs must be structured and useful.
+
+Never log:
+
+- private keys
+- seed phrases
+- RPC secrets
+- database passwords
+
+Include:
+
+- timestamp
+- service
+- severity
+- event
+- relevant public identifiers
+
+============================================================
+29. FAILURE / RECOVERY TESTS
+============================================================
+
+C14 MUST deliberately break things.
+
+Test:
+
+1. validator restart
+2. RPC restart
+3. indexer restart
+4. keeper restart
+5. PostgreSQL restart
+6. bootstrap node restart
+7. temporary network failure
+8. RPC timeout
+9. disk pressure warning
+10. invalid keeper transaction
+11. validator sync failure
+
+For each:
+
+failure
+→ detection
+→ recovery
+→ state verification
+
+No silent data loss.
+
+============================================================
+30. VALIDATOR FAILURE
+============================================================
+
+Take one testnet validator offline.
+
+Verify:
+
+- network remains healthy
+- validator status changes appropriately
+- fee accounting behaves correctly
+- keeper detects the change
+- registry updates
+- explorer reflects state
+
+Bring validator back.
+
+Verify recovery.
+
+============================================================
+31. VALIDATOR JOIN / LEAVE
+============================================================
+
+Exercise at least one real:
+
+join
+→ register
+→ activate
+→ sync
+→ earn fees
+
+and:
+
+leave
+→ removal
+→ unbonding
+→ inactive
+→ fee eligibility stops
+
+Respect:
+
+14-day unbonding
+
+Do not shorten the actual protocol parameter merely to make the test
+convenient.
+
+If a complete 14-day lifecycle is impractical during C14, create a
+rehearsal procedure and clearly separate accelerated test-only
+simulation from actual testnet behavior.
+
+============================================================
+32. TESTNET TRANSACTIONS
+============================================================
+
+Generate real activity:
+
+- PW transfers
+- contract calls
+- staking
+- reward claims
+- validator operations
+- fee distribution
+- governance events
+
+Use these to populate PWCScan.
+
+Do not use fake database records.
+
+============================================================
+33. TESTNET FAUCET
+============================================================
+
+Evaluate whether a faucet is required for public testers.
+
+If implemented:
+
+- strict rate limits
+- daily limits
+- testnet-only funds
+- no mainnet credentials
+- abuse protection
+
+Do not build a complex faucet if simple controlled distribution is
+sufficient.
+
+Document the decision.
+
+============================================================
+34. DNS
+============================================================
+
+Prepare testnet domains separately from mainnet.
+
+Do not point:
+
+pwcscan.com
+
+at testnet permanently.
+
+Use a clear testnet subdomain/environment where practical.
+
+Examples may be documented, but choose based on actual infrastructure.
+
+============================================================
+35. TLS
+============================================================
+
+Public services must use HTTPS/TLS.
+
+Verify:
+
+- certificate
+- renewal process
+- redirect HTTP → HTTPS where appropriate
+- secure headers
+
+Do not expose production credentials through HTTP.
+
+============================================================
+36. TESTNET GENESIS REPRODUCIBILITY
+============================================================
+
+Create a reproducible genesis procedure.
+
+Given:
+
+configuration
++
+version pins
++
+documented allocations
++
+documented addresses
+
+the same process should produce the same testnet genesis.
+
+Hash and record:
+
+- genesis
+- chain configuration
+- deployment artifacts
+
+============================================================
+37. DEPLOYMENT MANIFEST
+============================================================
+
+Create:
+
+docs/PW-C14-TESTNET-DEPLOYMENT-MANIFEST.md
+
+Include:
+
+Network
+Chain ID
+Blockchain ID
+Subnet ID
+Genesis hash
+Genesis file hash
+AvalancheGo version
+ICM version
+Solidity version
+OpenZeppelin versions
+Foundry version
+Node versions
+Contract addresses
+Validator identities
+RPC endpoints
+Indexer endpoint
+PWCScan endpoint
+Keeper status
+
+Do not include private credentials.
+
+============================================================
+38. VERSION LOCK
+============================================================
+
+Use the locked versions already established.
+
+Known pinned dependencies include:
+
+icm-services:
+icm-relayer-v1.7.5
+commit:
+40e1c89
+
+AvalancheGo:
+v1.14.2
+
+Solidity:
+0.8.30
+
+OpenZeppelin:
+v5.6.1 project default
+
+OpenZeppelin v5.1.0:
+Avalanche StakingManager dependency only
+
+Foundry:
+v1.7.1
+
+Do NOT upgrade dependencies during C14 without documenting the reason
+and compatibility impact.
+
+============================================================
+39. SECURITY CHECK
+============================================================
+
+Run a testnet deployment security checklist:
+
+[ ] no production private keys
+[ ] no private keys in Git
+[ ] no secrets in logs
+[ ] RPC admin methods inaccessible
+[ ] PostgreSQL private
+[ ] validator admin ports private
+[ ] TLS enabled
+[ ] firewall configured
+[ ] backups working
+[ ] restore tested
+[ ] governance keys separated
+[ ] keeper signer separated
+[ ] testnet labels everywhere
+
+============================================================
+40. COST CONTROL
+============================================================
+
+C14 is allowed to use more infrastructure than previous local sprints.
+
+But avoid unnecessary enterprise infrastructure.
+
+Do NOT introduce:
+
+- Kubernetes unless genuinely required
+- Kafka
+- Elasticsearch
+- Redis unless genuinely necessary
+- multiple databases
+- unnecessary microservices
+
+Prefer:
+
+nodes
++
+RPC
++
+keeper
++
+PostgreSQL
++
+indexer
++
+PWCScan
++
+simple monitoring
+
+Document actual monthly/testnet infrastructure cost where measurable.
+
+============================================================
+41. C14 TEST MATRIX
+============================================================
+
+Create a complete testnet acceptance matrix.
+
+Minimum:
+
+NET-01 Genesis valid
+NET-02 Chain ID correct
+NET-03 Blockchain ID correct
+NET-04 Native PW transfer
+NET-05 Gas paid in PW
+NET-06 RPC reachable
+NET-07 Multiple nodes synchronize
+NET-08 Validator registration
+NET-09 Validator activation
+NET-10 Validator sync
+NET-11 Fee distribution
+NET-12 RewardVault funding
+NET-13 Reward distribution
+NET-14 Governance
+NET-15 Keeper
+NET-16 Indexer
+NET-17 PWCScan
+NET-18 Search
+NET-19 Restart recovery
+NET-20 Database restore
+NET-21 Validator failure
+NET-22 Validator recovery
+NET-23 Reindex
+NET-24 Data integrity
+NET-25 RPC security
+NET-26 Secret security
+NET-27 Backup
+NET-28 Genesis reproducibility
+NET-29 Monitoring
+NET-30 Public connectivity
+
+Expand the matrix where necessary.
+
+============================================================
+42. C00-C13 REGRESSION
+============================================================
+
+C14 MUST preserve previous gates.
+
+Run:
+
+Forge:
+all protocol tests
+
+C11 Keeper:
+20/20 baseline
+
+C12:
+57/57 baseline
+
+C13 integration:
+
+PWCScan live data verification
+
+Any regression is a C14 failure.
+
+============================================================
+43. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C14-TESTNET-ARCHITECTURE.md
+docs/PW-C14-TESTNET-GENESIS.md
+docs/PW-C14-VALIDATOR-ONBOARDING.md
+docs/PW-C14-DEPLOYMENT-RUNBOOK.md
+docs/PW-C14-SECURITY-CHECKLIST.md
+docs/PW-C14-FAILURE-RECOVERY.md
+docs/PW-C14-MONITORING.md
+docs/PW-C14-TEST-MATRIX.md
+docs/PW-C14-TEST-REPORT.md
+docs/PW-C14-TESTNET-DEPLOYMENT-MANIFEST.md
+docs/PW-C14-FINAL-REPORT.md
+
+Update relevant existing infrastructure documentation.
+
+============================================================
+44. C14 ACCEPTANCE CRITERIA
+============================================================
+
+[ ] Dedicated testnet genesis
+[ ] Testnet Chain ID selected and documented
+[ ] Testnet blockchain ID recorded
+[ ] Testnet subnet ID recorded
+[ ] Real testnet keys generated securely
+[ ] No mainnet keys generated
+[ ] Multi-validator infrastructure
+[ ] Bootstrap/seed infrastructure
+[ ] P-Chain integration
+[ ] ACP-99 integration
+[ ] Real ICM/Warp path tested
+[ ] Validator registration tested
+[ ] Validator synchronization tested
+[ ] Keeper deployed
+[ ] Keeper restart tested
+[ ] Public RPC
+[ ] RPC security verified
+[ ] Fee distribution verified
+[ ] RewardVault funding verified
+[ ] Reward distribution verified
+[ ] Governance verified
+[ ] PoA/PoS transition rehearsal
+[ ] Indexer deployed
+[ ] PostgreSQL deployed
+[ ] Backup verified
+[ ] Restore verified
+[ ] PWCScan deployed against testnet
+[ ] Testnet environment visibly labeled
+[ ] DNS/TLS configured
+[ ] Monitoring configured
+[ ] Failure/recovery tested
+[ ] Validator failure tested
+[ ] Validator recovery tested
+[ ] Testnet transactions generated
+[ ] Search verified
+[ ] Reindex verified
+[ ] Genesis reproducibility verified
+[ ] Security checklist passed
+[ ] C00-C13 regression passes
+[ ] No Critical/High unresolved issue
+
+============================================================
+45. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP immediately and report if:
+
+1. Mainnet credentials are generated or exposed.
+2. NativeMinter becomes enabled unexpectedly.
+3. Fixed supply invariant breaks.
+4. RewardVault can mint or create PW.
+5. Fee distribution violates the locked architecture.
+6. ValidatorManager authority is bypassed.
+7. Public RPC exposes admin/private methods.
+8. Private database is publicly reachable.
+9. Keeper can arbitrarily alter validator state.
+10. Genesis is not reproducible.
+11. Nodes cannot synchronize reliably.
+12. Validator state cannot propagate through the real ACP-99/ICM path.
+13. Indexer loses or duplicates chain data.
+14. PWCScan displays fabricated testnet data.
+15. Governance gains unauthorized powers.
+16. C00-C13 regression fails.
+17. A Critical or High security issue is discovered.
+18. Mainnet is accidentally deployed.
+
+Do NOT silently work around these.
+
+============================================================
+46. IMPORTANT: TESTNET ≠ MAINNET
+============================================================
+
+At every stage clearly label:
+
+TESTNET
+
+Never use:
+
+"production"
+"mainnet"
+"live network"
+
+for this environment.
+
+The purpose is to prove the deployment and operations model before
+mainnet.
+
+============================================================
+47. FINAL OUTPUT
+============================================================
+
+When complete:
+
+STOP.
+
+DO NOT start C15 automatically.
+
+Return:
+
+PW-C14 COMPLETE
+
+with:
+
+1. Testnet Chain ID
+2. Blockchain ID
+3. Subnet ID
+4. Genesis hash
+5. Genesis reproducibility result
+6. AvalancheGo version
+7. ICM version
+8. Validator count actually running
+9. Validator onboarding result
+10. ACP-99 result
+11. ICM/Warp result
+12. Keeper result
+13. RPC endpoint architecture
+14. RPC security result
+15. Fee distribution result
+16. RewardVault result
+17. Governance result
+18. PoA/PoS rehearsal result
+19. Indexer result
+20. Database backup/restore result
+21. PWCScan result
+22. Monitoring result
+23. Failure/recovery results
+24. Validator failure/recovery result
+25. Testnet transaction result
+26. Search result
+27. Reindex result
+28. Genesis reproducibility result
+29. Security checklist result
+30. C00-C13 regression result
+31. Total C14 tests
+32. Remaining limitations
+33. Exact C15 prerequisites
+
+Do NOT expose secrets in the final response.
+
+============================================================
+END PW-C14
+============================================================

@@ -1,0 +1,33 @@
+[Unit]
+Description=PrimeWave Testnet AvalancheGo Node
+Documentation=https://docs.avax.network
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=avalanche
+Group=avalanche
+Type=simple
+Restart=always
+RestartSec=10s
+TimeoutStopSec=60s
+
+# Set NODE_ROLE=validator or NODE_ROLE=rpc via EnvironmentFile
+EnvironmentFile=-/etc/primewave/testnet-node.env
+
+ExecStart=/opt/avalanchego/avalanchego \
+  --config-file=/etc/primewave/node-config.json
+
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65536
+LimitNPROC=65536
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/data/avalanchego /var/log/avalanchego
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

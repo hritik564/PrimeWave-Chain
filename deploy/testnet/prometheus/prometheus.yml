@@ -1,0 +1,63 @@
+# PrimeWave Testnet — Prometheus Configuration
+# TESTNET ONLY | Sprint PW-C14
+# Place at /etc/prometheus/prometheus.yml on the sentinel node
+
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: testnet
+    chain_id: "77777"
+    network: primewave-testnet
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+scrape_configs:
+  # AvalancheGo node metrics (all validator/RPC nodes)
+  - job_name: 'avalanchego'
+    static_configs:
+      - targets:
+          - 'validator-1:9090'
+          - 'validator-2:9090'
+          - 'validator-3:9090'
+          - 'validator-4:9090'
+          - 'validator-5:9090'
+          - 'rpc-node-1:9090'
+        labels:
+          role: 'validator'
+      - targets:
+          - 'rpc-node-1:9090'
+        labels:
+          role: 'rpc'
+    metrics_path: /ext/metrics
+    scheme: http
+
+  # Keeper service metrics
+  - job_name: 'primewave-keeper'
+    static_configs:
+      - targets: ['sentinel:8080']
+    metrics_path: /metrics
+
+  # PostgreSQL metrics (via postgres_exporter)
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['indexer-host:9187']
+
+  # Node exporter (system metrics) on all hosts
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets:
+          - 'validator-1:9100'
+          - 'validator-2:9100'
+          - 'validator-3:9100'
+          - 'validator-4:9100'
+          - 'validator-5:9100'
+          - 'rpc-node-1:9100'
+          - 'indexer-host:9100'
+          - 'sentinel:9100'

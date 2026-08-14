@@ -12,6 +12,10 @@ import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { StatusBadge } from "@/components/pwcscan/status-badge"
 import { ErrorState } from "@/components/pwcscan/error-state"
 
+// VITE_NETWORK_LABEL: set to "Testnet" for testnet builds, leave unset for dev.
+// This ensures the explorer NEVER displays "Mainnet" when running on a test network.
+const networkLabel = import.meta.env.VITE_NETWORK_LABEL ?? ""
+
 export default function Home() {
   const { autoRefresh } = useSettings()
   
@@ -48,8 +52,13 @@ export default function Home() {
             The premier blockchain explorer for the PrimeWave ecosystem. Search blocks, transactions, validators, and more.
           </p>
           <div className="flex flex-wrap items-center gap-3">
+            {networkLabel && (
+              <Badge variant="outline" className="bg-orange-500/10 border-orange-500/40 text-orange-600 dark:text-orange-400 font-semibold backdrop-blur">
+                🧪 {networkLabel}
+              </Badge>
+            )}
             <Badge variant="outline" className="bg-background/50 backdrop-blur">
-              Chain ID: {stats?.network.chainId || '73571'}
+              Chain ID: {stats?.network.chainId || import.meta.env.VITE_CHAIN_ID || '73571'}
             </Badge>
             <Badge variant="outline" className="bg-background/50 backdrop-blur text-primary border-primary/20">
               {stats?.network.isSynced ? '🟢 Synced' : '🟡 Syncing...'}

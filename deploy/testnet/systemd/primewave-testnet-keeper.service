@@ -1,0 +1,28 @@
+[Unit]
+Description=PrimeWave Testnet Keeper (Validator Sync)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=keeper
+Group=keeper
+Type=simple
+Restart=always
+RestartSec=15s
+TimeoutStopSec=30s
+
+EnvironmentFile=/etc/primewave/testnet-keeper.env
+WorkingDirectory=/opt/primewave/keeper
+
+ExecStart=/usr/bin/node /opt/primewave/keeper/dist/index.js
+
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=4096
+
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

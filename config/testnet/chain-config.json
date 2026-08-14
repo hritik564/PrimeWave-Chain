@@ -1,0 +1,15 @@
+{
+  "_comment": "PrimeWave Testnet — Subnet-EVM Chain Config | Applied per-node at CHAIN_CONFIG_DIR/<blockchain-id>/config.json",
+  "_environment": "TESTNET ONLY",
+  "pruning-enabled": false,
+  "state-sync-enabled": false,
+  "eth-apis": ["eth", "eth-filter", "net", "web3", "internal-eth"],
+  "log-level": "info",
+  "allow-unprotected-txs": false,
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 1.0,
+  "fee-cap": "1000000000",
+  "commit-interval": 4096,
+  "snapshot-async": true,
+  "snapshot-verification-enabled": false
+}
