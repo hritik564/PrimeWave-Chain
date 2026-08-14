@@ -1,4 +1,5 @@
 - [PrimeWave Chain PW-C00](primewave-pw-c00.md) — Full design sprint; 20 docs in docs/; gate passed; locked forever
 - [PrimeWave Chain PW-C01](primewave-pw-c01.md) — Local dev env complete; network IDs, arch, flags, script map
 - [PrimeWave Chain PW-C02](primewave-pw-c02.md) — Tx tests + fee architecture; 13 PASS, Foundry v1.7.1 pinned, 70/20/10 via FeeDistributor confirmed
+- [PrimeWave Chain PW-C03](primewave-pw-c03.md) — C03 COMPLETE; forge script deploy; blockchain ID changes when genesis changes; everything in one ShellExec
 - [Avalanche dependency surprises](avalanche-dep-surprises.md) — Archived repos, CLI v1.9.5+AvalancheGo v1.14.2 mismatch workaround, subnet-evm binary source

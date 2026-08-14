@@ -1,0 +1,884 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C03 — FEE DISTRIBUTOR + 70/20/10 NATIVE PW PROOF
+
+============================================================
+STATUS
+============================================================
+
+PW-C00:
+PASSED / LOCKED
+
+PW-C01:
+PASSED / LOCAL L1 FOUNDATION COMPLETE
+
+PW-C02:
+PASSED / NATIVE PW TRANSACTION + FEE ARCHITECTURE VALIDATION COMPLETE
+
+PW-C03 is now an IMPLEMENTATION + LOCAL PROOF-OF-CONCEPT sprint.
+
+PRIMARY OBJECTIVE:
+
+Build and test the minimum secure local architecture capable of routing native PW transaction-fee value according to the LOCKED PrimeWave economic rule:
+
+70% → Validator Fee Vault
+20% → PrimeWave Treasury
+10% → Burn
+
+The purpose of this sprint is to prove the fee-routing mechanism on the actual PrimeWave local Avalanche L1.
+
+============================================================
+1. ABSOLUTE LOCKED ECONOMICS
+============================================================
+
+DO NOT CHANGE:
+
+70% → Validators
+20% → PrimeWave Treasury
+10% → Burn
+
+This is a locked PrimeWave decision.
+
+The 70% validator allocation and the 15M PW staking RewardVault are COMPLETELY SEPARATE.
+
+DO NOT combine them.
+
+The 15M PW RewardVault is NOT part of this sprint.
+
+============================================================
+2. SCOPE
+============================================================
+
+PW-C03 MAY implement:
+
+- FeeDistributor
+- local ValidatorFeeVault
+- local Treasury destination
+- local burn mechanism
+- fee-routing logic
+- unit tests
+- fuzz/invariant tests
+- integration tests
+- local deployment
+- local fee routing
+- local accounting verification
+
+PW-C03 MUST NOT implement:
+
+- PrimeWaveStakingManager
+- validator/delegator reward accounting
+- staking rewards
+- RewardVault
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- MLM integration
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- Salary
+- P2P
+- bridges
+- BEP-20 migration
+- production governance
+- production multisigs
+- production treasury
+- production validators
+- mainnet
+- public testnet
+
+============================================================
+3. READ SOURCE DOCUMENTATION FIRST
+============================================================
+
+Read before coding:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PRIMEWAVE_KEY_SECURITY_PROCEDURE.md
+- docs/PW-C02-FEE-ARCHITECTURE-ANALYSIS.md
+- docs/PW-C02-FINAL-REPORT.md
+- docs/PW-C02-TRANSACTION-TEST-REPORT.md
+
+These are the source of truth.
+
+============================================================
+4. CRITICAL ARCHITECTURAL REQUIREMENT
+============================================================
+
+Do NOT assume that a normal Solidity contract can automatically intercept native Avalanche transaction fees.
+
+Before implementing FeeDistributor, verify exactly how native transaction fees reach the configured destination in the current PrimeWave Avalanche L1 architecture.
+
+The intended conceptual flow is:
+
+Transaction
+    ↓
+Avalanche fee mechanism
+    ↓
+Fee destination
+    ↓
+FeeDistributor
+    ↓
+70% ValidatorFeeVault
+20% Treasury
+10% Burn
+
+BUT:
+
+Do NOT assume the above is technically possible merely because the diagram is logical.
+
+Prove how the Avalanche fee mechanism sends native PW to the FeeDistributor.
+
+Use the actual pinned AvalancheGo implementation and current local PrimeWave configuration.
+
+If a protocol-level configuration must direct fees to FeeDistributor, implement that in LOCAL DEVELOPMENT ONLY.
+
+If an additional Avalanche precompile/configuration is required, document and configure it locally.
+
+If the proposed architecture is technically impossible:
+
+STOP.
+
+Do not fake the result by manually sending PW to FeeDistributor.
+
+============================================================
+5. NATIVE PW REQUIREMENT
+============================================================
+
+The fee asset is:
+
+NATIVE PW
+
+NOT:
+
+- ERC-20 PW
+- wrapped PW
+- BEP-20 PW
+- PWUSD
+- USDT
+
+FeeDistributor must receive native PW.
+
+The implementation must prove that actual transaction-fee value reaches the fee-routing mechanism.
+
+============================================================
+6. DEVELOPMENT ADDRESSES
+============================================================
+
+Use development-only addresses.
+
+Create clearly labeled local addresses:
+
+DEV_VALIDATOR_FEE_VAULT
+DEV_TREASURY
+DEV_FEE_DISTRIBUTOR
+DEV_BURN_DESTINATION
+
+Do NOT generate or configure production keys.
+
+Do NOT create production multisigs.
+
+Do NOT use real Treasury addresses.
+
+Do NOT use the future PWUSD Monetary Authority.
+
+============================================================
+7. FEE DISTRIBUTOR
+============================================================
+
+Implement a minimal, auditable FeeDistributor.
+
+Required behavior:
+
+When FeeDistributor receives native PW:
+
+70% → ValidatorFeeVault
+20% → Treasury
+10% → Burn
+
+The split must be deterministic.
+
+Do not use floating-point arithmetic.
+
+Use integer arithmetic.
+
+The implementation must explicitly handle rounding.
+
+============================================================
+8. ROUNDING RULE
+============================================================
+
+Native PW uses integer denomination.
+
+Define the smallest PW denomination supported by the chain.
+
+The FeeDistributor must calculate:
+
+validatorShare
+treasuryShare
+burnShare
+
+such that:
+
+validatorShare + treasuryShare + burnShare
+=
+amount received
+
+There must NEVER be an unaccounted remainder.
+
+Do NOT simply calculate:
+
+70%
+20%
+10%
+
+and discard rounding dust.
+
+Any remainder must be explicitly assigned according to a documented deterministic rule.
+
+Prefer a mathematically exact accounting rule.
+
+Document the reason.
+
+============================================================
+9. FEE DISTRIBUTOR SECURITY
+============================================================
+
+The FeeDistributor MUST NOT contain arbitrary administrator withdrawal functionality.
+
+Do NOT add:
+
+- ownerWithdraw()
+- emergencyWithdrawAll()
+- arbitraryTransfer()
+- arbitraryDestinationSetter()
+
+unless a specific security requirement is identified and documented.
+
+The normal fee-routing destinations must not be freely changeable by an arbitrary administrator.
+
+If destinations need future governance control:
+
+document the future governance interface.
+
+Do not introduce unnecessary upgradeability.
+
+============================================================
+10. REENTRANCY / NATIVE TRANSFER SAFETY
+============================================================
+
+Analyze native PW transfer behavior.
+
+Determine whether sending native PW to:
+
+- ValidatorFeeVault
+- Treasury
+- Burn destination
+
+can trigger arbitrary contract execution.
+
+If contract recipients can execute code:
+
+use appropriate checks-effects-interactions/reentrancy protection.
+
+Prefer simple pull/accounting architecture if safer.
+
+Do not add OpenZeppelin components merely for appearance.
+
+Use them only where justified.
+
+============================================================
+11. VALIDATOR FEE VAULT
+============================================================
+
+For C03, ValidatorFeeVault is ONLY a receiving/accounting destination.
+
+It does NOT yet implement:
+
+- validator weight
+- uptime
+- staking
+- delegation
+- commissions
+- claims
+- validator distribution
+
+Those belong to later sprints.
+
+The vault must:
+
+- receive native PW
+- expose balance
+- expose total received
+- emit an event
+- prevent unauthorized withdrawals
+
+The 70% received must remain separately identifiable.
+
+============================================================
+12. TREASURY
+============================================================
+
+For C03, Treasury is a DEVELOPMENT destination only.
+
+It must:
+
+- receive the 20% share
+- expose/query balance
+- emit appropriate events
+
+Do NOT create production governance.
+
+Do NOT create production multisig.
+
+Do NOT implement Treasury spending governance.
+
+The production Treasury architecture is already defined elsewhere and will be implemented later.
+
+============================================================
+13. BURN MECHANISM
+============================================================
+
+This requires special care.
+
+The existing C02 environment demonstrated Avalanche's blackhole fee destination behavior.
+
+DO NOT automatically assume that sending 10% to an inaccessible address is equivalent to a protocol-level supply burn.
+
+Determine exactly what happens to:
+
+- spendable PW
+- total supply
+- circulating supply
+- native balance
+- chain accounting
+
+The burn mechanism must be tested.
+
+The final requirement is:
+
+10% of routed fee value becomes permanently inaccessible according to the approved burn mechanism.
+
+If a true protocol-level burn is technically available and appropriate:
+
+document it.
+
+If the correct mechanism is an inaccessible native-token destination:
+
+document precisely why it constitutes the approved burn behavior and what it does/does not do to total supply.
+
+DO NOT falsely claim that total supply decreases unless the chain actually reports that behavior.
+
+============================================================
+14. NO MANUAL FUNDING TEST
+============================================================
+
+This is critical.
+
+A successful test is NOT:
+
+1. Manually send 100 PW to FeeDistributor.
+2. Call distribute().
+3. Observe 70/20/10.
+
+That only proves a Solidity contract can split funds.
+
+The core C03 proof must be:
+
+REAL NATIVE TRANSACTION FEES
+        ↓
+ACTUAL AVALANCHE FEE MECHANISM
+        ↓
+FEE DISTRIBUTOR
+        ↓
+70/20/10
+
+Manual funding may be used for isolated unit tests, but it does NOT count as the end-to-end acceptance test.
+
+============================================================
+15. END-TO-END TEST
+============================================================
+
+Create a real local transaction.
+
+Example:
+
+DEV_ACCOUNT_0
+→ sends 1 PW
+→ DEV_ACCOUNT_1
+
+Record:
+
+- sender balance before
+- receiver balance before
+- transaction hash
+- gas used
+- effective gas price
+- actual transaction fee
+- sender balance after
+- receiver balance after
+
+Then identify the actual fee amount routed through the fee architecture.
+
+If the fee is:
+
+F
+
+Then expected routing is:
+
+Validator:
+floor/defined 70% of F
+
+Treasury:
+defined 20% of F
+
+Burn:
+remaining amount
+
+The three destinations must account for the entire fee.
+
+============================================================
+16. MULTIPLE TRANSACTION TEST
+============================================================
+
+Do not prove the system with only one transaction.
+
+Run at least:
+
+10 independent local transactions.
+
+For every transaction record:
+
+- fee paid
+- validator share
+- treasury share
+- burn share
+
+Then calculate totals.
+
+Verify:
+
+SUM(validator shares)
++
+SUM(treasury shares)
++
+SUM(burn shares)
+=
+SUM(routed fees)
+
+No value may disappear.
+
+No value may appear.
+
+============================================================
+17. ACCOUNTING INVARIANTS
+============================================================
+
+Implement automated invariant tests.
+
+INVARIANT 1:
+
+validatorShare + treasuryShare + burnShare = feeAmount
+
+INVARIANT 2:
+
+validatorShare = 70% of feeAmount according to the documented integer rounding rule.
+
+INVARIANT 3:
+
+treasuryShare = 20% of feeAmount according to the documented integer rounding rule.
+
+INVARIANT 4:
+
+burnShare = remaining amount after validatorShare + treasuryShare.
+
+INVARIANT 5:
+
+No fee routing operation creates PW.
+
+INVARIANT 6:
+
+No fee routing operation destroys more PW than intended.
+
+INVARIANT 7:
+
+No fee amount is silently retained unless explicitly documented.
+
+INVARIANT 8:
+
+Total PW supply does not increase.
+
+INVARIANT 9:
+
+FeeDistributor cannot arbitrarily transfer unrelated user funds.
+
+============================================================
+18. FUZZ TESTING
+============================================================
+
+Use Foundry fuzz testing.
+
+Fuzz:
+
+- small fee amounts
+- large fee amounts
+- odd integer amounts
+- 1 wei-equivalent
+- amounts not divisible by 10
+- repeated deposits
+- zero-value deposits where applicable
+
+Verify the accounting invariants.
+
+Pay special attention to rounding.
+
+============================================================
+19. ACCESS CONTROL TESTING
+============================================================
+
+Test that an unauthorized address cannot:
+
+- redirect fees
+- withdraw ValidatorFeeVault funds
+- withdraw Treasury funds
+- modify burn destination
+- modify the split
+- bypass the routing mechanism
+
+If a function requires privileged access:
+
+document exactly:
+
+WHO
+CAN
+DO
+WHAT
+
+Do not use generic "owner" authority unless specifically justified.
+
+============================================================
+20. EVENT REQUIREMENTS
+============================================================
+
+Define appropriate events.
+
+At minimum the fee-routing system should make it possible for an indexer to determine:
+
+- total fee received
+- validator allocation
+- treasury allocation
+- burn allocation
+- originating transaction where practical
+- timestamp/block context
+
+Events must be deterministic and suitable for future PrimeWave Dex/indexer infrastructure.
+
+Do NOT design a second independent indexing system.
+
+============================================================
+21. FEE SPLIT CONFIGURATION
+============================================================
+
+The 70/20/10 split is LOCKED.
+
+Do NOT expose arbitrary public setters.
+
+Do NOT allow an administrator to silently change:
+
+70 → 50
+20 → 40
+10 → 10
+
+or any other combination.
+
+If future protocol governance may change the economic split:
+
+that is a future protocol-upgrade/governance question.
+
+For C03, hard-code the locked split into the implementation or otherwise make it immutable.
+
+Prefer immutable constants if technically appropriate.
+
+============================================================
+22. GAS / FEE LOOP ANALYSIS
+============================================================
+
+Determine whether FeeDistributor itself can create a fee-routing loop.
+
+For example:
+
+Transaction fee
+→ FeeDistributor
+→ transfer
+→ another fee-generating operation
+→ FeeDistributor
+
+This must NOT happen.
+
+Fee distribution should not recursively generate additional protocol fees.
+
+Document the mechanism.
+
+============================================================
+23. LOCAL AVALANCHE CONFIGURATION
+============================================================
+
+If local genesis/configuration must change to route fees to FeeDistributor:
+
+Update the local development configuration only.
+
+Do NOT modify production specifications.
+
+Document:
+
+- configuration field
+- reason
+- expected behavior
+- actual behavior
+
+After modifying local configuration:
+
+Reset/recreate the local chain cleanly.
+
+Do not rely on stale chain state.
+
+============================================================
+24. DO NOT IMPLEMENT VALIDATOR DISTRIBUTION
+============================================================
+
+This is intentionally deferred.
+
+C03 only proves:
+
+70%
+→ ValidatorFeeVault
+
+It does NOT distribute the 70% among validators.
+
+Do not implement:
+
+- validator weight
+- uptime
+- delegation
+- commission
+- validator claims
+
+Those belong to later validator economics work.
+
+============================================================
+25. DO NOT IMPLEMENT REWARDVAULT
+============================================================
+
+The 15M PW RewardVault remains untouched.
+
+Do NOT:
+
+- deploy it
+- fund it
+- connect it to FeeDistributor
+- use it for transaction fees
+
+Keep the two economic systems completely separate.
+
+============================================================
+26. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C03-FEEDISTRIBUTOR_SPEC.md
+
+Include:
+
+1. Architecture
+2. Fee flow
+3. Contract responsibilities
+4. Native PW flow
+5. 70/20/10 mathematics
+6. Rounding
+7. Access control
+8. Events
+9. Security
+10. Upgradeability
+11. Burn behavior
+12. Invariants
+13. Future validator integration
+
+Create:
+
+docs/PW-C03-TEST-REPORT.md
+
+Include:
+
+- test environment
+- transaction hashes
+- fee amounts
+- routing results
+- 10-transaction test
+- fuzz results
+- access-control results
+- burn results
+- supply results
+
+Create:
+
+docs/PW-C03-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Implementation
+C. End-to-end proof
+D. Accounting proof
+E. Security testing
+F. Burn findings
+G. Supply findings
+H. Known limitations
+I. Remaining open questions
+J. Exact prerequisites for PW-C04
+
+============================================================
+27. COST CONTROL
+============================================================
+
+Everything must remain local.
+
+DO NOT:
+
+- deploy public infrastructure
+- use paid RPC
+- deploy public testnet
+- deploy mainnet
+- create production multisigs
+- create production Treasury
+- create production validator accounts
+- build PWSwap
+- build PrimeWave Dex
+- build PWUSD
+
+Do not introduce unnecessary contracts.
+
+Prefer the smallest secure architecture capable of proving the requirement.
+
+============================================================
+28. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C03 PASSES only when:
+
+[ ] FeeDistributor is implemented.
+
+[ ] ValidatorFeeVault development destination exists.
+
+[ ] Treasury development destination exists.
+
+[ ] Burn mechanism is implemented/tested.
+
+[ ] FeeDistributor receives native PW.
+
+[ ] Actual Avalanche transaction fees reach the routing architecture.
+
+[ ] 70% routes to ValidatorFeeVault.
+
+[ ] 20% routes to Treasury.
+
+[ ] 10% routes to burn.
+
+[ ] Entire fee amount is accounted for.
+
+[ ] No rounding dust is silently lost.
+
+[ ] No PW is minted.
+
+[ ] Total supply does not increase.
+
+[ ] 10 independent real transactions pass.
+
+[ ] Fuzz tests pass.
+
+[ ] Access-control tests pass.
+
+[ ] Events are emitted correctly.
+
+[ ] No fee-routing loop exists.
+
+[ ] No RewardVault is involved.
+
+[ ] No validator distribution logic is implemented.
+
+[ ] No production keys exist.
+
+[ ] No production deployment exists.
+
+[ ] Documentation is complete.
+
+============================================================
+29. FAILURE POLICY
+============================================================
+
+If the actual Avalanche fee mechanism cannot route fees to FeeDistributor:
+
+STOP.
+
+Do NOT simulate it.
+
+Do NOT manually fund FeeDistributor and call that an end-to-end success.
+
+Do NOT change the 70/20/10 decision.
+
+Document the exact limitation and propose the minimum architecture required.
+
+If the 10% burn cannot be implemented exactly as intended:
+
+STOP and document the difference between:
+
+- inaccessible balance
+- spendable balance
+- total supply
+- circulating supply
+- protocol burn
+
+Do not make an unsupported claim.
+
+If the FeeDistributor requires privileged control beyond the approved governance architecture:
+
+STOP.
+
+Do not create an unrestricted admin.
+
+============================================================
+30. FINAL STOP CONDITION
+============================================================
+
+When all acceptance criteria are satisfied:
+
+STOP.
+
+Do NOT begin PW-C04.
+
+Do NOT implement validator reward distribution.
+
+Do NOT implement staking.
+
+Do NOT implement RewardVault.
+
+Do NOT implement PWUSD.
+
+Do NOT implement PWSwap.
+
+Do NOT implement PrimeWave Dex.
+
+Report:
+
+PW-C03 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C03
+============================================================

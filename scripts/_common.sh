@@ -12,11 +12,16 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export REPO_ROOT
 
 # ── Foundry toolchain — add to PATH ──────────────────────────────────────────
-# Foundry is installed via foundryup to ~/.foundry/bin/
+# Foundry v1.7.1 binaries are bundled in local-bin/foundry/ (extracted tarball).
+# This is the canonical source since the container user may not have ~/.foundry.
+# Fall back to ~/.foundry/bin if someone has a personal installation.
 # Version pinned below (PW-C02); update only with documented compatibility review.
-FOUNDRY_BIN="${HOME:-/root}/.foundry/bin"
-if [[ -d "$FOUNDRY_BIN" ]] && [[ ":$PATH:" != *":$FOUNDRY_BIN:"* ]]; then
-    export PATH="$FOUNDRY_BIN:$PATH"
+FOUNDRY_WORKSPACE_BIN="$REPO_ROOT/local-bin/foundry"
+FOUNDRY_HOME_BIN="${HOME:-/root}/.foundry/bin"
+if [[ -d "$FOUNDRY_WORKSPACE_BIN" ]] && [[ ":$PATH:" != *":$FOUNDRY_WORKSPACE_BIN:"* ]]; then
+    export PATH="$FOUNDRY_WORKSPACE_BIN:$PATH"
+elif [[ -d "$FOUNDRY_HOME_BIN" ]] && [[ ":$PATH:" != *":$FOUNDRY_HOME_BIN:"* ]]; then
+    export PATH="$FOUNDRY_HOME_BIN:$PATH"
 fi
 
 # ── Pinned dependency versions (from PW-C00 FINAL GATE / PW-C02) ─────────────

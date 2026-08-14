@@ -1,2 +1,4 @@
 local-bin/avalanchego-v1.14.2/avalanchego filter=lfs diff=lfs merge=lfs -text
 local-bin/subnet-evm filter=lfs diff=lfs merge=lfs -text
+local-bin/foundry/cast filter=lfs diff=lfs merge=lfs -text
+local-bin/foundry/forge filter=lfs diff=lfs merge=lfs -text
