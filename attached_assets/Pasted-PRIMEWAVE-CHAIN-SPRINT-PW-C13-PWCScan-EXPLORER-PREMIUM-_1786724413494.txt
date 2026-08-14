@@ -1,0 +1,1976 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C13 — PWCScan EXPLORER
+PREMIUM USER-FACING PRODUCT SPRINT
+
+============================================================
+STATUS
+============================================================
+
+PW-C00 through PW-C12 are LOCKED.
+
+Current foundation:
+
+C00 — Architecture
+C01 — L1 Foundation
+C02 — Native PW / Gas
+C03 — FeeDistributor
+C04 — ValidatorFeeVault
+C05 — Validator Integration
+C06 — RewardVault
+C07 — Governance
+C08 — Integrated Security
+C09 — Phase-2 PoS
+C10 — PoS Hardening / Security Audit
+C11 — Production Infrastructure
+C12 — RPC + Indexer + PostgreSQL + Read-only API
+
+C12 delivered:
+
+- 17-table PostgreSQL schema
+- 20+ read-only REST endpoints
+- cursor pagination
+- block indexing
+- transaction indexing
+- receipt indexing
+- event decoding
+- validator indexing
+- staking indexing
+- RewardVault indexing
+- fee indexing
+- governance indexing
+- search backend
+- PWCScan data contract
+- 57/57 Jest tests
+- 792/792 Forge regression
+
+PWCScan domain:
+
+pwcscan.com
+
+Brand:
+
+PWCScan
+PrimeWave Blockchain Explorer
+
+============================================================
+0. C13 OBJECTIVE
+============================================================
+
+Build the first production-quality PWCScan web application.
+
+This is a PREMIUM USER-FACING SPRINT.
+
+Unlike previous infrastructure sprints, prioritize:
+
+- visual quality
+- UX
+- polish
+- information hierarchy
+- responsiveness
+- performance
+- explorer usability
+- professional blockchain-product appearance
+
+DO NOT aggressively optimize C13 for minimum code/credit consumption
+at the expense of UX.
+
+A reasonable increase in implementation effort is APPROVED.
+
+However, do not create unnecessary backend infrastructure.
+
+C12 already provides the data layer.
+
+PWCScan MUST consume the real C12 API.
+
+DO NOT build a fake/mock explorer.
+
+============================================================
+1. DESIGN REFERENCE — SOLSCAN
+============================================================
+
+IMPORTANT:
+
+PWCScan should be STRONGLY INSPIRED by the current Solscan explorer
+experience.
+
+The objective is:
+
+"Solscan-level information architecture and usability,
+with a distinct PrimeWave visual identity."
+
+DO NOT copy Solscan's:
+
+- logo
+- branding
+- proprietary graphics
+- exact source code
+- exact visual assets
+- exact proprietary styling
+
+DO NOT present PWCScan as affiliated with Solscan.
+
+Study the current Solscan UX patterns and reproduce the underlying
+PRODUCT PRINCIPLES using original PrimeWave design.
+
+Key Solscan patterns to emulate:
+
+1. Search-first explorer navigation
+2. Dense but readable data tables
+3. Strong information hierarchy
+4. Entity-oriented pages
+5. Address pages
+6. Transaction pages
+7. Block pages
+8. Program/contract pages
+9. Validator/staking information
+10. Network dashboard
+11. Filters
+12. Pagination
+13. Human-readable transaction summaries
+14. Raw/on-chain details for advanced users
+15. Responsive desktop/mobile experience
+16. Configurable table presentation where useful
+17. Analytics-ready layout
+
+Solscan's current homepage emphasizes network metrics, latest
+transactions and dashboard navigation.
+
+Its current account experience separates general account information
+from activity, with transaction/history-style tabs.
+
+Its transaction experience presents a concise summary first, followed
+by deeper details, balance changes and raw data.
+
+Use these PRINCIPLES.
+
+Do not create a generic SaaS dashboard.
+
+PWCScan should immediately feel like a serious blockchain explorer.
+
+============================================================
+2. BRAND IDENTITY
+============================================================
+
+Brand:
+
+PWCScan
+
+Subtitle:
+
+PrimeWave Blockchain Explorer
+
+Domain:
+
+pwcscan.com
+
+PrimeWave ecosystem identity should be visible but restrained.
+
+Design goals:
+
+- premium
+- modern
+- technical
+- trustworthy
+- fast
+- clean
+- institutional enough for validators/developers
+- accessible enough for normal users
+
+Avoid:
+
+- excessive gradients
+- childish crypto aesthetics
+- giant decorative illustrations
+- excessive glassmorphism
+- excessive animations
+- clutter
+- generic AI-dashboard appearance
+
+Use a strong visual hierarchy.
+
+PrimeWave branding should be distinct from Solscan.
+
+============================================================
+3. RESPONSIVE DESIGN
+============================================================
+
+Desktop is the primary explorer environment.
+
+But mobile MUST be first-class.
+
+Support:
+
+- desktop
+- laptop
+- tablet
+- mobile
+
+Tables must transform intelligently.
+
+Do not simply horizontally overflow every table.
+
+Mobile should prioritize:
+
+- search
+- transaction status
+- hash
+- address
+- value
+- timestamp
+- essential metadata
+
+Advanced fields can move into expandable sections.
+
+============================================================
+4. TECHNOLOGY
+============================================================
+
+Inspect the existing repository before choosing the frontend stack.
+
+Prefer the existing project conventions if already established.
+
+If no frontend exists for PWCScan, use a modern:
+
+React + TypeScript
+
+architecture.
+
+Use the existing ecosystem where practical.
+
+Do not introduce unnecessary frameworks.
+
+Use:
+
+- reusable components
+- typed API client
+- route-based pages
+- reusable tables
+- reusable cards
+- reusable badges
+- reusable address components
+- reusable transaction status components
+
+============================================================
+5. APPLICATION STRUCTURE
+============================================================
+
+Create:
+
+/
+
+Homepage / Network Dashboard
+
+/blocks
+
+Block list
+
+/blocks/:number
+
+Block detail
+
+/tx/:hash
+
+Transaction detail
+
+/transactions
+
+Transaction list
+
+/address/:address
+
+Address detail
+
+/address/:address/transactions
+
+Address transaction history
+
+/contracts
+
+Contract directory
+
+/contract/:address
+
+Contract detail
+
+/validators
+
+Validator directory
+
+/validator/:id
+
+Validator detail
+
+/staking
+
+Staking dashboard
+
+/rewards
+
+RewardVault / rewards dashboard
+
+/fees
+
+Network fee dashboard
+
+/governance
+
+Governance activity
+
+/stats
+
+Network statistics
+
+/search
+
+Search results / resolution
+
+============================================================
+6. GLOBAL NAVIGATION
+============================================================
+
+Build a polished top navigation.
+
+Recommended structure:
+
+PWCScan logo
+
+Explorer
+Validators
+Staking
+Rewards
+Fees
+Analytics / Stats
+
+Search
+
+Settings
+
+Theme toggle
+
+On mobile:
+
+compact header
++
+prominent search
++
+navigation drawer
+
+Do not overcrowd the header.
+
+============================================================
+7. GLOBAL SEARCH
+============================================================
+
+This is one of the MOST IMPORTANT UI components.
+
+Large search field:
+
+Search by Address / Transaction Hash / Block / Contract / Validator
+
+Search should detect input type intelligently.
+
+Examples:
+
+0x...
+→ Address or transaction hash
+
+123456
+→ Block
+
+validator ID
+→ Validator
+
+contract address
+→ Contract
+
+Search results should clearly identify:
+
+Address
+Transaction
+Block
+Contract
+Validator
+
+Never return an ambiguous result without explaining the type.
+
+Show:
+
+- icon
+- type
+- shortened identifier
+- relevant metadata
+
+Keyboard:
+
+Enter → search
+
+Escape → close dropdown
+
+Support search suggestions where practical.
+
+============================================================
+8. HOMEPAGE
+============================================================
+
+The homepage should feel like a serious blockchain explorer.
+
+Hero area:
+
+PWCScan
+
+PrimeWave Blockchain Explorer
+
+Large global search.
+
+Under search:
+
+NETWORK OVERVIEW
+
+Create high-quality metric cards.
+
+Suggested:
+
+Current Block
+Transactions
+TPS
+Active Validators
+Total Staked
+Network Fees
+RewardVault
+PW Supply
+
+Only display metrics that C12 actually provides reliably.
+
+Do NOT fabricate:
+
+- PW USD price
+- market cap
+- TVL
+- circulating supply
+
+unless a reliable data source exists.
+
+If unavailable:
+
+show "—"
+or omit the metric.
+
+============================================================
+9. LATEST TRANSACTIONS
+============================================================
+
+Homepage section:
+
+Latest Transactions
+
+Columns:
+
+Status
+Transaction
+Time
+Block
+From
+To
+Value
+Fee
+
+Use compact address rendering.
+
+Examples:
+
+0x71a4...9B21
+
+Provide hover/click copy.
+
+Status:
+
+Success
+Failed
+
+Use strong but restrained visual indicators.
+
+Include:
+
+View All Transactions
+
+============================================================
+10. LATEST BLOCKS
+============================================================
+
+Homepage section:
+
+Latest Blocks
+
+Columns:
+
+Block
+Age
+Transactions
+Gas Used
+Gas Limit
+Timestamp
+
+Provide:
+
+View All Blocks
+
+============================================================
+11. NETWORK OVERVIEW
+============================================================
+
+Create an attractive network section.
+
+Possible cards:
+
+Block Height
+Transactions
+Average Block Time
+TPS
+Active Validators
+Total Staked
+Fees
+RewardVault Balance
+
+Use real API values.
+
+Do not invent values.
+
+============================================================
+12. BLOCK LIST PAGE
+============================================================
+
+/blocks
+
+Build a polished block table.
+
+Columns:
+
+Block
+Age
+Transactions
+Gas Used
+Gas Limit
+Timestamp
+
+Features:
+
+- pagination
+- newest first
+- oldest where useful
+- block number search
+- responsive design
+
+============================================================
+13. BLOCK DETAIL PAGE
+============================================================
+
+/blocks/:number
+
+Header:
+
+Block #123456
+
+Show:
+
+Block hash
+Parent hash
+Timestamp
+Transactions
+Gas limit
+Gas used
+Base fee if available
+Chain information
+
+Then:
+
+Transactions in Block
+
+Use a reusable transaction table.
+
+Include:
+
+Copy
+Open transaction
+
+Do not display Ethereum-only fields unless actually available.
+
+============================================================
+14. TRANSACTION LIST
+============================================================
+
+/transactions
+
+Use a high-quality data table inspired by modern explorer tables.
+
+Columns:
+
+Status
+Transaction
+Time
+Block
+Action
+From
+To
+Value
+Fee
+
+"Action" must only be shown when C12 can reliably determine it.
+
+For native transfers:
+
+PW Transfer
+
+For known protocol events:
+
+Stake
+Unstake
+Reward Claim
+Validator Update
+Fee Distribution
+Governance
+Contract Call
+
+If classification cannot be safely derived:
+
+Contract Interaction
+
+Never fabricate semantic labels.
+
+Provide:
+
+- filters
+- pagination
+- search
+- status filter
+- address filter
+- block filter
+- time filter where API supports it
+
+============================================================
+15. TRANSACTION DETAIL PAGE
+============================================================
+
+This is one of the most important pages.
+
+Build a PREMIUM transaction-detail experience.
+
+Header:
+
+Transaction
+
+0x....
+
+Status:
+
+Success / Failed
+
+Primary summary:
+
+"Transferred X PW from A to B"
+
+or
+
+"Claimed X PW staking reward"
+
+or
+
+"Contract interaction"
+
+Only use semantic descriptions supported by decoded data.
+
+============================================================
+16. TRANSACTION DETAIL STRUCTURE
+============================================================
+
+Use tabs or sections:
+
+Overview
+
+Balance Changes
+
+Event Logs
+
+Raw
+
+For known contract interactions:
+
+Decoded Interaction
+
+Details:
+
+Transaction Hash
+Status
+Block
+Timestamp
+From
+To
+Value
+Fee
+Gas Used
+Gas Price
+Nonce
+Input Data
+
+Where available.
+
+Do not display unsupported Ethereum fields.
+
+============================================================
+17. BALANCE CHANGES
+============================================================
+
+Show:
+
+Address
+Before
+Change
+After
+
+For all reliably derived native PW balance changes.
+
+Clearly distinguish:
+
+Value transfer
+
+from:
+
+Gas fee
+
+from:
+
+Protocol distribution
+
+Do not double-count the same movement.
+
+============================================================
+18. EVENT LOGS
+============================================================
+
+Show decoded protocol events.
+
+Example:
+
+FeeDistributor
+FeeDistributed
+
+ValidatorFeeVault
+FeeReceived
+
+RewardVault
+RewardClaimed
+
+PrimeWaveStakingManager
+StakeDeposited
+
+Use actual event names from C12.
+
+Each event should be expandable.
+
+Show:
+
+Contract
+Event
+Parameters
+
+Unknown logs:
+
+Raw Log
+
+Do not break the page because an event is unknown.
+
+============================================================
+19. RAW TRANSACTION DATA
+============================================================
+
+Provide an advanced Raw section.
+
+Show:
+
+- raw transaction fields
+- input/calldata
+- logs
+- topics
+- data
+
+Use syntax highlighting/monospace formatting.
+
+This is for developers.
+
+Do not make raw data the default visual experience.
+
+============================================================
+20. ADDRESS PAGE
+============================================================
+
+/address/:address
+
+Follow the strong information architecture of Solscan-style account
+pages, adapted to EVM/PrimeWave.
+
+Top:
+
+Address
+Copy
+QR
+Explorer label if available
+
+Summary:
+
+PW Balance
+Transactions
+First Seen
+Last Active
+
+Then tabs:
+
+Overview
+Transactions
+Transfers
+Staking
+Rewards
+Fees
+Analytics
+
+Only implement tabs where C12 data exists.
+
+Do not show empty fake tabs.
+
+============================================================
+21. ADDRESS OVERVIEW
+============================================================
+
+Show:
+
+PW balance
+transaction count
+incoming value
+outgoing value
+fees paid
+staking balance
+rewards earned
+rewards claimed
+
+Only where reliable.
+
+Use compact cards.
+
+============================================================
+22. ADDRESS TRANSACTIONS
+============================================================
+
+Provide:
+
+transaction history
+
+Filters:
+
+incoming
+outgoing
+success
+failed
+
+Pagination.
+
+Do not fetch entire history into the browser.
+
+Use C12 cursor pagination.
+
+============================================================
+23. ADDRESS TRANSFERS
+============================================================
+
+Show native PW transfers derived from actual transaction/log data.
+
+Columns:
+
+Age
+From
+To
+Amount
+Transaction
+
+Do not call gas fees "transfers."
+
+============================================================
+24. ADDRESS STAKING
+============================================================
+
+Where applicable:
+
+Active Stake
+Pending Unbond
+Withdrawn
+Rewards
+Validator
+
+Show clear lifecycle state.
+
+============================================================
+25. ADDRESS REWARDS
+============================================================
+
+Show:
+
+Reward
+Source
+Timestamp
+Transaction
+
+Distinguish:
+
+staking rewards
+
+from:
+
+validator transaction-fee rewards
+
+This distinction is VERY important to PrimeWave.
+
+============================================================
+26. ADDRESS FEES
+============================================================
+
+Show:
+
+Total Fees Paid
+Transaction
+Fee
+Time
+
+Where data is available.
+
+============================================================
+27. CONTRACT DIRECTORY
+============================================================
+
+/contracts
+
+Show known PrimeWave protocol contracts.
+
+At minimum:
+
+FeeDistributor
+ValidatorFeeVault
+RewardVault
+PrimeWaveValidatorRegistry
+PrimeWaveStakingManager
+EmergencyMultisig
+PrimeWaveTimelock
+
+Use actual deployed addresses.
+
+Each row:
+
+Name
+Address
+Type
+Transactions
+Status
+
+Do not claim "verified" unless verification actually exists.
+
+============================================================
+28. CONTRACT DETAIL
+============================================================
+
+/contract/:address
+
+Header:
+
+Contract Name
+Address
+Copy
+QR
+
+Sections:
+
+Overview
+Transactions
+Events
+Contract Information
+
+If ABI is available:
+
+Decoded Events
+
+If source verification exists later:
+
+Verified Source
+
+Do NOT implement a full source verification platform in C13.
+
+============================================================
+29. VALIDATOR DIRECTORY
+============================================================
+
+/validators
+
+This is a PrimeWave-native feature.
+
+Create a professional validator dashboard.
+
+Top metrics:
+
+Active Validators
+Total Stake
+Total Validator Fees
+Total Staking Rewards
+
+Table:
+
+Validator
+Status
+Weight
+Stake
+Fee Earnings
+Rewards
+Uptime if available
+
+Use real C12 data.
+
+Do not fabricate uptime.
+
+============================================================
+30. VALIDATOR DETAIL
+============================================================
+
+/validator/:id
+
+Show:
+
+Validator ID
+Status
+Weight
+Stake
+Reward Recipient
+Registration
+Activation
+Deactivation
+Fee Earnings
+Staking Rewards
+
+Tabs:
+
+Overview
+Transactions
+Fees
+Rewards
+Events
+
+Only show data actually indexed.
+
+============================================================
+31. STAKING DASHBOARD
+============================================================
+
+/staking
+
+Create:
+
+PrimeWave Staking
+
+Metrics:
+
+Total Staked
+Active Validators
+Total Rewards Emitted
+Current Emission Rate
+RewardVault Remaining
+
+Then:
+
+Recent staking activity
+
+Top validators/stakers only if C12 supports reliable ranking.
+
+Do not create fake rankings.
+
+============================================================
+32. REWARDVAULT DASHBOARD
+============================================================
+
+/rewards
+
+This should be visually distinctive.
+
+Header:
+
+PrimeWave RewardVault
+
+Cards:
+
+Total Funded
+Total Emitted
+Remaining
+Current Emission Rate
+Annual Cap
+
+Create a visual reserve/progress indicator.
+
+Example:
+
+15M PW
+████████████░░░░
+
+Remaining:
+X PW
+
+Emitted:
+X PW
+
+Do not imply the reserve is "burned" when it is simply remaining.
+
+Show:
+
+Recent Reward Claims
+
+Reward recipients
+
+Emission history if C12 provides it.
+
+============================================================
+33. FEES DASHBOARD
+============================================================
+
+/fees
+
+PrimeWave Fee Distribution
+
+Visual:
+
+100% Network Fees
+
+70%
+ValidatorFeeVault
+
+20%
+DevTreasury
+
+10%
+Burn
+
+Use actual indexed values.
+
+Show:
+
+Total Fees
+Validator Fees
+Treasury
+Burn
+
+Charts:
+
+Fee distribution over time
+
+Recent distributions
+
+Do not show fake historical data.
+
+============================================================
+34. GOVERNANCE PAGE
+============================================================
+
+/governance
+
+Show:
+
+Emergency Multisig
+Timelock
+Recent governance events
+Pause/unpause events
+Proposals/events where indexed
+
+Clearly display:
+
+Emergency Multisig
+3-of-5
+
+Timelock
+48 hours
+
+These are protocol facts.
+
+Do not make governance actions executable from PWCScan.
+
+Explorer is READ-ONLY.
+
+============================================================
+35. ANALYTICS / STATS
+============================================================
+
+/stats
+
+Create a professional analytics dashboard.
+
+Initial metrics:
+
+Transactions
+TPS where reliably calculated
+Blocks
+Gas Used
+Network Fees
+Active Validators
+Total Staked
+Reward Emissions
+
+Charts:
+
+Transactions over time
+Fees over time
+Blocks over time
+Staking/reward activity where supported
+
+Time ranges:
+
+24H
+7D
+30D
+ALL
+
+Only show ranges supported by indexed data.
+
+If historical data is insufficient:
+
+show a clear empty state.
+
+Do not fabricate charts.
+
+============================================================
+36. TABLE DESIGN
+============================================================
+
+Tables are a CORE PWCScan visual element.
+
+Follow modern explorer principles:
+
+- compact rows
+- clear typography
+- strong alignment
+- subtle separators
+- hover state
+- sortable columns where useful
+- filter controls
+- pagination
+- copy buttons
+- external navigation where applicable
+
+Support:
+
+column visibility where useful
+
+Do not overbuild customization in C13.
+
+But design tables so customization can be added later.
+
+============================================================
+37. ADDRESS DISPLAY
+============================================================
+
+Default:
+
+0x1234...ABCD
+
+Click:
+
+copy full address
+
+Optional hover:
+
+show full address
+
+Never make users guess whether two truncated addresses are identical.
+
+============================================================
+38. HASH DISPLAY
+============================================================
+
+Use:
+
+0x123456...89AB
+
+Copy button.
+
+Full hash available on hover/click.
+
+Use monospace typography.
+
+============================================================
+39. STATUS SYSTEM
+============================================================
+
+Use consistent status badges:
+
+Success
+Failed
+Pending where applicable
+Active
+Inactive
+Paused
+
+Do not overuse colors.
+
+Status must be understandable without color alone.
+
+============================================================
+40. EMPTY STATES
+============================================================
+
+Empty pages should look intentional.
+
+Example:
+
+No staking activity yet.
+
+NOT:
+
+"No data."
+
+Use helpful context.
+
+============================================================
+41. ERROR STATES
+============================================================
+
+Build polished:
+
+404
+Invalid address
+Invalid transaction
+Invalid block
+API unavailable
+Indexer syncing
+Network unavailable
+
+Example:
+
+"Transaction not found"
+
+"Check the transaction hash and try again."
+
+Do not expose backend stack traces.
+
+============================================================
+42. LOADING STATES
+============================================================
+
+Use skeleton loaders.
+
+Do NOT use giant generic spinners everywhere.
+
+Tables should have skeleton rows.
+
+Cards should have skeleton blocks.
+
+Transaction pages should load progressively.
+
+============================================================
+43. REAL-TIME REFRESH
+============================================================
+
+Where C12 supports it:
+
+- latest block
+- latest transactions
+- network stats
+
+Use polling or WebSocket based on C12 capabilities.
+
+Do not hammer the API.
+
+Show:
+
+"Updated X seconds ago"
+
+where useful.
+
+============================================================
+44. SETTINGS
+============================================================
+
+Provide lightweight settings.
+
+At minimum:
+
+Theme:
+Light
+Dark
+System
+
+Address display:
+Truncated
+Full on hover
+
+Time:
+Local
+UTC
+
+Auto-refresh:
+On
+Off
+
+Do not build an enormous settings platform.
+
+============================================================
+45. DARK MODE
+============================================================
+
+Dark mode must be a FIRST-CLASS design.
+
+Do not simply invert colors.
+
+Ensure:
+
+- contrast
+- readable tables
+- readable cards
+- readable code
+- clear borders
+- clear status indicators
+
+Both light and dark themes must look intentional.
+
+============================================================
+46. VISUAL QUALITY BAR
+============================================================
+
+This is NOT an internal admin dashboard.
+
+Before declaring C13 complete, inspect every major page visually.
+
+Ask:
+
+Does this look like a real blockchain explorer?
+
+Would a crypto user trust it?
+
+Does it look polished at 1440px?
+
+Does it look good at 1280px?
+
+Does it work at 768px?
+
+Does it work at 390px?
+
+Are tables readable?
+
+Are addresses easy to scan?
+
+Are numbers aligned?
+
+Are cards consistent?
+
+Are spacing and typography consistent?
+
+Are loading/error/empty states polished?
+
+Fix visual inconsistencies.
+
+============================================================
+47. ACCESSIBILITY
+============================================================
+
+Implement:
+
+- semantic HTML
+- keyboard navigation
+- visible focus states
+- sufficient contrast
+- aria labels where necessary
+- buttons that are actually buttons
+- links that are actually links
+
+Do not sacrifice accessibility for aesthetics.
+
+============================================================
+48. PERFORMANCE
+============================================================
+
+PWCScan must feel fast.
+
+Implement:
+
+- code splitting where appropriate
+- lazy loading for heavy pages
+- pagination
+- API caching where appropriate
+- avoid unnecessary re-renders
+- optimized charts
+- optimized tables
+
+Never load thousands of transactions into the browser.
+
+============================================================
+49. SEO
+============================================================
+
+Implement basic SEO:
+
+Homepage title:
+
+PWCScan — PrimeWave Blockchain Explorer
+
+Dynamic titles:
+
+Transaction | PWCScan
+Address | PWCScan
+Block | PWCScan
+Validator | PWCScan
+Contract | PWCScan
+
+Use meaningful metadata.
+
+============================================================
+50. SECURITY
+============================================================
+
+PWCScan is read-only.
+
+Never put:
+
+- private keys
+- seed phrases
+- RPC credentials
+- database credentials
+- keeper credentials
+
+in frontend code.
+
+Only public API endpoints belong in browser-accessible configuration.
+
+Sanitize rendered blockchain data.
+
+Do not use unsafe HTML rendering.
+
+============================================================
+51. API INTEGRATION
+============================================================
+
+Use the C12 PWCScan Data Contract.
+
+DO NOT bypass the API and connect the browser directly to PostgreSQL.
+
+Create a typed API client.
+
+Centralize:
+
+- base URL
+- error handling
+- request cancellation
+- pagination
+- caching
+
+============================================================
+52. IMPORTANT DATA INTEGRITY RULE
+============================================================
+
+If the API does not provide a value:
+
+DO NOT invent it.
+
+Display:
+
+—
+
+or a meaningful unavailable state.
+
+Examples:
+
+PW/USD price
+Market cap
+TVL
+Circulating supply
+Uptime
+
+must not be fabricated.
+
+============================================================
+53. PWC-20 BOUNDARY
+============================================================
+
+PWCScan should be architected so PWC-20 can be added later.
+
+Do NOT build a full PWC-20 explorer in C13.
+
+However:
+
+- token pages should be architecturally possible
+- token transfers should be extensible
+- contract/event architecture should not prevent future PWC-20 support
+
+Do not implement token economics that are not currently locked.
+
+============================================================
+54. PWSWAP BOUNDARY
+============================================================
+
+DO NOT implement PWSwap.
+
+PWCScan may eventually display PWSwap activity, but C13 should only
+render generic contract/event information available through C12.
+
+No:
+
+- swap engine
+- liquidity engine
+- trading UI
+- AMM calculations
+- price engine
+
+============================================================
+55. PRIMEWAVE DEX BOUNDARY
+============================================================
+
+DO NOT implement PrimeWave Dex.
+
+No:
+
+- candlestick charts
+- OHLCV engine
+- pair discovery
+- liquidity charts
+- trading terminal
+- DEX analytics
+
+PWCScan is the blockchain explorer.
+
+PrimeWave Dex remains a separate product.
+
+============================================================
+56. PWCScan DESIGN SYSTEM
+============================================================
+
+Create reusable design primitives:
+
+- Button
+- Card
+- Badge
+- MetricCard
+- DataTable
+- Pagination
+- Address
+- Hash
+- CopyButton
+- QRButton
+- StatusBadge
+- Tabs
+- FilterBar
+- Search
+- Chart
+- EmptyState
+- ErrorState
+- Skeleton
+- Tooltip
+- Modal
+
+Avoid duplicated page-specific styling.
+
+============================================================
+57. ROUTING
+============================================================
+
+Implement clean routes.
+
+Examples:
+
+/
+ /blocks
+ /blocks/12345
+ /transactions
+ /tx/0x...
+ /address/0x...
+ /address/0x.../transactions
+ /contracts
+ /contract/0x...
+ /validators
+ /validator/1
+ /staking
+ /rewards
+ /fees
+ /governance
+ /stats
+ /search?q=...
+
+Ensure invalid routes produce a polished 404.
+
+============================================================
+58. TESTING
+============================================================
+
+Create frontend tests for:
+
+- homepage rendering
+- search
+- block page
+- transaction page
+- address page
+- validator page
+- RewardVault page
+- fee page
+- API error
+- loading states
+- empty states
+- pagination
+- responsive behavior where practical
+- theme switching
+
+At minimum test all critical components.
+
+============================================================
+59. E2E TESTING
+============================================================
+
+Create a deterministic local E2E flow.
+
+1. Start PrimeWave chain
+2. Start C12 API
+3. Start PWCScan
+4. Load homepage
+5. Search transaction
+6. Open transaction
+7. Open sender address
+8. Open block
+9. Open validator
+10. Open RewardVault
+11. Open fee dashboard
+12. Return to homepage
+13. Switch dark mode
+14. Test mobile viewport
+15. Test invalid transaction
+16. Test API failure state
+
+============================================================
+60. VISUAL QA
+============================================================
+
+This is mandatory.
+
+Inspect screenshots at:
+
+Desktop:
+1440 × 900
+
+Laptop:
+1280 × 800
+
+Tablet:
+768 × 1024
+
+Mobile:
+390 × 844
+
+Review:
+
+Homepage
+Block page
+Transaction page
+Address page
+Validator page
+RewardVault
+Fees
+Stats
+
+Fix:
+
+- overflow
+- spacing
+- inconsistent typography
+- broken cards
+- table clipping
+- mobile issues
+- dark mode issues
+- loading state issues
+
+Do not declare complete until these are checked.
+
+============================================================
+61. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C13-PWCSCAN-UI-SPEC.md
+docs/PW-C13-PWCSCAN-DESIGN-SYSTEM.md
+docs/PW-C13-PWCSCAN-ROUTES.md
+docs/PW-C13-PWCSCAN-TEST-REPORT.md
+docs/PW-C13-PWCSCAN-FINAL-REPORT.md
+
+Update:
+
+docs/PW-C12-PWCSCAN-DATA-CONTRACT.md
+
+only if actual frontend integration reveals a genuine API contract
+gap.
+
+Do not modify C12 merely to make a UI assumption convenient.
+
+============================================================
+62. COST / QUALITY BALANCE
+============================================================
+
+C13 is explicitly approved for higher effort than previous sprints.
+
+QUALITY > MINIMUM CREDIT COST.
+
+However:
+
+Do NOT waste time rebuilding C12.
+
+Do NOT create unnecessary backend services.
+
+Do NOT build features outside C13.
+
+Spend the extra effort on:
+
+- UI polish
+- UX
+- responsive design
+- component quality
+- animations where useful
+- loading states
+- tables
+- transaction detail
+- search
+- visual consistency
+- QA
+
+============================================================
+63. REGRESSION
+============================================================
+
+C13 must not break the chain or indexer.
+
+Run:
+
+C00-C12 regression where applicable.
+
+Minimum known baseline:
+
+C10:
+745/745
+
+C11 Forge:
+792/792
+
+C11 Keeper:
+20/20
+
+C12 Jest:
+57/57
+
+Do not silently weaken previous tests.
+
+============================================================
+64. ACCEPTANCE CRITERIA
+============================================================
+
+[ ] PWCScan frontend implemented
+[ ] Real C12 API integrated
+[ ] No permanent mock data
+[ ] Homepage complete
+[ ] Global search complete
+[ ] Blocks complete
+[ ] Block detail complete
+[ ] Transactions complete
+[ ] Transaction detail complete
+[ ] Address pages complete
+[ ] Contract pages complete
+[ ] Validator pages complete
+[ ] Staking dashboard complete
+[ ] RewardVault dashboard complete
+[ ] Fee dashboard complete
+[ ] Governance page complete
+[ ] Stats/analytics foundation complete
+[ ] Light mode complete
+[ ] Dark mode complete
+[ ] Mobile responsive
+[ ] Desktop responsive
+[ ] Loading states
+[ ] Empty states
+[ ] Error states
+[ ] Search validation
+[ ] Pagination
+[ ] Filters
+[ ] Copy interactions
+[ ] QR functionality where appropriate
+[ ] Real-time updates where supported
+[ ] API errors handled
+[ ] SEO basics
+[ ] Accessibility basics
+[ ] Performance reviewed
+[ ] Visual QA completed
+[ ] E2E flow passes
+[ ] Frontend tests pass
+[ ] C00-C12 regression passes
+[ ] No protocol changes
+[ ] No PWSwap implementation
+[ ] No PrimeWave Dex implementation
+[ ] No fake financial data
+[ ] No Critical/High frontend security issue
+
+============================================================
+65. CRITICAL STOP CONDITIONS
+============================================================
+
+STOP and report if:
+
+1. C12 API cannot support a required explorer page without inventing
+data.
+2. UI must fabricate blockchain information.
+3. C12 data contradicts on-chain state.
+4. A protocol contract must be modified purely for visual convenience.
+5. PWCScan requires write access to blockchain state.
+6. Private credentials are required in the frontend.
+7. A serious XSS/injection vulnerability is discovered.
+8. A serious data-integrity problem is discovered.
+9. C00-C12 regression fails.
+10. Building a requested feature requires PWSwap or PrimeWave Dex logic.
+
+Do not silently work around these.
+
+============================================================
+66. FINAL OUTPUT
+============================================================
+
+When complete:
+
+STOP.
+
+Do NOT start C14.
+
+Return:
+
+PW-C13 COMPLETE
+
+with:
+
+1. Frontend stack
+2. Page count
+3. Component count
+4. API endpoints consumed
+5. Search result
+6. Block explorer result
+7. Transaction explorer result
+8. Address explorer result
+9. Contract explorer result
+10. Validator explorer result
+11. Staking result
+12. RewardVault result
+13. Fee dashboard result
+14. Governance result
+15. Analytics result
+16. Dark mode result
+17. Mobile result
+18. Accessibility result
+19. Performance result
+20. E2E test result
+21. Frontend test count
+22. C00-C12 regression result
+23. Visual QA result
+24. Remaining limitations
+25. C14 prerequisites
+
+Do not start C14 automatically.
+
+============================================================
+END PW-C13
+============================================================

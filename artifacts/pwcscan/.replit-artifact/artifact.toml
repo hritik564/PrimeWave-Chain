@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PWCScan"
+description = "PWCScan is the PrimeWave Blockchain Explorer — a premium, production-quality block explorer for PrimeWave Chain (chain ID 73571). It consumes the C12 indexer REST API to display blocks, transactions, addresses, validators, staking activity, RewardVault state, fee distribution, governance events, and network analytics. Inspired by Solscan's information architecture, built with a distinct PrimeWave visual identity."
+version = "1.0.0"
+id = "artifacts/pwcscan"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19951
+
+[services.development]
+run = "pnpm --filter @workspace/pwcscan run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pwcscan", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pwcscan/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19951"
+BASE_PATH = "/"
