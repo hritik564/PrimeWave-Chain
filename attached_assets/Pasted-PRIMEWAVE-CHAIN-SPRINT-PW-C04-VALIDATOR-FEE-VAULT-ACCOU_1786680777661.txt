@@ -1,0 +1,1186 @@
+PRIMEWAVE CHAIN
+SPRINT PW-C04 — VALIDATOR FEE VAULT ACCOUNTING
+
+============================================================
+STATUS
+============================================================
+
+PW-C00:
+PASSED / LOCKED
+
+PW-C01:
+PASSED / LOCAL L1 FOUNDATION
+
+PW-C02:
+PASSED / NATIVE PW TRANSACTION + FEE VALIDATION
+
+PW-C03:
+PASSED / LIVE 70/20/10 FEE ROUTING
+
+C03 proved on the live local PrimeWave L1:
+
+Native transaction fees
+        ↓
+Avalanche Reward Manager
+        ↓
+FeeDistributor
+        ├── 70% → ValidatorFeeVault
+        ├── 20% → Treasury
+        └── 10% → Burn
+
+C04 now focuses ONLY on the next layer:
+
+70% ValidatorFeeVault balance
+        ↓
+Validator fee accounting
+        ↓
+Validator entitlements
+
+============================================================
+1. PRIMARY OBJECTIVE
+============================================================
+
+Build and test the validator fee accounting layer for the 70% validator allocation.
+
+The current PrimeWave economic rule is:
+
+70% of applicable transaction-fee economics
+→ Validators
+
+The validator entitlement model approved during PW-C00 is:
+
+Validator entitlement ∝
+effective validator weight × eligibility/uptime
+
+For the initial PrimeWave validator set:
+
+15 validators.
+
+If all 15 validators have:
+
+- equal effective weight
+- equal eligibility
+- equal uptime
+
+then their fee entitlement must be approximately/equally distributed, subject only to deterministic integer rounding.
+
+C04 must prove the accounting mathematics and security of this model.
+
+============================================================
+2. ABSOLUTE SCOPE BOUNDARY
+============================================================
+
+C04 MAY implement:
+
+- ValidatorFeeVault accounting
+- Validator registry/accounting
+- Validator weight accounting
+- Uptime/eligibility accounting
+- Fee entitlement calculation
+- Reward index / accumulated-fee-per-weight accounting if appropriate
+- Validator claim mechanism
+- Accounting events
+- Unit tests
+- Fuzz tests
+- Integration tests
+- Local deployment
+- Local multi-validator simulation
+- Documentation
+
+C04 MUST NOT implement:
+
+- Phase 2 staking
+- Delegation
+- Delegator rewards
+- PrimeWaveStakingManager
+- 15M RewardVault
+- staking emissions
+- validator staking deposits
+- validator unbonding
+- validator slashing implementation
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+- MLM income
+- ROI
+- Binary income
+- Binary Orbit
+- Level income
+- Salary
+- P2P
+- bridges
+- BEP-20 migration
+- production governance
+- production multisigs
+- production Treasury
+- production validators
+- mainnet
+- public testnet
+
+============================================================
+3. SOURCE DOCUMENTATION
+============================================================
+
+Read before implementation:
+
+- docs/PRIMEWAVE_CHAIN_ARCHITECTURE.md
+- docs/PRIMEWAVE_VALIDATOR_SPEC.md
+- docs/PRIMEWAVE_REWARD_ECONOMICS.md
+- docs/PRIMEWAVE_TOKENOMICS.md
+- docs/PRIMEWAVE_SECURITY_THREAT_MODEL.md
+- docs/PRIMEWAVE_GOVERNANCE_POLICY.md
+- docs/PW-C03-FEEDISTRIBUTOR_SPEC.md
+- docs/PW-C03-TEST-REPORT.md
+- docs/PW-C03-FINAL-REPORT.md
+- docs/PRIMEWAVE_POS_TRANSITION_SPEC.md
+
+Treat these as the source of truth.
+
+Do not silently modify locked decisions.
+
+============================================================
+4. CRITICAL ARCHITECTURAL QUESTION
+============================================================
+
+Before writing the accounting implementation, determine exactly how the validator identity and validator status will be represented.
+
+PrimeWave currently has:
+
+15 initial PoA validators.
+
+The accounting system must NOT invent a second unrelated validator system that can disagree with Avalanche's actual validator set.
+
+Determine:
+
+A. How Avalanche identifies validators.
+
+B. Whether those identifiers can be represented safely in the EVM accounting layer.
+
+C. How the accounting layer will know:
+
+- validator exists
+- validator is active
+- validator weight
+- validator eligibility
+- validator uptime
+
+D. Which data is available directly on-chain.
+
+E. Which data must be supplied by an authorized protocol component.
+
+F. How the system prevents an unauthorized party from fabricating validator uptime or weight.
+
+If an exact integration with Avalanche's Validator Manager cannot yet be implemented safely:
+
+DO NOT fake it.
+
+Build the accounting layer with a clearly defined interface/adapter boundary and document the integration requirement.
+
+============================================================
+5. INITIAL 15 VALIDATORS
+============================================================
+
+C04 must support exactly the initial validator accounting model:
+
+15 validators.
+
+For local testing, use development-only validator identities.
+
+Do NOT use production validator keys.
+
+Do NOT claim the development identities are the final mainnet validators.
+
+The system must support:
+
+Validator 1
+Validator 2
+...
+Validator 15
+
+Each validator must have an unambiguous identifier.
+
+Document:
+
+- validator identifier
+- accounting address/recipient
+- weight
+- eligibility
+- uptime status/score
+
+============================================================
+6. WEIGHT MODEL
+============================================================
+
+The current validator-fee model is:
+
+effective validator weight × eligibility/uptime
+
+Do NOT introduce staking weight in C04.
+
+For Phase 1 PoA testing:
+
+Use equal effective weight unless the existing locked documentation specifies otherwise.
+
+Therefore, initial local test configuration should be:
+
+V1 = 1
+V2 = 1
+...
+V15 = 1
+
+Total effective weight:
+
+15
+
+Do NOT create artificial economic differences between validators.
+
+Do NOT introduce delegation.
+
+============================================================
+7. UPTIME / ELIGIBILITY MODEL
+============================================================
+
+C04 must define a deterministic eligibility/uptime representation suitable for the accounting layer.
+
+Do NOT invent a complicated oracle.
+
+The design must answer:
+
+- What constitutes an eligible validator?
+- What constitutes an ineligible validator?
+- Is uptime binary or fractional?
+- Over what period is uptime measured?
+- Who supplies the uptime result?
+- How is the result authenticated?
+- Can uptime be manipulated?
+- What happens when uptime data is unavailable?
+
+For the initial PoA implementation, prefer the simplest secure model.
+
+If the locked documentation already defines the exact uptime mechanism, follow it.
+
+If not, explicitly document the chosen C04 accounting representation as a Phase-1 accounting mechanism, not as the final Phase-2 staking oracle.
+
+============================================================
+8. RECOMMENDED ACCOUNTING MODEL
+============================================================
+
+Evaluate whether an accumulated-fee-per-weight / reward-index model is the most efficient architecture.
+
+Conceptually:
+
+Fee arrives
+    ↓
+ValidatorFeeVault
+    ↓
+Total eligible weight
+    ↓
+accumulatedFeePerWeight increases
+    ↓
+validator's effective weight
+    ↓
+validator claimable amount
+
+For example:
+
+accumulatedFeePerWeight +=
+    feeAmount / totalEffectiveWeight
+
+A validator's claimable amount is based on:
+
+validatorWeight ×
+(unclaimed accumulatedFeePerWeight)
+
+Use integer fixed-point arithmetic.
+
+Do NOT use floating-point arithmetic.
+
+If another accounting model is demonstrably safer or simpler, use that instead and document why.
+
+============================================================
+9. NO O(N) DISTRIBUTION
+============================================================
+
+Do NOT distribute fees by looping over all 15 validators every time a transaction fee arrives.
+
+That would unnecessarily increase gas and scale poorly.
+
+Prefer:
+
+Fee accumulation
+→ global accounting index
+→ individual validator claim
+
+This should allow fee accounting to remain approximately O(1) for fee accrual.
+
+Claims should be O(1) per validator.
+
+============================================================
+10. VALIDATOR REGISTRATION
+============================================================
+
+Implement the minimum validator registry necessary for C04.
+
+A validator record should contain only information required for fee accounting.
+
+Potential fields:
+
+- validator ID
+- reward recipient
+- effective weight
+- eligibility
+- uptime factor
+- accrued reward
+- reward debt/index checkpoint
+- active status
+
+Do NOT add unnecessary staking fields.
+
+Do NOT add delegation fields.
+
+Do NOT add vesting fields.
+
+Do NOT add MLM fields.
+
+============================================================
+11. VALIDATOR WEIGHT SECURITY
+============================================================
+
+Weight MUST NOT be freely editable by arbitrary users.
+
+Define exactly who can:
+
+- register validator
+- deactivate validator
+- update validator weight
+- update eligibility
+- update uptime
+
+For C04 local development, use a clearly defined development authority.
+
+Do NOT create unrestricted production admin powers.
+
+Document the future authority boundary.
+
+The final production implementation must integrate with the approved validator-management/governance architecture.
+
+============================================================
+12. FEE ACCRUAL
+============================================================
+
+The ValidatorFeeVault already receives the 70% share from C03.
+
+C04 must determine how the accounting layer observes newly received fees.
+
+Possible architectures:
+
+A. Vault + accounting contract
+
+B. FeeDistributor directly updates accounting
+
+C. ValidatorFeeVault maintains accounting internally
+
+D. Separate FeeAccounting contract
+
+Choose the smallest secure architecture.
+
+Do NOT create duplicate fee balances.
+
+There must be ONE authoritative accounting source for validator-fee entitlement.
+
+============================================================
+13. CRITICAL CONSERVATION INVARIANT
+============================================================
+
+For every accounting period:
+
+Total validator claimable entitlement
++
+unallocated validator fee balance
+=
+total validator-fee value received
+
+No validator fee may:
+
+- disappear
+- be created
+- be counted twice
+
+Formally:
+
+claimed
++
+claimable
++
+unallocated
+=
+totalValidatorFeesReceived
+
+subject only to explicitly documented rounding behavior.
+
+============================================================
+14. ROUNDING
+============================================================
+
+Native PW uses integer denomination.
+
+Define deterministic rounding.
+
+Do NOT allow rounding dust to disappear silently.
+
+For every accounting period:
+
+total validator allocations
+<=
+fee amount received
+
+Any remainder must be explicitly:
+
+- retained in the vault
+- carried forward
+- allocated according to a documented deterministic rule
+
+Do NOT burn rounding dust unless explicitly approved.
+
+Do NOT send rounding dust to Treasury.
+
+Do NOT silently discard it.
+
+============================================================
+15. CLAIM MODEL
+============================================================
+
+Determine whether validators should:
+
+A. Pull/claim their accrued fees
+
+or
+
+B. Receive automatic transfers.
+
+Prefer the pull model unless there is a compelling reason otherwise.
+
+Reasons:
+
+- lower systemic gas cost
+- no O(N) distribution
+- validator chooses when to claim
+- simpler accounting
+
+A successful claim must:
+
+1. calculate validator's claimable amount
+2. update accounting checkpoint
+3. transfer native PW
+4. emit event
+5. prevent double claiming
+
+============================================================
+16. CLAIM SECURITY
+============================================================
+
+A validator must only be able to claim:
+
+its own entitlement.
+
+A validator MUST NOT be able to:
+
+- claim another validator's fees
+- modify its weight
+- modify uptime
+- modify eligibility
+- withdraw vault funds directly
+- redirect another validator's reward
+
+Test all of these.
+
+============================================================
+17. ZERO-VALIDATOR / ZERO-WEIGHT CASE
+============================================================
+
+Define behavior for:
+
+total effective weight = 0
+
+Possible behavior:
+
+- retain fees in ValidatorFeeVault
+- do not distribute
+- carry forward to the next eligible accounting period
+
+Do NOT divide by zero.
+
+Do NOT send fees to arbitrary addresses.
+
+Document the exact behavior.
+
+============================================================
+18. INACTIVE VALIDATOR
+============================================================
+
+Test:
+
+Validator becomes inactive.
+
+Determine:
+
+- whether it stops accumulating new fees
+- whether previously accrued fees remain claimable
+- whether it can claim after deactivation
+- whether its weight becomes zero
+- whether its previous accounting checkpoint is preserved
+
+Use deterministic behavior.
+
+Do NOT confiscate previously earned fees unless explicitly authorized by the locked protocol design.
+
+============================================================
+19. UPTIME TEST MODEL
+============================================================
+
+Create controlled local scenarios:
+
+Scenario A:
+15 validators, equal weight, 100% eligibility.
+
+Scenario B:
+14 eligible, 1 ineligible.
+
+Scenario C:
+different uptime factors.
+
+Scenario D:
+validator becomes inactive after earning fees.
+
+Scenario E:
+validator becomes active again.
+
+Verify entitlement calculations.
+
+Do NOT interpret these scenarios as final mainnet slashing policy.
+
+They are accounting tests only.
+
+============================================================
+20. 15-VALIDATOR EQUAL DISTRIBUTION TEST
+============================================================
+
+Run a real local fee sequence.
+
+Example:
+
+ValidatorFeeVault receives:
+
+150 PW
+
+All 15 validators:
+
+weight = 1
+eligibility = 100%
+
+Expected conceptual allocation:
+
+150 / 15 = 10 PW each
+
+Verify:
+
+V1 = 10 PW
+V2 = 10 PW
+...
+V15 = 10 PW
+
+Then test a non-divisible amount.
+
+Example:
+
+151 PW
+
+Verify the deterministic rounding rule.
+
+There must be no unexplained 1 PW disappearance.
+
+============================================================
+21. WEIGHTED DISTRIBUTION TEST
+============================================================
+
+Test:
+
+V1 = 1
+V2 = 2
+V3 = 3
+...
+others as defined by the test.
+
+Calculate expected distribution mathematically.
+
+Verify the implementation exactly matches the documented formula.
+
+Do NOT use floating-point calculations.
+
+============================================================
+22. UPTIME-WEIGHTED TEST
+============================================================
+
+Test at least:
+
+Validator A:
+
+weight = 1
+uptime factor = 100%
+
+Validator B:
+
+weight = 1
+uptime factor = 50%
+
+Validator C:
+
+weight = 1
+uptime factor = 0%
+
+Verify:
+
+effectiveWeight =
+baseWeight × uptimeFactor
+
+according to the exact integer/fixed-point representation chosen.
+
+Document the precision.
+
+============================================================
+23. FUZZ TESTING
+============================================================
+
+Use Foundry fuzzing.
+
+Fuzz:
+
+- validator count
+- validator weights
+- fee amounts
+- uptime factors
+- eligible/ineligible states
+- repeated accrual
+- repeated claims
+- activation/deactivation
+- small amounts
+- non-divisible amounts
+- maximum reasonable values
+
+Verify:
+
+No overpayment.
+
+No double claim.
+
+No negative balance.
+
+No division by zero.
+
+No fee creation.
+
+No fee destruction except explicitly documented rounding behavior.
+
+============================================================
+24. INVARIANT TESTING
+============================================================
+
+Implement Foundry invariant tests for:
+
+INVARIANT 1:
+
+totalClaimed <= totalReceived
+
+INVARIANT 2:
+
+totalClaimable + totalClaimed + unallocated
+= totalReceived
+
+INVARIANT 3:
+
+validatorClaimable <= validatorEntitlement
+
+INVARIANT 4:
+
+No validator can claim another validator's entitlement.
+
+INVARIANT 5:
+
+Total validator entitlement <= validator fees received.
+
+INVARIANT 6:
+
+No PW is minted.
+
+INVARIANT 7:
+
+Validator accounting does not affect Treasury funds.
+
+INVARIANT 8:
+
+Validator accounting does not affect PWUSD.
+
+============================================================
+25. C03 INTEGRATION
+============================================================
+
+Use the actual C03 FeeDistributor architecture.
+
+The full local flow should become:
+
+Real transaction
+      ↓
+Avalanche fee mechanism
+      ↓
+FeeDistributor
+      ↓
+70%
+      ↓
+ValidatorFeeVault
+      ↓
+Validator accounting
+      ↓
+Validator claim
+
+The 20% Treasury share must remain untouched.
+
+The 10% burn share must remain untouched.
+
+Do NOT reroute them.
+
+============================================================
+26. REAL END-TO-END TEST
+============================================================
+
+Run real transactions on the local PrimeWave L1.
+
+At least:
+
+10 transactions.
+
+For each:
+
+1. execute transaction
+2. determine actual transaction fee
+3. verify 70% enters ValidatorFeeVault
+4. update validator accounting
+5. verify validator entitlement
+6. have selected validators claim
+7. verify balances
+
+Run a final conservation calculation:
+
+Total real validator fees received
+=
+Total claimed
++
+Total remaining claimable
++
+Total unallocated
+
+within documented rounding rules.
+
+============================================================
+27. MULTI-NODE VERIFICATION
+============================================================
+
+After validator fee accrual and claims:
+
+verify all relevant blockchain state from multiple nodes.
+
+Verify:
+
+- ValidatorFeeVault balance
+- accounting state
+- validator claim state
+- transaction receipts
+- latest block
+
+Nodes must agree.
+
+============================================================
+28. ACCESS CONTROL TESTS
+============================================================
+
+Test unauthorized attempts to:
+
+- register validator
+- modify weight
+- modify uptime
+- modify eligibility
+- deactivate validator
+- claim another validator's fees
+- withdraw vault balance
+- alter accounting state
+
+All unauthorized operations must fail.
+
+============================================================
+29. NO PRODUCTION GOVERNANCE
+============================================================
+
+Do NOT implement:
+
+- final protocol admin
+- final multisig
+- production timelock
+- production governance
+
+Use development-only authority where necessary.
+
+Document the exact future integration point.
+
+============================================================
+30. NO STAKING
+============================================================
+
+C04 must NOT implement staking.
+
+There must be:
+
+NO:
+
+- staking deposit
+- delegation
+- unbonding
+- staking rewards
+- slashing
+- validator stake weight
+- delegator claims
+
+Validator fee weight in C04 is purely an accounting/test parameter.
+
+Phase 2 staking will later provide the production effective validator weight.
+
+============================================================
+31. NO REWARDVAULT
+============================================================
+
+Do not touch the 15M PW RewardVault.
+
+C04 validator fee accounting is funded ONLY by:
+
+70% of actual transaction-fee economics.
+
+The 15M staking reserve remains separate.
+
+============================================================
+32. GAS EFFICIENCY
+============================================================
+
+Measure/estimate gas for:
+
+- validator registration
+- validator update
+- fee accrual
+- claim
+- validator activation/deactivation
+
+Do not optimize prematurely.
+
+But avoid:
+
+- loops over all validators for every fee
+- unnecessary storage writes
+- duplicate accounting
+- redundant events
+
+Document approximate gas costs.
+
+============================================================
+33. SECURITY REVIEW
+============================================================
+
+Perform a local security review for:
+
+- reentrancy
+- access control
+- double claims
+- accounting manipulation
+- weight manipulation
+- uptime manipulation
+- rounding attacks
+- integer overflow/underflow
+- denial of service
+- unauthorized withdrawals
+- claim front-running
+- stale validator data
+- zero-weight conditions
+
+Use OpenZeppelin v5.6.1 where appropriate.
+
+Do not add libraries unnecessarily.
+
+============================================================
+34. CONTRACT ARCHITECTURE
+============================================================
+
+Choose the minimum number of contracts.
+
+Possible structure:
+
+ValidatorFeeVault
+        │
+        ▼
+ValidatorFeeAccounting
+        │
+        ▼
+Validator claim recipients
+
+If combining Vault + Accounting is demonstrably safer and simpler:
+
+you may combine them.
+
+Do not create multiple contracts simply to make the architecture look sophisticated.
+
+Document the final architecture.
+
+============================================================
+35. EVENTS
+============================================================
+
+Events must make the accounting indexer-friendly.
+
+At minimum consider:
+
+ValidatorRegistered
+ValidatorUpdated
+ValidatorActivated
+ValidatorDeactivated
+FeeAccrued
+RewardAccrued
+ValidatorFeeClaimed
+
+Each event should contain the minimum information required for future indexing.
+
+Do not emit redundant events.
+
+============================================================
+36. DEPLOYMENT
+============================================================
+
+Use local development deployment only.
+
+Do NOT deploy to public networks.
+
+Do NOT generate production keys.
+
+Use Foundry scripts.
+
+Record:
+
+- contract addresses
+- deployment transactions
+- deployed bytecode/code hash where practical
+- configuration
+- validator test identities
+
+============================================================
+37. DOCUMENTATION
+============================================================
+
+Create:
+
+docs/PW-C04-VALIDATOR-FEE-ACCOUNTING-SPEC.md
+
+Include:
+
+1. Architecture
+2. Validator model
+3. Weight model
+4. Eligibility model
+5. Uptime model
+6. Accounting formula
+7. Reward index
+8. Claim mechanism
+9. Rounding
+10. Security
+11. Access control
+12. Events
+13. Gas efficiency
+14. Future PoS integration
+15. Known limitations
+
+Create:
+
+docs/PW-C04-TEST-REPORT.md
+
+Include:
+
+- unit tests
+- fuzz tests
+- invariant tests
+- 15-validator test
+- weighted test
+- uptime test
+- inactive validator test
+- 10 real transaction integration test
+- multi-node verification
+- claim tests
+- access-control tests
+
+Create:
+
+docs/PW-C04-FINAL-REPORT.md
+
+Include:
+
+A. Executive summary
+B. Implementation
+C. Architecture
+D. Accounting mathematics
+E. Real-chain proof
+F. Test results
+G. Security review
+H. Gas analysis
+I. Known limitations
+J. Future PoS integration requirements
+K. Remaining open questions
+L. Exact prerequisites for PW-C05
+
+============================================================
+38. COST CONTROL
+============================================================
+
+Keep everything local.
+
+Do NOT:
+
+- deploy public infrastructure
+- purchase RPC services
+- deploy public validators
+- deploy mainnet
+- deploy public testnet
+- implement staking
+- implement RewardVault
+- implement PWUSD
+- implement PWSwap
+- implement PrimeWave Dex
+
+Prefer existing C03 infrastructure.
+
+Do not rebuild the local chain tooling from scratch unless required.
+
+============================================================
+39. ACCEPTANCE CRITERIA
+============================================================
+
+PW-C04 PASSES only when:
+
+[ ] ValidatorFeeVault accounting is implemented.
+
+[ ] 15 development validators are represented.
+
+[ ] Validator identity is deterministic.
+
+[ ] Validator weight is deterministic.
+
+[ ] Eligibility is deterministic.
+
+[ ] Uptime representation is documented.
+
+[ ] Accounting formula is documented.
+
+[ ] Fee accrual is O(1) or demonstrably efficient.
+
+[ ] Validator claims are O(1).
+
+[ ] Equal-weight 15-validator test passes.
+
+[ ] Non-divisible fee test passes.
+
+[ ] Weighted validator test passes.
+
+[ ] Uptime-weighted test passes.
+
+[ ] Inactive validator test passes.
+
+[ ] 10 real transaction integration test passes.
+
+[ ] Validator claims work.
+
+[ ] No double claiming.
+
+[ ] No unauthorized claims.
+
+[ ] No unauthorized weight changes.
+
+[ ] No unauthorized withdrawals.
+
+[ ] Fuzz tests pass.
+
+[ ] Invariant tests pass.
+
+[ ] Multi-node state verification passes.
+
+[ ] 70% fee accounting remains separate from Treasury.
+
+[ ] 70% fee accounting remains separate from burn.
+
+[ ] RewardVault remains untouched.
+
+[ ] No staking implementation exists.
+
+[ ] No production keys exist.
+
+[ ] No production deployment exists.
+
+[ ] Documentation is complete.
+
+============================================================
+40. FAILURE POLICY
+============================================================
+
+If the actual Avalanche Validator Manager does not expose enough information to safely integrate validator identity/uptime:
+
+STOP.
+
+Do NOT invent a validator oracle.
+
+Do NOT trust arbitrary user-supplied uptime.
+
+Do NOT create a hidden centralized validator authority.
+
+Document the exact missing interface.
+
+If the accounting model requires architecture changes:
+
+STOP and report them.
+
+If the system cannot guarantee:
+
+totalClaimed + totalClaimable + unallocated = totalReceived
+
+STOP.
+
+Do not weaken the invariant.
+
+============================================================
+41. FINAL STOP CONDITION
+============================================================
+
+When all acceptance criteria pass:
+
+STOP.
+
+Do NOT begin PW-C05.
+
+Do NOT implement:
+
+- staking
+- delegation
+- RewardVault
+- Phase 2 PoS
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+
+Report:
+
+PW-C04 COMPLETE
+
+and wait for explicit approval.
+
+============================================================
+END OF PW-C04
+============================================================

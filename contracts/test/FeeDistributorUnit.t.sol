@@ -253,10 +253,11 @@ contract FeeDistributorUnitTest is Test {
 
     function test_vaultEmitsEvent() public {
         vm.deal(address(distributor), 1 ether);
-        vm.expectEmit(true, false, false, true, address(vault));
-        emit ValidatorFeeVault.ValidatorFeeReceived(
-            0.7 ether, block.number, address(distributor)
-        );
+        // C04: ValidatorFeeVault now emits FeeReceived(amount, newAccFeePerWeight, totalEffectiveWeight).
+        // No validators are registered in this test harness so totalEffectiveWeight == 0
+        // and the fee goes to unallocated; accFeePerWeight stays 0.
+        vm.expectEmit(false, false, false, true, address(vault));
+        emit ValidatorFeeVault.FeeReceived(0.7 ether, 0, 0);
         distributor.distribute();
     }
 
