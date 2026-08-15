@@ -1,0 +1,99 @@
+The SSH connectivity test has PASSED.
+
+We have confirmed:
+- SSH: PASS
+- Host: 159.195.193.209
+- User: root
+- OS: Debian 13
+- Kernel: 6.12.101
+- Architecture: x86_64
+- Temporary key cleanup: PASS
+
+Now perform the COMPLETE PrimeWave validator server qualification on the Netcup server.
+
+Use PRIMEWAVE_SSH_KEY_B64 to establish SSH access exactly as in the successful connection test.
+
+IMPORTANT:
+This phase is AUDIT/QUALIFICATION ONLY.
+
+DO NOT:
+- install anything
+- upgrade or downgrade packages
+- modify system configuration
+- modify SSH configuration
+- modify firewall rules
+- modify networking
+- create users
+- create validator keys
+- install AvalancheGo
+- install subnet-evm
+- deploy anything
+- start Avalanche services
+- reboot the server
+- modify files outside temporary files required for the test
+- alter the existing server state
+
+Run the existing repository qualification script:
+
+scripts/testnet/qualify-server.sh
+
+First inspect the script and verify that it is genuinely non-destructive before executing it.
+
+If the script contains ANY command that can modify persistent system state, DO NOT execute that portion. Report it and stop for approval.
+
+The qualification must test and report at minimum:
+
+1. Network connectivity
+2. Latency
+3. Network throughput
+4. Outbound TCP connectivity
+5. UDP/DNS behavior
+6. Public IPv4 / NAT
+7. CPU capability
+8. RAM capability
+9. Disk/storage health
+10. System health
+11. Avalanche-specific network readiness
+
+Also collect the server's:
+- CPU model
+- available CPU cores
+- RAM
+- disk type
+- disk capacity
+- filesystem
+- I/O scheduler
+- virtualization type
+- public IPv4
+- IPv6
+- network interface speed if determinable
+- routing
+- NTP/time synchronization
+- packet loss
+- latency to relevant Avalanche/Fuji endpoints
+- outbound connectivity to required Avalanche ports/endpoints
+- any existing firewall status
+- kernel/system errors
+- OOM events
+- disk I/O errors
+
+For every test provide:
+PASS / FAIL / WARNING / NOT TESTABLE
+
+At the end produce a clear verdict:
+
+READY
+READY WITH CONCERNS
+NOT READY
+
+For every WARNING or FAIL:
+- explain the exact issue
+- explain whether it actually prevents this server from being a PrimeWave validator
+- give the evidence
+- do NOT fix it automatically
+
+Save the complete qualification output to a temporary log only if necessary, and remove any temporary credentials after completion.
+
+Do not expose any SSH private key or secret.
+
+STOP after producing the qualification report. Do not proceed to validator installation or deployment.
