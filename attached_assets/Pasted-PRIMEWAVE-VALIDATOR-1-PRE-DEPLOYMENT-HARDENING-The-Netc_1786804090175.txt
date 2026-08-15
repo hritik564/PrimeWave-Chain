@@ -1,0 +1,288 @@
+PRIMEWAVE VALIDATOR #1 — PRE-DEPLOYMENT HARDENING
+
+The Netcup Validator #1 server has completed the full read-only qualification.
+
+Qualification verdict:
+READY WITH CONCERNS — NOT APPROVED FOR PRODUCTION
+
+Hardware/network qualification is PASS. The remaining pre-launch actions are:
+1. Configure a host-level firewall.
+2. Add 4 GB swap.
+3. Install and run memtester for memory assurance.
+
+You are now authorized to perform ONLY these pre-deployment hardening tasks.
+
+SERVER:
+- Host: 159.195.193.209
+- User: root
+- OS: Debian 13
+- 4 vCPU AMD EPYC 9645
+- ~7.8 GiB RAM
+- 256 GB VirtIO/NVMe-backed storage
+
+==================================================
+STRICT SAFETY RULES
+==================================================
+
+DO NOT:
+- install AvalancheGo
+- install subnet-evm
+- deploy any PrimeWave contracts
+- create validator keys
+- join any Avalanche subnet
+- modify Avalanche configuration
+- start AvalancheGo
+- modify DNS
+- modify the public IP
+- change the SSH port
+- disable SSH
+- disable root SSH access yet
+- reboot the server
+- modify existing SSH authentication
+- remove any authorized SSH keys
+- delete the existing backup/recovery access
+- modify application/repository files
+- expose or print SSH credentials/private keys
+- make unrelated system changes
+
+Do not blindly execute commands if their effect is unclear.
+
+Before making each persistent change, inspect the current state.
+
+==================================================
+PHASE 1 — BASELINE
+==================================================
+
+Collect and report:
+
+- uptime
+- hostname
+- OS/kernel
+- CPU count
+- RAM
+- disk usage
+- current swap status
+- current firewall status:
+  - nftables
+  - iptables
+  - ufw
+- current listening TCP ports:
+  ss -lntup
+- current SSH configuration relevant to access
+- current /root/.ssh/authorized_keys state
+
+Do NOT print private keys or sensitive credential material.
+
+Record the baseline.
+
+==================================================
+PHASE 2 — 4 GB SWAP
+==================================================
+
+Create a 4 GB swap file only if no suitable swap already exists.
+
+Requirements:
+
+- Use a standard Linux swap file.
+- Allocate exactly 4 GiB.
+- Set permissions to 600.
+- Format it as swap.
+- Enable it.
+- Verify it with:
+  swapon --show
+  free -h
+
+Persist it correctly in /etc/fstab so it survives reboot.
+
+Before modifying /etc/fstab:
+- inspect the existing file
+- ensure no duplicate/conflicting swap entry is added
+
+Do NOT reboot.
+
+Verify:
+- swap is active
+- total swap is approximately 4 GiB
+- filesystem remains healthy
+
+==================================================
+PHASE 3 — MEMORY TEST
+==================================================
+
+Install memtester if it is not already installed.
+
+Before installing:
+- confirm the package comes from the configured Debian repositories
+- do not add third-party repositories
+
+Run:
+
+memtester 512M 1
+
+This is a one-time memory assurance test.
+
+Report:
+- whether memtester installed successfully
+- exact test result
+- whether any memory errors occurred
+
+Do not run an unnecessarily long memory test.
+
+==================================================
+PHASE 4 — HOST FIREWALL DESIGN
+==================================================
+
+IMPORTANT:
+
+Before applying firewall rules, inspect the current networking and SSH state.
+
+We need a LEAST-PRIVILEGE firewall appropriate for an Avalanche validator.
+
+The firewall must preserve our current SSH access.
+
+Required behavior:
+
+INBOUND:
+- Allow established/related connections.
+- Allow loopback.
+- Allow SSH from the Internet initially so we do not lock ourselves out.
+- Allow Avalanche P2P TCP 9651.
+- Allow Avalanche P2P UDP 9651 if required by the selected Avalanche networking configuration.
+- Deny other unsolicited inbound traffic.
+
+OUTBOUND:
+- Allow established/related.
+- Allow required outbound traffic.
+- Do not unnecessarily restrict outbound traffic during initial validator deployment.
+
+DO NOT expose:
+- PostgreSQL
+- Redis
+- application development ports
+- RPC/admin ports
+- monitoring interfaces
+- random services
+
+IMPORTANT:
+Do not assume the exact Avalanche port requirements without checking the PrimeWave deployment specification already present in the repository.
+
+Before applying the firewall:
+1. Inspect the repository's existing C14/C15 deployment documentation for the intended Avalanche networking ports.
+2. Reconcile those requirements with the actual server state.
+3. Show the proposed firewall rule set.
+4. Then apply it.
+
+Do not create an overly complicated firewall.
+
+==================================================
+PHASE 5 — FIREWALL VALIDATION
+==================================================
+
+After applying the firewall:
+
+Verify:
+
+- SSH remains accessible.
+- Loopback works.
+- outbound DNS works.
+- outbound HTTPS works.
+- NTP remains functional.
+- existing legitimate connectivity remains functional.
+- inbound unsolicited ports are blocked.
+- required Avalanche P2P ports are permitted.
+
+Do NOT claim inbound TCP/UDP 9651 is externally reachable yet because AvalancheGo is not installed/listening.
+
+Explicitly classify inbound 9651 as:
+
+NOT YET TESTABLE — SERVICE NOT INSTALLED
+
+==================================================
+PHASE 6 — NETCUP FIREWALL
+==================================================
+
+DO NOT modify Netcup Robot/cloud firewall settings automatically.
+
+We will handle the provider-level firewall separately.
+
+Report what provider-level rules will eventually be required, but do not change them.
+
+==================================================
+PHASE 7 — SECURITY VALIDATION
+==================================================
+
+After hardening, verify:
+
+- no unexpected new listening services
+- no unexpected firewall rules
+- no SSH lockout
+- no failed systemd services caused by the changes
+- no network connectivity loss
+- swap active
+- memtester result recorded
+- filesystem still healthy
+- no new kernel errors attributable to hardening
+
+==================================================
+PHASE 8 — FINAL REPORT
+==================================================
+
+Produce a clear report:
+
+BASELINE
+- before-state
+
+CHANGES MADE
+- swap
+- memtester
+- firewall
+
+FIREWALL RULES
+- exact effective rules
+- do not omit any rule
+
+VALIDATION
+- SSH
+- DNS
+- HTTPS
+- NTP
+- listening ports
+- firewall status
+- swap
+- memory test
+- system health
+
+RISKS / CONCERNS
+- anything unresolved
+
+NEXT REQUIRED ACTIONS
+- provider-level firewall
+- AvalancheGo installation
+- validator configuration
+- external 9651 test
+
+FINAL STATUS:
+
+Either:
+
+HARDENING COMPLETE — READY FOR AVALANCHEGO INSTALLATION
+
+or:
+
+HARDENING BLOCKED — [exact reason]
+
+==================================================
+CRITICAL STOP CONDITION
+==================================================
+
+STOP after completing this hardening phase.
+
+DO NOT install AvalancheGo.
+
+DO NOT configure the validator.
+
+DO NOT deploy PrimeWave.
+
+DO NOT start any Avalanche services.
+
+Wait for explicit approval before proceeding to AvalancheGo installation.
