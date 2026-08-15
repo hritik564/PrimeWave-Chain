@@ -4,7 +4,7 @@ description: AvalancheGo v1.14.2 installation on 159.195.193.209 — service, No
 ---
 
 ## Status
-INSTALLED AND RUNNING — 2026-08-15. Waiting for Netcup provider firewall (TCP/UDP 9651) to be opened before peer connectivity can be established.
+UPGRADED TO v1.15.0-fuji — 2026-08-15. Fuji Helicon-compatible. 36 peers connected. P-Chain bootstrapping (block execution phase). Firewall open and confirmed working.
 
 ## Node Identity
 - **NodeID**: `NodeID-8PrCNxVrpztDxX2QWc6arY3d9rDdEjxX7`
@@ -13,10 +13,14 @@ INSTALLED AND RUNNING — 2026-08-15. Waiting for Netcup provider firewall (TCP/
 - Staking certs: `/home/avalanche/.avalanchego/staking/staker.crt|key`, `signer.key` — all `r--------` (400), owned by `avalanche`
 
 ## Installation Facts
-- **Version**: AvalancheGo v1.14.2 (db=v1.4.5, rpcchainvm=45, go=1.25.8, commit=6e5acf909c)
+- **Version**: AvalancheGo v1.15.0-fuji (db=v1.4.5, rpcchainvm=**46**, go=1.25.10, commit=e8f9781ee57de048bbfde5be0fa632e9efdf1448)
 - **Binary**: `/opt/avalanchego/avalanchego`
-- **SHA256**: `023da7976ba7ab9a1ded2280ba26575649066078dd89805f826592e06c035c8b`
-- **Source**: official GitHub release `avalanchego-linux-amd64-v1.14.2.tar.gz`
+- **SHA256 (binary)**: `8e324aa3c7370998d2df97d9c5904d699878a404366f062ac85ed6ceddff270b`
+- **SHA256 (tarball)**: `aeae28f71499fc55d0e3349fbe8f73dc0c95d62837b6d12f1eb6741efaa575eb`
+- **Source**: official GitHub release `avalanchego-linux-amd64-v1.15.0-fuji.tar.gz`
+- **v1.14.2 backup**: `/opt/avalanchego/avalanchego.v1.14.2.bak` (retained on server)
+- **rpcchainvm changed**: 45 → 46 (breaking — subnet-evm plugin must also be v1.15.0-fuji)
+- **Subnet-EVM to use**: `subnet-evm-linux-amd64-v1.15.0-fuji.tar.gz` from same release
 - **Service user**: `avalanche` (uid=988, system user)
 - **Home dir**: `/home/avalanche` (required — AvalancheGo writes staking certs to $HOME/.avalanchego/staking/)
 - **Data dir**: `/data/avalanchego/db`
@@ -44,11 +48,12 @@ Note: `--track-subnets` intentionally omitted — no PrimeWave subnet ID exists 
 1. **`--api-keystore-enabled` was removed in v1.14.2** — the setup-testnet-node.sh script still references it. Remove this flag; keystore API is gone entirely.
 2. **Service user needs a real home directory** — using `useradd --no-create-home` causes `mkdir /home/avalanche: permission denied` because AvalancheGo writes staking certs to `$HOME/.avalanchego/staking/`. Must create `/home/avalanche` and set ownership.
 
-## Why 0 Peers (Expected)
-- Netcup provider-level firewall has NOT been opened for TCP/UDP 9651 inbound yet
-- Without inbound 9651, the node cannot receive peer connections
-- Outbound P2P connections also appear blocked (bootstrap nodes may filter new unknown nodes)
-- After Netcup firewall is opened: verify with `nc -z -w 8 159.195.193.209 9651` from external, then peers will connect and bootstrap will proceed
+## Peer Connectivity (v1.15.0-fuji)
+- **36 Fuji peers** connected within ~90 seconds of v1.15.0-fuji startup
+- 95% stake-weighted connectivity immediately achieved
+- P-Chain bootstrap: block fetch completed in ~2 minutes; block execution phase follows (takes longer)
+- "peer attempting to connect with newer version" log spam — fully resolved; all peers now run v1.15.0
+- External TCP 9651 confirmed OPEN from Replit: `nc -z -w 8 159.195.193.209 9651` → OPEN
 
 ## Next Required Actions (in order)
 1. **Operator**: Open Netcup Robot firewall: inbound TCP 9651 + UDP 9651

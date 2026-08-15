@@ -1,0 +1,288 @@
+PRIMEWAVE VALIDATOR #1 — UPGRADE TO FUJI HELICON
+
+The read-only Fuji compatibility audit is complete.
+
+APPROVED ACTION:
+Upgrade Validator #1 from AvalancheGo v1.14.2 to the official Fuji Helicon release:
+
+AVALANCHEGO v1.15.0-fuji
+
+This upgrade is approved because the current v1.14.2 node cannot establish stable peers with the post-Helicon Fuji network.
+
+==================================================
+STRICT SCOPE
+==================================================
+
+You are authorized ONLY to:
+
+1. Upgrade AvalancheGo to v1.15.0-fuji.
+2. Verify the resulting binary.
+3. Verify the resulting RPCChainVM version.
+4. Verify the node still has its existing staking identity.
+5. Verify the systemd service.
+6. Restart AvalancheGo as required.
+7. Verify Fuji peer connectivity and bootstrap.
+
+DO NOT:
+- create a subnet
+- create a blockchain
+- create CreateSubnetTx
+- create CreateChainTx
+- generate new validator/staking keys
+- delete existing staking certificates
+- install the PrimeWave subnet-EVM plugin yet
+- modify PrimeWave genesis
+- change Chain ID 77
+- deploy contracts
+- deploy keeper/indexer/PWCScan
+- modify ICM services
+- modify PoAValidatorManager
+- change firewall rules
+- change SSH configuration
+- remove SSH keys
+- change passwords
+- reboot unless absolutely required
+- make unrelated system changes
+
+==================================================
+1. PRE-UPGRADE BACKUP / INVENTORY
+==================================================
+
+Before changing anything, record:
+
+- currently installed AvalancheGo version
+- current RPCChainVM version
+- current NodeID
+- current staking certificate filenames
+- current BLS public key
+- current systemd unit
+- current command-line arguments
+- current database path
+- current plugin directory
+- current nftables rules
+
+Do NOT print private keys.
+
+Create a safe backup of the AvalancheGo service configuration and relevant non-secret configuration if necessary.
+
+Do NOT copy private staking keys into logs or repository files.
+
+==================================================
+2. DOWNLOAD / VERIFY
+==================================================
+
+Use ONLY the official AvalancheGo GitHub release:
+
+v1.15.0-fuji
+
+Use the official Linux AMD64 release asset.
+
+Verify the SHA-256 checksum against the official release checksum before installation.
+
+Do not use an unofficial mirror.
+
+Report:
+- exact asset
+- SHA-256
+- expected SHA-256
+- verification result
+
+==================================================
+3. INSTALL
+==================================================
+
+Install v1.15.0-fuji without destroying:
+
+- /home/avalanche/.avalanchego/staking/
+- existing NodeID
+- existing BLS key
+- existing database
+
+Do not delete the existing database unless the upgrade explicitly requires it.
+
+Do not delete staking certificates.
+
+Keep the service running as the dedicated non-root avalanche user.
+
+==================================================
+4. SYSTEMD CONFIGURATION
+==================================================
+
+Audit the existing systemd unit against v1.15.0-fuji.
+
+Check every existing flag for compatibility.
+
+Do NOT blindly preserve obsolete flags.
+
+Do NOT invent new flags.
+
+Pay particular attention to:
+
+--http-host=127.0.0.1
+--http-port=9650
+--staking-port=9651
+--network-id=fuji
+--api-admin-enabled=false
+
+Do not add --track-subnets because the PrimeWave subnet does not yet exist.
+
+If any flag is obsolete or changed in v1.15.0-fuji:
+- identify it
+- explain the change
+- make only the necessary correction
+
+==================================================
+5. START / VERIFY
+==================================================
+
+Restart the service after installation.
+
+Verify:
+
+systemctl status primewave-testnet-node.service
+
+Verify:
+- service active
+- no crash loop
+- no repeated restart
+- running as avalanche user
+- HTTP API remains localhost-only
+- TCP/UDP 9651 remains available
+- nftables unchanged
+
+==================================================
+6. VERSION VERIFICATION
+==================================================
+
+Run the installed binary's version command.
+
+Report:
+
+AvalancheGo:
+v1.15.0-fuji
+
+RPCChainVM:
+ACTUAL VALUE — DO NOT ASSUME
+
+Also record:
+- database version
+- rpcchainvm version
+- Go version
+- commit hash
+
+This is important because the previous audit explicitly stated that the RPCChainVM version for v1.15.0-fuji had NOT been confirmed.
+
+==================================================
+7. STAKING IDENTITY VERIFICATION
+==================================================
+
+Verify that the upgrade preserved:
+
+NodeID:
+NodeID-8PrCNxVrpztDxX2QWc6arY3d9rDdEjxX7
+
+Verify the staking certificate and BLS identity remain unchanged.
+
+Do NOT print private key contents.
+
+If the NodeID or BLS identity changes unexpectedly:
+STOP immediately and report the issue.
+
+==================================================
+8. FUJI CONNECTIVITY
+==================================================
+
+After restart, monitor for at least 10 minutes.
+
+Check:
+
+- connected peers
+- established P2P connections
+- P-Chain bootstrap
+- Fuji network health
+- P-Chain height
+- C-Chain bootstrap
+- database health
+
+We specifically want to see whether the previous:
+
+"peer attempting to connect with newer version"
+
+problem disappears.
+
+We expect stable Fuji peers to appear.
+
+Do not claim success based only on port 9651 being open.
+
+==================================================
+9. DATABASE
+==================================================
+
+Report whether the existing database was retained.
+
+If AvalancheGo reports database migration:
+- allow the official migration
+- monitor for errors
+
+Do not wipe the database unless the official binary requires it.
+
+==================================================
+10. SUBNET-EVM
+==================================================
+
+DO NOT install subnet-EVM yet.
+
+However, once the actual RPCChainVM version is known, identify the exact subnet-EVM asset that corresponds to v1.15.0-fuji.
+
+Do NOT install it.
+
+==================================================
+11. FINAL REPORT
+==================================================
+
+Provide:
+
+1. Previous AvalancheGo version
+2. New AvalancheGo version
+3. Previous RPCChainVM
+4. New RPCChainVM — ACTUAL VALUE
+5. NodeID before/after
+6. BLS identity before/after
+7. Database retained/migrated/wiped
+8. Systemd status
+9. HTTP/API bind
+10. P2P port
+11. Connected peers
+12. Fuji bootstrap status
+13. P-Chain height if available
+14. C-Chain bootstrap status
+15. Firewall status
+16. Any warnings/errors
+17. Exact matching subnet-EVM release we should use later
+18. Any ICM/Helicon concerns discovered
+
+FINAL STATUS:
+
+AVALANCHEGO FUJI UPGRADE COMPLETE — READY FOR SUBNET CEREMONY
+
+or
+
+UPGRADE BLOCKED — [exact reason]
+
+==================================================
+STOP CONDITION
+==================================================
+
+STOP after producing the report.
+
+DO NOT create the PrimeWave subnet.
+
+DO NOT create the PrimeWave blockchain.
+
+DO NOT install subnet-EVM.
+
+DO NOT deploy contracts.
+
+DO NOT touch ICM.
+
+Wait for explicit approval.
