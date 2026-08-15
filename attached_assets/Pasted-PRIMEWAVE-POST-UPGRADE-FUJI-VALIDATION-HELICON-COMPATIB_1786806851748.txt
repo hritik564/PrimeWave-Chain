@@ -1,0 +1,197 @@
+PRIMEWAVE — POST-UPGRADE FUJI VALIDATION + HELICON COMPATIBILITY AUDIT
+
+The AvalancheGo upgrade to v1.15.0-fuji is COMPLETE and successful.
+
+Confirmed:
+- AvalancheGo: v1.15.0-fuji
+- RPCChainVM: 46
+- NodeID preserved
+- BLS identity preserved
+- 36 Fuji peers
+- ~95% stake-weighted connectivity
+- Previous 1.14.2/1.15.0 peer-version failure resolved
+- TCP/UDP 9651 reachable
+- HTTP API remains localhost-only
+- nftables unchanged
+
+DO NOT CREATE THE PRIMEWAVE SUBNET YET.
+
+This phase has TWO objectives:
+
+==================================================
+PHASE 1 — WAIT / VERIFY FULL FUJI BOOTSTRAP
+==================================================
+
+Monitor the existing AvalancheGo node.
+
+Do not modify anything.
+
+Wait until:
+
+1. P-Chain finishes block execution.
+2. P-Chain reports healthy/bootstrap complete.
+3. X-Chain bootstrap completes.
+4. C-Chain bootstrap completes.
+5. Overall node health is healthy.
+6. Peer count remains stable.
+7. No repeated protocol/version errors occur.
+
+Do not impose an arbitrary short timeout.
+
+If bootstrap is still progressing normally, report current progress and continue monitoring.
+
+Do not modify configuration merely because bootstrap takes time.
+
+==================================================
+PHASE 2 — HELICON / PRIMEWAVE CEREMONY COMPATIBILITY AUDIT
+==================================================
+
+While the node bootstraps, perform a READ-ONLY audit of the PrimeWave repository.
+
+Do NOT modify code or configuration.
+
+Specifically investigate the two open questions identified in the previous audit:
+
+A. ICM Services compatibility
+
+Current PrimeWave pin:
+- icm-relayer-v1.7.5
+- commit 40e1c89
+
+Determine whether this version is compatible with:
+- AvalancheGo v1.15.0-fuji
+- Helicon
+- Fuji P-Chain after ACP-236
+- CreateSubnetTx
+- CreateChainTx
+- Warp/ICM messaging
+
+Use:
+- existing PrimeWave documentation
+- existing repository code
+- dependency/version manifests
+- official Avalanche documentation/release notes
+- official ICM Services release information where available
+
+Do NOT guess.
+
+If compatibility cannot be conclusively established, mark it OPEN rather than PASS.
+
+B. ACP-236 / ConvertSubnetToL1Tx
+
+Inspect the PrimeWave implementation and deployment procedure involving:
+
+- CreateSubnetTx
+- CreateChainTx
+- ConvertSubnetToL1Tx
+- PoAValidatorManager
+- validator registration/staking assumptions
+
+Determine whether Fuji Helicon / ACP-236 changes anything required for the PrimeWave ceremony.
+
+Specifically answer:
+
+1. Can our existing CreateSubnetTx flow be executed on post-Helicon Fuji?
+2. Can our existing CreateChainTx flow be executed on post-Helicon Fuji?
+3. Does ConvertSubnetToL1Tx have any new requirements?
+4. Does ACP-236 affect our subnet validator manager?
+5. Does our PoAValidatorManager operate independently of Fuji P-Chain validator staking as expected?
+6. Are there any required changes to PrimeWave code/scripts?
+7. Are there any required changes to the Fuji ceremony procedure?
+
+Again: do not infer compatibility merely because the code compiled previously.
+
+==================================================
+PHASE 3 — SUBNET-EVM COMPATIBILITY
+==================================================
+
+Confirm:
+
+AvalancheGo:
+v1.15.0-fuji
+RPCChainVM:
+46
+
+Required subnet-EVM:
+v1.15.0-fuji
+
+Verify the exact official release asset and checksum/signature information available.
+
+Do NOT install subnet-EVM yet.
+
+Do NOT modify local-bin/subnet-evm yet.
+
+Report exactly what must be replaced in the repository before deployment.
+
+==================================================
+PHASE 4 — CEREMONY READINESS CHECK
+==================================================
+
+Inspect the existing C15 documentation and scripts.
+
+Create a checklist:
+
+PRECONDITION | STATUS | EVIDENCE | BLOCKER?
+
+Include:
+
+- Fuji fully bootstrapped
+- Deployer funded
+- Deployer P-Chain address
+- CreateSubnetTx prerequisites
+- CreateChainTx prerequisites
+- ConvertSubnetToL1Tx prerequisites
+- subnet-EVM v1.15.0-fuji
+- Genesis placeholders
+- Validator configuration
+- ICM compatibility
+- ACP-236 compatibility
+- Chain ID 77
+- NativeMinter disabled
+- 100M PW supply
+- Required addresses
+- Contract deployment prerequisites
+
+Do not execute any ceremony transactions.
+
+==================================================
+STOP CONDITIONS
+==================================================
+
+DO NOT:
+- CreateSubnetTx
+- CreateChainTx
+- ConvertSubnetToL1Tx
+- install subnet-EVM
+- generate validator keys
+- deploy contracts
+- modify genesis
+- modify ICM
+- modify PoAValidatorManager
+- stake AVAX
+- join the PrimeWave subnet
+
+If Fuji bootstrap completes, STOP.
+
+If any compatibility question remains unresolved, STOP.
+
+Produce a final report with:
+
+1. Fuji bootstrap status
+2. Peer stability
+3. ICM compatibility result
+4. ACP-236 compatibility result
+5. subnet-EVM compatibility result
+6. Ceremony readiness matrix
+7. Exact blockers
+8. Exact next actions
+
+Final classification:
+
+A) READY FOR PRIMEWAVE SUBNET CEREMONY
+
+B) READY WITH BLOCKERS — [list]
+
+C) NOT READY — [reason]
+
+STOP and wait for explicit approval.

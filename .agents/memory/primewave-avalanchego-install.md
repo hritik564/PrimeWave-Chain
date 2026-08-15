@@ -56,12 +56,22 @@ Note: `--track-subnets` intentionally omitted — no PrimeWave subnet ID exists 
 - External TCP 9651 confirmed OPEN from Replit: `nc -z -w 8 159.195.193.209 9651` → OPEN
 
 ## Next Required Actions (in order)
-1. **Operator**: Open Netcup Robot firewall: inbound TCP 9651 + UDP 9651
-2. **Verify**: `nc -z -w 8 159.195.193.209 9651` from external host → must show OPEN
-3. **Wait**: AvalancheGo will bootstrap Fuji primary network (P-chain, X-chain, C-chain) — takes 10-30 min
-4. **Subnet-EVM plugin**: Not yet installed (no subnet ID exists yet; deferred to Fuji ceremony)
-5. **Key ceremony**: Generate testnet deployer → CreateSubnetTx → CreateChainTx → SubnetID → BlockchainID
-6. **Then**: Add `--track-subnets=<SUBNET_ID>` to service, install subnet-evm plugin
+1. Fund testnet-deployer on Fuji: faucet.avax.network → 0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60 (currently 0 AVAX)
+2. Update setup-testnet-node.sh: AVALANCHEGO_VERSION and SUBNET_EVM_VERSION from v1.14.2 → v1.15.0-fuji
+3. Replace local-bin/subnet-evm v1.14.2 (rpcchainvm=45) with v1.15.0-fuji (rpcchainvm=46)
+4. Assess Avalanche CLI v1.9.5 compatibility with Helicon Fuji for ceremony tx types
+5. Assess ICM relayer v1.7.5 vs v1.8.0-fuji for post-ceremony Warp messaging
+6. Wait for C-Chain full bootstrap (no state sync in v1.15.0-fuji — takes hours)
+7. Fill genesis placeholders (6 __REPLACE__* addresses + FeeDistributor address)
+8. Key ceremony: CreateSubnetTx → CreateChainTx → ConvertSubnetToL1Tx → SubnetID → BlockchainID
+9. Add --track-subnets=<SUBNET_ID> to service, install subnet-evm-v1.15.0-fuji plugin
+
+## ICM Services Versions
+- Current PrimeWave pin: icm-relayer-v1.7.5 (Jan 2026, pre-Helicon)
+- Helicon Fuji pre-release: icm-relayer-v1.8.0-fuji (Jul 27, 2026, same day as Helicon activation)
+- RC: icm-relayer-v1.8.1-fuji-rc.0 (Aug 5, 2026)
+- For CEREMONY: v1.7.5 contracts OK (P-Chain txs don't use ICM)
+- For WARP RELAYER: OPEN — v1.8.0-fuji likely required for post-Helicon Fuji JSON-RPC compatibility
 
 ## DO NOT (until explicitly approved)
 - Create subnet or blockchain
