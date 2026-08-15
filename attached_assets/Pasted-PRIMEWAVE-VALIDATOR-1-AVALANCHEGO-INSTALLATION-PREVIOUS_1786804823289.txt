@@ -1,0 +1,239 @@
+PRIMEWAVE VALIDATOR #1 — AVALANCHEGO INSTALLATION
+
+PREVIOUS PHASE:
+Server qualification: PASS
+Server hardening: COMPLETE
+4 GiB swap: ACTIVE
+memtester: PASS
+nftables: ACTIVE
+SSH: VERIFIED
+Outbound connectivity: PASS
+
+You are now authorized to install AvalancheGo ONLY.
+
+IMPORTANT:
+This phase is INSTALLATION + BASE CONFIGURATION ONLY.
+
+DO NOT:
+- create the PrimeWave subnet
+- create a blockchain
+- create validator keys
+- perform the key ceremony
+- join a PrimeWave subnet
+- stake AVAX
+- deploy PrimeWave contracts
+- configure the PrimeWave Chain ID 77 yet
+- start validating PrimeWave
+- expose the Avalanche HTTP API publicly
+- change SSH authentication
+- remove SSH keys
+- disable root access
+- modify the existing nftables policy except where explicitly required
+- modify DNS
+- reboot the server unless absolutely required by the official installation procedure
+- install unrelated software
+
+==================================================
+1. INSPECT BEFORE INSTALLATION
+==================================================
+
+Inspect the current server state:
+
+- OS/version
+- architecture
+- CPU/RAM
+- disk
+- swap
+- nftables
+- existing AvalancheGo/subnet-evm installations
+- existing Avalanche services
+- listening ports
+- systemd state
+
+Do not overwrite an existing installation without inspecting it first.
+
+==================================================
+2. INSTALL AVALANCHEGO
+==================================================
+
+Install exactly:
+
+AvalancheGo v1.14.2
+
+Use the official Avalanche release/source already specified by the PrimeWave C15 deployment documentation.
+
+Do NOT use an unofficial repository or random binary download.
+
+Verify:
+
+avalanchego --version
+
+Record:
+- exact version
+- binary path
+- installation source/checksum if available
+
+==================================================
+3. SYSTEM USER / SERVICE
+==================================================
+
+Create a dedicated non-root service account for AvalancheGo if the existing deployment specification requires one.
+
+Do not run AvalancheGo as root unless the PrimeWave deployment specification explicitly requires it.
+
+Create the required directories with appropriate ownership and restrictive permissions.
+
+Do not expose private keys or credentials in logs.
+
+==================================================
+4. BASE AVALANCHE CONFIGURATION
+==================================================
+
+Configure AvalancheGo for Fuji connectivity.
+
+Use the PrimeWave C15 deployment documentation as the authoritative configuration source.
+
+Required security principle:
+
+AvalancheGo HTTP/API interface must bind to:
+
+127.0.0.1
+
+Do NOT bind the HTTP API/admin interface to 0.0.0.0.
+
+P2P/staking networking must use:
+
+9651
+
+Do not configure PrimeWave-specific subnet tracking yet because the actual subnet ID does not exist until the Fuji subnet creation ceremony.
+
+Do NOT invent a subnet ID.
+
+==================================================
+5. SYSTEMD
+==================================================
+
+Create/configure the AvalancheGo systemd service according to the existing PrimeWave deployment specification.
+
+Requirements:
+
+- starts automatically after reboot
+- restarts on failure
+- runs under the dedicated service account
+- logs are accessible through journalctl
+- no credentials exposed in the unit file
+- appropriate resource/ulimit settings if specified by the deployment documentation
+
+Do not start the service until the configuration has been validated.
+
+==================================================
+6. CONFIG VALIDATION
+==================================================
+
+Before starting AvalancheGo:
+
+- validate the configuration
+- check for conflicting ports
+- verify HTTP/API is bound only to localhost
+- verify P2P/staking port is 9651
+- verify nftables permits required P2P traffic
+- verify no unintended public RPC/admin exposure
+
+Show the effective configuration relevant to networking, but redact secrets.
+
+==================================================
+7. START AVALANCHEGO
+==================================================
+
+Start the service.
+
+Then verify:
+
+systemctl status avalanchego
+
+journalctl -u avalanchego --no-pager -n 100
+
+Verify that:
+
+- process remains running
+- no crash loop
+- port 9651 is listening
+- localhost API responds
+- Fuji connectivity is established
+- node begins normal synchronization/bootstrap
+
+Do NOT expose the API publicly.
+
+==================================================
+8. HEALTH CHECK
+==================================================
+
+Perform only safe read-only health checks.
+
+Verify:
+
+- AvalancheGo process
+- systemd status
+- local API
+- P2P port
+- Fuji network connectivity
+- synchronization/bootstrap status
+- disk usage
+- memory
+- swap
+- firewall
+
+If Fuji bootstrap cannot complete because the server lacks the required PrimeWave subnet ID or other external ceremony information, report that as BLOCKED rather than inventing configuration.
+
+==================================================
+9. NETCUP PROVIDER FIREWALL
+==================================================
+
+Do NOT modify Netcup Robot firewall automatically.
+
+At the end, report:
+
+REQUIRED PROVIDER FIREWALL:
+TCP 9651 — ACCEPT
+UDP 9651 — ACCEPT
+
+Once AvalancheGo is actually listening on 9651, we will manually open the Netcup provider firewall and perform the external reachability test.
+
+==================================================
+10. STOP CONDITION
+==================================================
+
+STOP after AvalancheGo installation, configuration, startup and health verification.
+
+DO NOT:
+- create the subnet
+- create the PrimeWave blockchain
+- generate validator keys
+- join PrimeWave
+- stake
+- deploy contracts
+
+Produce a final report containing:
+
+1. AvalancheGo version
+2. Installation path
+3. Service status
+4. Service user
+5. Listening ports
+6. HTTP/API bind address
+7. P2P/staking configuration
+8. Fuji connectivity
+9. Sync/bootstrap status
+10. Firewall status
+11. Any warnings/errors
+12. Exact next prerequisites
+
+FINAL STATUS MUST BE ONE OF:
+
+AVALANCHEGO READY — WAITING FOR PRIMEWAVE SUBNET
+
+or
+
+AVALANCHEGO BLOCKED — [exact reason]
+
+STOP and wait for explicit approval.
