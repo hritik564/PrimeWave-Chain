@@ -76,6 +76,16 @@ Note: `--track-subnets` intentionally omitted — no PrimeWave subnet ID exists 
 ## Forge test count note
 - Baseline updated: 823/823 (was 792; 31 tests added by sprints C09-C11, all pass)
 
+## Server Fleet (established 2026-08-15)
+- V1: 159.195.193.209 — DO NOT TOUCH (Netcup, hardened, v1.15.0-fuji, P-Chain bootstrapped)
+- V2: 152.53.19.19 — existing node, password auth; 56 peers; all chains bootstrapping; 11GB DB; NRestarts=0
+- V3: 152.53.236.29 — Nuremberg; fresh setup; NodeID-7KdZ1yQLWYgLRPhnHEYpyrR5wjoXhzpPs; BLS 0xa2c11ad2...; 36 peers; bootstrapping
+- V4: 152.53.236.136 — Nuremberg; fresh setup; NodeID-9KnWP1cBvXz8Eh6Q8XG538hr6jDbhGGji; BLS 0xb55eaca3...; 36 peers; bootstrapping
+- V5: 152.53.17.32 — Vienna; fresh setup; NodeID-5Phd5NJ5BCGYQTaZEu1QyqhtoyapHgvCJ; BLS 0x93051900...; 36 peers; bootstrapping
+- V3/V4/V5 all: Debian 13.6, 4 vCPU, 8GB RAM, 251GB disk, 4GB swap, memtester PASS, nftables ACTIVE, AvalancheGo v1.15.0-fuji rpcchainvm=46
+- SSH key installed on V3/V4/V5 (PRIMEWAVE_SSH_KEY_B64 → Ed25519 pubkey in /root/.ssh/authorized_keys)
+- ShellExec base64 decode: use python3 -c with > file (NO 2>&1) to avoid stderr contamination
+
 ## Next Required Actions (in order)
 1. Fund testnet-deployer on Fuji: faucet.avax.network → 0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60 (currently 0 AVAX)
 2. Update setup-testnet-node.sh: AVALANCHEGO_VERSION and SUBNET_EVM_VERSION from v1.14.2 → v1.15.0-fuji

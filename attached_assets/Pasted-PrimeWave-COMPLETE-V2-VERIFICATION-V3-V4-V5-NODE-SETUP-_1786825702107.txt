@@ -1,0 +1,403 @@
+PrimeWave — COMPLETE V2 VERIFICATION + V3/V4/V5 NODE SETUP
+
+We have manually validated the PrimeWave AvalancheGo node setup on V2.
+
+Credentials are available ONLY through Replit Secrets:
+
+PRIMEWAVE_V2_HOST
+PRIMEWAVE_V2_ROOT_PASSWORD
+
+PRIMEWAVE_V3_HOST
+PRIMEWAVE_V3_ROOT_PASSWORD
+
+PRIMEWAVE_V4_HOST
+PRIMEWAVE_V4_ROOT_PASSWORD
+
+PRIMEWAVE_V5_HOST
+PRIMEWAVE_V5_ROOT_PASSWORD
+
+Existing SSH key:
+PRIMEWAVE_SSH_KEY_B64
+
+Do not print passwords, SSH private keys, staking private keys, signer keys, or other secrets.
+
+==================================================
+SERVER INVENTORY
+==================================================
+
+V2:
+Use $PRIMEWAVE_V2_HOST
+This is the EXISTING PrimeWave AvalancheGo node.
+
+V3:
+Use $PRIMEWAVE_V3_HOST
+New server — Nuremberg
+
+V4:
+Use $PRIMEWAVE_V4_HOST
+New server — Nuremberg
+
+V5:
+Use $PRIMEWAVE_V5_HOST
+New server — Vienna
+
+DO NOT TOUCH V1.
+
+==================================================
+PART A — V2 READ-ONLY VERIFICATION
+==================================================
+
+Connect to V2.
+
+READ-ONLY ONLY.
+
+Do not reinstall anything.
+Do not restart the service.
+Do not modify the database.
+Do not modify the staking identity.
+Do not modify firewall rules.
+Do not modify configuration.
+
+Verify:
+
+1. AvalancheGo version
+2. systemd service status
+3. restart count
+4. PID
+5. 127.0.0.1:9650 listening
+6. *:9651 listening
+7. Fuji network
+8. connected peers
+9. network health
+10. P-Chain bootstrap status
+11. X-Chain bootstrap status
+12. C-Chain bootstrap status
+13. overall node health
+14. database health
+15. disk availability
+16. memory
+17. swap
+18. failed systemd services
+
+Use AvalancheGo JSON-RPC POST requests where required.
+
+Determine whether V2 is:
+
+- BOOTSTRAPPING
+- BOOTSTRAPPED / HEALTHY
+- FAILED
+
+If still bootstrapping, report its current stage. Do not interfere with it.
+
+==================================================
+PART B — V3/V4/V5 SETUP
+==================================================
+
+Set up V3, V4 and V5 IN PARALLEL.
+
+Use root credentials only for initial access.
+
+After initial access, install/use the existing Replit SSH public key for key-based access.
+
+For EACH server:
+
+--------------------------------------------------
+1. BASELINE
+--------------------------------------------------
+
+Verify actual:
+
+- Debian version
+- kernel
+- CPU count
+- RAM
+- disk
+- IPv4
+- network
+- listening ports
+- failed services
+- NTP synchronization
+
+--------------------------------------------------
+2. SWAP
+--------------------------------------------------
+
+Create:
+
+/swapfile
+
+Size:
+4 GiB
+
+Permissions:
+600
+
+Format and activate it.
+
+Persist it in:
+
+/etc/fstab
+
+Verify 4 GiB active.
+
+--------------------------------------------------
+3. MEMORY TEST
+--------------------------------------------------
+
+Install:
+
+memtester
+
+Run:
+
+memtester 512M 1
+
+Require exit code 0 and all tests passing.
+
+--------------------------------------------------
+4. HOST FIREWALL
+--------------------------------------------------
+
+Configure nftables:
+
+table inet filter {
+    chain input {
+        type filter hook input priority filter;
+        policy drop;
+
+        ct state established,related accept
+        ct state invalid drop
+        iif "lo" accept
+        ip protocol icmp accept
+        ip6 nexthdr ipv6-icmp accept
+        tcp dport 22 accept
+        tcp dport 9651 accept
+        udp dport 9651 accept
+    }
+
+    chain forward {
+        type filter hook forward priority filter;
+        policy drop;
+    }
+
+    chain output {
+        type filter hook output priority filter;
+        policy accept;
+    }
+}
+
+Enable nftables at boot.
+
+Do NOT modify SSH authentication settings.
+
+Verify SSH remains accessible.
+
+--------------------------------------------------
+5. AVALANCHE USER/DIRECTORIES
+--------------------------------------------------
+
+Create system user:
+
+avalanche
+
+Home:
+
+/home/avalanche
+
+Create:
+
+/opt/avalanchego
+/opt/avalanchego/plugins
+/data/avalanchego/db
+/var/log/avalanchego
+
+Ownership:
+
+avalanche:avalanche
+
+Home permissions:
+
+700
+
+--------------------------------------------------
+6. AVALANCHEGO
+--------------------------------------------------
+
+Install EXACTLY:
+
+AvalancheGo v1.15.0-fuji
+
+Official release asset:
+
+avalanchego-linux-amd64-v1.15.0-fuji.tar.gz
+
+Install binary:
+
+/opt/avalanchego/avalanchego
+
+Verify:
+
+avalanchego/1.15.0
+database=v1.4.5
+rpcchainvm=46
+go=1.25.10
+
+--------------------------------------------------
+7. SYSTEMD
+--------------------------------------------------
+
+Create:
+
+/etc/systemd/system/primewave-testnet-node.service
+
+Use:
+
+[Unit]
+Description=PrimeWave AvalancheGo Fuji Testnet Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=avalanche
+Group=avalanche
+
+ExecStart=/opt/avalanchego/avalanchego \
+  --network-id=fuji \
+  --http-host=127.0.0.1 \
+  --http-port=9650 \
+  --staking-port=9651 \
+  --plugin-dir=/opt/avalanchego/plugins \
+  --db-dir=/data/avalanchego/db
+
+Restart=always
+RestartSec=5
+
+LimitNOFILE=32768
+
+StandardOutput=append:/var/log/avalanchego/avalanchego.log
+StandardError=append:/var/log/avalanchego/avalanchego-error.log
+
+[Install]
+WantedBy=multi-user.target
+
+Enable and start the service.
+
+--------------------------------------------------
+8. UNIQUE NODE IDENTITY
+--------------------------------------------------
+
+Each server MUST generate its own Avalanche identity.
+
+Do NOT copy anything from V2 or another server.
+
+In particular, NEVER copy:
+
+- NodeID
+- staker.crt
+- staker.key
+- signer.key
+- BLS private key
+- .avalanchego directory
+
+Verify that each node has a unique NodeID and BLS public key.
+
+--------------------------------------------------
+9. VALIDATION
+--------------------------------------------------
+
+For V3/V4/V5 verify:
+
+- service active
+- no crash loop
+- 9650 bound ONLY to 127.0.0.1
+- 9651 listening on all interfaces
+- Fuji detected
+- peers established
+- P-Chain bootstrap progressing
+- database healthy
+- disk healthy
+- memory reasonable
+- swap active
+- nftables active
+
+Allow Fuji bootstrap to proceed normally.
+
+Do NOT repeatedly restart nodes.
+
+Do NOT wipe databases.
+
+==================================================
+STOP CONDITIONS
+==================================================
+
+Do NOT perform any of the following:
+
+- PrimeWave subnet creation
+- CreateSubnetTx
+- CreateChainTx
+- subnet-EVM installation
+- --track-subnets
+- genesis configuration
+- PWUSD deployment
+- PWC20 deployment
+- PW token deployment
+- contract deployment
+- keeper deployment
+- PWCScan deployment
+- MetaMask network configuration
+
+Those are later stages.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return ONE consolidated report.
+
+V2:
+- version
+- service
+- peers
+- network health
+- P-Chain
+- X-Chain
+- C-Chain
+- overall bootstrap status
+- disk/database
+- any issue
+
+V3:
+- IP
+- location
+- version
+- NodeID
+- BLS public key
+- service
+- ports
+- peers
+- bootstrap
+- health
+- disk
+- swap
+- firewall
+- status
+
+V4:
+same fields
+
+V5:
+same fields
+
+Finally provide:
+
+INFRASTRUCTURE STATUS
+
+V2: PASS / BOOTSTRAPPING / FAIL
+V3: PASS / BOOTSTRAPPING / FAIL
+V4: PASS / BOOTSTRAPPING / FAIL
+V5: PASS / BOOTSTRAPPING / FAIL
+
+Also list ONLY genuine manual actions required from the operator.
+
+STOP after this report.
