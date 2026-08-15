@@ -1,0 +1,154 @@
+We have a newly purchased Netcup RS 1000 G12 server.
+
+Server:
+- OS: Debian 13.6
+- Virtualization: KVM
+- CPU: 4 vCPU, AMD EPYC 9645
+- RAM: ~7.8 GiB
+- Storage: 256 GB VirtIO disk
+- Public IPv4: configured
+- Public IPv6: configured
+
+We have already completed storage benchmarking:
+- Random 4K 70/30 read/write:
+  - Read: ~70K IOPS / 274 MiB/s
+  - Write: ~30K IOPS / 117 MiB/s
+  - No I/O errors
+- Sequential read:
+  - ~4.1 GiB/s sustained
+  - Repeated successfully
+
+DO NOT install AvalancheGo yet.
+DO NOT change firewall rules.
+DO NOT change SSH configuration.
+DO NOT change passwords.
+DO NOT reboot the server.
+DO NOT modify networking configuration.
+
+Run READ-ONLY / NON-DESTRUCTIVE qualification tests only.
+
+We need to qualify this server for an Avalanche validator.
+
+TEST 1 — Network connectivity
+- Verify IPv4 connectivity.
+- Verify IPv6 connectivity.
+- Check default route.
+- Check DNS resolution.
+- Test connectivity to several reliable public endpoints.
+
+TEST 2 — Network latency
+Measure latency and packet loss to:
+- Google DNS
+- Cloudflare DNS
+- Debian repository
+- Several geographically relevant European endpoints
+
+Run enough packets to make the results meaningful.
+Report:
+- average latency
+- minimum
+- maximum
+- packet loss
+- jitter if available
+
+TEST 3 — Internet throughput
+Measure download and upload bandwidth using a reputable speed-test method.
+Do not perform an excessive amount of traffic.
+Report:
+- download Mbps
+- upload Mbps
+- latency
+- packet loss
+
+TEST 4 — TCP connectivity
+Check outbound TCP connectivity on ports relevant to Avalanche networking.
+Do NOT modify firewall rules.
+Determine whether outbound connections can be established.
+
+TEST 5 — UDP connectivity
+Test what can safely be determined about UDP connectivity.
+Do not claim UDP is open merely because an outbound test succeeds.
+Clearly distinguish:
+- outbound UDP capability
+- inbound UDP reachability
+- what cannot be verified without an external host
+
+TEST 6 — Public IP / NAT
+Verify whether the server has a directly assigned public IPv4 address and whether there is NAT.
+Report the detected public IPv4 and local interface configuration.
+Do not expose credentials.
+
+TEST 7 — CPU
+Run a short non-destructive CPU benchmark/stress test.
+Use all 4 vCPUs.
+Keep it short and controlled.
+Report:
+- CPU performance
+- load
+- temperatures if available
+- whether throttling is observed
+
+Do not run a long stress test.
+
+TEST 8 — RAM
+Run a controlled memory test using a reasonable portion of available RAM.
+Do not consume all RAM.
+Do not cause swapping or OOM.
+Report any errors.
+
+TEST 9 — Disk health
+We already benchmarked disk performance.
+Do NOT repeat long fio tests.
+Instead check:
+- filesystem health indicators
+- disk/device information available to the guest
+- VirtIO configuration
+- I/O scheduler
+- current disk utilization
+
+Do not run destructive disk tests.
+
+TEST 10 — System health
+Check:
+- uptime
+- load average
+- CPU steal time if available
+- memory pressure
+- swap
+- filesystem usage
+- failed systemd services
+- kernel errors
+- network interface errors/drops
+
+TEST 11 — Avalanche-specific network readiness
+Without installing AvalancheGo:
+- determine whether the server can resolve Avalanche-related domains
+- test outbound connectivity to the relevant Avalanche networking endpoints where technically possible
+- determine what ports would need to be reachable for an Avalanche validator
+- clearly separate facts that can be verified from assumptions
+
+IMPORTANT:
+Do not install AvalancheGo yet.
+Do not configure the validator yet.
+Do not make permanent system changes.
+
+At the end produce a concise qualification report with:
+
+1. PASS
+2. PASS WITH CONCERN
+3. FAIL
+4. NOT TESTABLE FROM THIS SERVER
+
+For each test include:
+- exact command used
+- result
+- interpretation
+- whether it matters for an Avalanche validator
+
+Then give an overall verdict:
+
+"READY FOR AVALANCHE VALIDATOR SETUP"
+or
+"NOT READY — [specific reason]"
+
+Do not hide failed tests or massage results.
