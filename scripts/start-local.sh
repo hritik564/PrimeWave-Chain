@@ -270,6 +270,32 @@ log_ok "subnet-evm plugin placed: $LOCAL_CLUSTER_DIR/plugins/$PRIMEWAVE_VM_ID"
 # ── Phase 3: Start the node ───────────────────────────────────────────────────
 log_section "Phase 3: Starting Node"
 
+# Kill any stale avalanchego that already holds port $PRIMEWAVE_HTTP_PORT.
+# The Avalanche CLI's 'blockchain deploy' now starts the local-cluster node before
+# failing at "setup VM binary". That node runs with pre-Phase-2 flags (no subnet
+# tracking, missing chain configs). We must kill it so Phase 3 can start with the
+# correctly-patched flags.json produced by Phase 2.
+STALE_PID=$(ps aux 2>/dev/null | grep -v grep | \
+    while IFS= read -r line; do
+        pid=$(echo "$line" | awk '{print $2}')
+        cmdline=$(cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ' || echo "")
+        if echo "$cmdline" | grep -qF "$LOCAL_CLUSTER_DIR"; then
+            echo "$pid"
+        fi
+    done | head -1 || true)
+
+if [[ -n "$STALE_PID" ]]; then
+    log_warn "Found stale avalanchego (PID $STALE_PID) using $LOCAL_CLUSTER_DIR."
+    log_info "Stopping it so we can start with patched flags (Phase 2)..."
+    kill "$STALE_PID" 2>/dev/null || true
+    # Wait for port to release (max 5s)
+    for _i in 1 2 3 4 5; do
+        if ! kill -0 "$STALE_PID" 2>/dev/null; then break; fi
+        sleep 1
+    done
+    log_ok "Stale node stopped."
+fi
+
 # Build startup command from flags.json
 python3 << PYEOF2
 import json, os

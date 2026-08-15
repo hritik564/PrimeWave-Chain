@@ -1,0 +1,470 @@
+PRIMEWAVE PWCScan — C13 POST-DEPLOYMENT CONNECTIVITY FIX
+
+The PWCScan frontend is currently displaying:
+
+"Cannot connect to PrimeWave indexer
+
+The API might be offline or you need to set VITE_INDEXER_API_URL."
+
+This is a regression in the C13 integrated development environment.
+
+DO NOT redesign the UI.
+
+DO NOT modify protocol contracts.
+
+DO NOT start C16.
+
+DO NOT change Chain IDs.
+
+Current identities:
+
+Development = 73571
+Testnet = 77
+Mainnet = TBD
+
+============================================================
+OBJECTIVE
+============================================================
+
+Restore the existing PWCScan → C12 Indexer connectivity.
+
+The expected architecture is:
+
+PWCScan React/Vite
+        ↓
+VITE_INDEXER_API_URL
+        ↓
+C12 REST API
+        ↓
+PostgreSQL
+        ↓
+PrimeWave Dev Chain
+
+For the current Replit/local development environment, the indexer
+should be reachable by the frontend.
+
+============================================================
+1. DIAGNOSE FIRST — DO NOT GUESS
+============================================================
+
+Inspect:
+
+PWCScan frontend:
+- .env
+- .env.development
+- .env.local
+- Vite configuration
+- src/lib/api.ts
+- React Query configuration
+- package.json
+
+Indexer:
+- indexer/.env
+- indexer/package.json
+- src/server.ts / app entrypoint
+- REST route registration
+- listen host
+- listen port
+
+Search the repository for:
+
+VITE_INDEXER_API_URL
+INDEXER_API_URL
+localhost:4000
+127.0.0.1:4000
+0.0.0.0:4000
+
+Determine the ACTUAL URL the frontend is attempting to call.
+
+Do not assume it.
+
+============================================================
+2. CHECK INDEXER PROCESS
+============================================================
+
+Determine whether the C12 indexer is actually running.
+
+Check:
+
+process
+port
+health endpoint
+REST endpoint
+
+Expected development indexer port:
+
+4000
+
+If the indexer is not running:
+
+start it using the existing documented command.
+
+Do not create a second competing indexer process if one is already
+running.
+
+============================================================
+3. CHECK LISTEN ADDRESS
+============================================================
+
+Verify whether the indexer is listening on:
+
+127.0.0.1
+
+or:
+
+0.0.0.0
+
+If the Replit frontend runs in a separate process/container/service
+context, localhost may not be reachable from the frontend.
+
+Use the architecture that is already intended by the project.
+
+If necessary for Replit preview compatibility, bind the development
+indexer to:
+
+0.0.0.0
+
+BUT:
+
+Do not expose PostgreSQL.
+
+Do not expose admin/private APIs.
+
+Only the intended REST API should be reachable.
+
+============================================================
+4. CHECK HEALTH ENDPOINT
+============================================================
+
+From the same environment where the frontend runs, test:
+
+GET http://localhost:4000/health
+
+or the project's actual documented health endpoint.
+
+Then test:
+
+GET /blocks
+GET /transactions
+
+using the actual API route structure.
+
+Record:
+
+HTTP status
+response
+latency
+
+If the API is healthy locally but inaccessible from the browser,
+continue to CORS/network diagnosis.
+
+============================================================
+5. CHECK VITE ENVIRONMENT
+============================================================
+
+Vite environment variables are build-time variables.
+
+Verify:
+
+VITE_INDEXER_API_URL
+
+is actually available to the running frontend.
+
+Do NOT merely confirm that the value exists in a file.
+
+Confirm it is present in the Vite process/environment used by the
+current preview.
+
+For development, use the correct reachable URL.
+
+If the frontend and indexer are served through the same Replit
+environment, prefer the simplest stable development URL supported by
+the existing architecture.
+
+Do not hardcode a production URL.
+
+============================================================
+6. CHECK STALE VITE BUILD
+============================================================
+
+If VITE_INDEXER_API_URL was recently changed:
+
+restart the Vite development server.
+
+Do not assume Vite hot reload picked up the environment variable.
+
+Clear only the appropriate development cache if necessary.
+
+Do NOT delete unrelated project state.
+
+============================================================
+7. CHECK API CLIENT
+============================================================
+
+Inspect:
+
+src/lib/api.ts
+
+Verify:
+
+- base URL comes from VITE_INDEXER_API_URL
+- no stale hardcoded URL
+- no accidental trailing-path duplication
+- no incorrect `/api` prefix
+- no incorrect port
+- no accidental HTTPS during local HTTP development
+- React Query receives the correct base URL
+
+Do not rewrite the API client unless there is an actual bug.
+
+============================================================
+8. CHECK CORS
+============================================================
+
+If browser requests reach the API but are blocked by CORS:
+
+inspect the existing CORS configuration.
+
+Allow the actual Replit development/preview frontend origin.
+
+Do NOT use:
+
+Access-Control-Allow-Origin: *
+
+as a lazy permanent production solution.
+
+For local development only, a controlled development CORS policy
+is acceptable.
+
+Keep production/testnet CORS configuration separate.
+
+============================================================
+9. CHECK PROXY OPTION
+============================================================
+
+If direct browser → localhost:4000 connectivity is unreliable in
+the Replit preview environment, inspect whether Vite already has a
+proxy configuration.
+
+If appropriate, configure:
+
+/api
+    ↓
+http://localhost:4000
+
+and make the frontend use the existing proxy architecture.
+
+Do NOT add a proxy unless it genuinely solves the Replit preview
+networking issue.
+
+Do not alter the C12 REST API contract.
+
+============================================================
+10. CHECK INDEXER DATABASE
+============================================================
+
+If the indexer process starts but the API returns 500:
+
+check PostgreSQL connectivity.
+
+Do NOT modify the schema.
+
+Do NOT reset the database.
+
+Do NOT delete indexed data.
+
+Only diagnose:
+
+connection
+migration
+query
+startup
+
+============================================================
+11. CHECK DEV CHAIN
+============================================================
+
+The C13 local integration previously used the PrimeWave development
+chain:
+
+Chain ID = 73571
+
+Verify the indexer is pointing to the correct development RPC.
+
+Do NOT point the local development PWCScan at testnet Chain ID 77
+unless explicitly running the testnet configuration.
+
+Do not modify testnet configuration.
+
+============================================================
+12. VERIFY LIVE DATA
+============================================================
+
+Once connectivity is fixed:
+
+Start:
+
+PrimeWave Dev Chain
++
+C12 Indexer
++
+PWCScan
+
+Verify the frontend receives REAL data.
+
+Minimum:
+
+Homepage:
+- latest block
+- transaction count
+- sync status
+
+Blocks:
+- block list
+
+Transactions:
+- transaction list
+
+Transaction detail:
+- actual transaction
+
+Contracts:
+- indexed contracts
+
+Validators:
+- current validator data
+
+Fees:
+- actual fee data
+
+============================================================
+13. VERIFY NO FABRICATED FALLBACK DATA
+============================================================
+
+Do NOT "fix" the issue by inserting fake frontend data.
+
+Do NOT create mock API responses.
+
+Do NOT hide the error.
+
+If the API is offline, the existing error state should remain.
+
+The objective is genuine C12 connectivity.
+
+============================================================
+14. TEST RESTART RECOVERY
+============================================================
+
+After fixing:
+
+1. Start indexer
+2. Confirm PWCScan data
+3. Stop indexer
+4. Confirm graceful frontend error state
+5. Restart indexer
+6. Confirm PWCScan automatically recovers
+
+Do not require a frontend code change just to recover from a normal
+indexer restart.
+
+============================================================
+15. CHECK CONFIGURATION SEPARATION
+============================================================
+
+Ensure these remain separate:
+
+Development:
+Chain ID = 73571
+local indexer
+
+Testnet:
+Chain ID = 77
+testnet indexer
+
+Mainnet:
+Chain ID = TBD
+
+Do not accidentally put:
+
+VITE_INDEXER_API_URL=testnet...
+
+into the development environment.
+
+============================================================
+16. REGRESSION
+============================================================
+
+Run:
+
+Forge:
+792/792
+
+Indexer Jest:
+57/57
+
+Keeper Jest:
+20/20
+
+Run PWCScan TypeScript typecheck.
+
+Run the existing C13 frontend/integration tests.
+
+Do not remove or weaken tests.
+
+============================================================
+17. FINAL REPORT
+============================================================
+
+Return:
+
+PWCScan C13 CONNECTIVITY — FIXED
+
+Include:
+
+1. Root cause
+2. Indexer process status
+3. Indexer port
+4. Indexer bind address
+5. Actual VITE_INDEXER_API_URL
+6. API health result
+7. CORS result
+8. Vite result
+9. PWCScan live-data result
+10. Restart recovery result
+11. Forge result
+12. Indexer Jest result
+13. Keeper Jest result
+14. Frontend typecheck result
+15. Files changed
+16. Any remaining limitation
+
+If the issue cannot be fixed because of a Replit networking
+limitation, STOP and clearly report the exact limitation instead of
+creating a brittle workaround.
+
+============================================================
+18. DO NOT TOUCH
+============================================================
+
+Do NOT modify:
+
+- Chain ID 73571
+- Testnet Chain ID 77
+- Mainnet Chain ID TBD
+- contracts
+- tokenomics
+- RewardVault
+- FeeDistributor
+- ValidatorFeeVault
+- StakingManager
+- governance
+- PWC-20
+- PWUSD
+- PWSwap
+- PrimeWave Dex
+
+This is strictly a C12 → C13 connectivity repair.
+
+============================================================
+END
+============================================================
