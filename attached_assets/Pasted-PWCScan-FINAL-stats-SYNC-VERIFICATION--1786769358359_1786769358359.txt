@@ -1,0 +1,304 @@
+PWCScan — FINAL /stats SYNC VERIFICATION
+
+============================================================
+OBJECTIVE
+============================================================
+
+We previously fixed the C13 connectivity issue.
+
+Current verified state:
+
+- PWCScan loads correctly
+- Indexer runs on :4000
+- Vite proxy works
+- Real chain data is displayed
+- Forge: 792/792
+- Indexer Jest: 57/57
+- Keeper Jest: 20/20
+- Restart recovery: PASS
+
+There is one remaining observation:
+
+    latestIndexed: 4
+    chainHead: 2
+
+The previous report described this as a harmless startup off-by-one.
+
+Do NOT assume that.
+
+Prove whether it is transient or a genuine defect.
+
+============================================================
+1. DO NOT CHANGE THE ARCHITECTURE
+============================================================
+
+Do NOT modify:
+
+- contracts
+- Chain ID 73571
+- Testnet Chain ID 77
+- Mainnet Chain ID TBD
+- C12 database schema
+- C12 REST API contract
+- PWCScan UI design
+- indexer architecture
+
+Do not add fake data.
+
+Do not hide the discrepancy.
+
+============================================================
+2. TRACE THE SOURCE
+============================================================
+
+Inspect the implementation of:
+
+GET /stats
+
+Identify exactly how:
+
+- latestIndexed
+- chainHead
+- synced
+
+are calculated.
+
+Document:
+
+SOURCE OF latestIndexed
+SOURCE OF chainHead
+SOURCE OF synced
+
+Do not guess.
+
+============================================================
+3. LIVE TEST — INITIAL START
+============================================================
+
+Start the development stack:
+
+PrimeWave Dev Chain
++
+Indexer
++
+PWCScan
+
+Immediately record:
+
+RPC chain head
+Indexer latest indexed block
+/api/stats response
+
+Then wait for the indexer to fully synchronize.
+
+Record the same three values again.
+
+============================================================
+4. EXPECTED RELATIONSHIP
+============================================================
+
+Determine the intended invariant.
+
+For example:
+
+latestIndexed <= chainHead
+
+or:
+
+latestIndexed == chainHead
+
+or whatever relationship is explicitly defined by the C12 implementation.
+
+Do NOT invent a new invariant.
+
+Use the existing C12 specification and implementation as the authority.
+
+============================================================
+5. WAIT FOR CONVERGENCE
+============================================================
+
+Observe the values over multiple polling intervals.
+
+Determine:
+
+Does:
+
+latestIndexed → chainHead
+
+after synchronization?
+
+Does:
+
+synced = true
+
+only when the intended condition is satisfied?
+
+If the values converge, record the exact sequence.
+
+============================================================
+6. RESTART TEST
+============================================================
+
+Perform:
+
+1. Stop indexer.
+2. Confirm API unavailable.
+3. Restart indexer.
+4. Wait for synchronization.
+5. Re-check:
+
+RPC chain head
+latestIndexed
+chainHead
+synced
+
+Verify the same relationship holds.
+
+============================================================
+7. ADD NEW BLOCKS
+============================================================
+
+Generate a few legitimate development-chain transactions/blocks.
+
+Do NOT fabricate database records.
+
+Observe:
+
+RPC head
+indexer head
+stats
+
+while blocks are being indexed.
+
+Verify whether the discrepancy:
+
+- remains
+- moves together
+- disappears
+- is caused by a timing window
+
+============================================================
+8. IF IT IS TRANSIENT
+============================================================
+
+If the discrepancy is proven to be a startup/indexing timing artifact:
+
+DO NOT modify the implementation unnecessarily.
+
+Add a short comment/documentation explaining:
+
+- why the temporary difference occurs
+- what the intended synchronization condition is
+- why it does not represent incorrect chain data
+
+Then close the issue.
+
+============================================================
+9. IF IT IS NOT TRANSIENT
+============================================================
+
+If the discrepancy persists after full synchronization or restart:
+
+STOP.
+
+Do not patch blindly.
+
+Identify the exact root cause.
+
+Propose the smallest safe fix.
+
+Only implement it if the fix is clearly supported by the existing
+C12 architecture.
+
+Then run the complete regression.
+
+============================================================
+10. SYNC STATUS SECURITY
+============================================================
+
+Verify PWCScan cannot display:
+
+"Synced"
+
+when the actual C12 synchronization condition is not satisfied.
+
+This is important.
+
+An explorer's synchronization indicator must be trustworthy.
+
+============================================================
+11. REGRESSION
+============================================================
+
+Run:
+
+Forge:
+792/792
+
+Indexer:
+57/57
+
+Keeper:
+20/20
+
+PWCScan TypeScript:
+0 errors
+
+Verify existing C13 pages still load:
+
+- Dashboard
+- Blocks
+- Transactions
+- Transaction Detail
+- Address
+- Contracts
+- Validators
+- Fees
+- Rewards
+- Governance
+
+============================================================
+12. FINAL OUTPUT
+============================================================
+
+Return:
+
+PWCScan /stats SYNC VERIFICATION — COMPLETE
+
+Include:
+
+1. Exact source of latestIndexed
+2. Exact source of chainHead
+3. Exact synced condition
+4. Initial values
+5. Fully synchronized values
+6. Values after restart
+7. Values after new blocks
+8. Whether discrepancy is transient
+9. Root cause
+10. Whether any code was changed
+11. Files changed
+12. Forge result
+13. Indexer result
+14. Keeper result
+15. Frontend typecheck result
+
+Final classification MUST be exactly one of:
+
+PASS — transient and understood
+
+or
+
+FIXED — genuine defect corrected
+
+or
+
+BLOCKED — cannot conclusively verify
+
+Do not start C14/C15/C16 work.
+
+Do not create another sprint.
+
+============================================================
+END
+============================================================

@@ -26,6 +26,12 @@ PWCScan is connected to the C12 indexer and showing live blockchain data.
 
 **Why:** Browser accesses indexer via Vite proxy path `/indexer-api/*` → port 4000; direct `localhost:4000` is unreachable from browser in Replit (resolves to user's machine).
 
+### Chain reset detection (post-gate fix)
+- **Problem:** When the dev chain restarts, `sync_state.latest_block` holds a stale value from the old chain run. The old DB blocks have wrong hashes → `isSynced` reported `true` incorrectly.
+- **Fix:** `IndexerEngine.detectAndHandleChainReset()` runs on every `start()`. Fetches the block at `lastIndexed` from RPC. If RPC returns error (`"cannot query unfinalized data"` = block does not exist on current chain) OR hash differs from DB → TRUNCATE all chain tables, reset sync_state, re-index from genesis.
+- **AvalancheGo note:** `eth_getBlockByNumber` for a non-existent block returns JSON-RPC error -32000 `"cannot query unfinalized data"`, NOT null. RpcClient throws on this. The catch block must treat ANY thrown error as "block not found" (not skip-purge conservatively).
+- **File:** `indexer/src/indexer/engine.ts` — `detectAndHandleChainReset()` private method, called before `registerKnownContracts()` in `start()`.
+
 ### Regression baseline
 - Forge: 792/792
 - Indexer Jest: 57/57

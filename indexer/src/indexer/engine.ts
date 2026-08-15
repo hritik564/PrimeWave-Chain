@@ -258,6 +258,13 @@ export class IndexerEngine {
     this.running = true;
     console.log(`[engine] Starting sync on chain ${this.config.chainId}`);
 
+    // Detect chain resets BEFORE registering contracts or entering the sync loop.
+    // When the dev chain is restarted its block hashes change from block 1 onward
+    // (genesis/block 0 is deterministic). Without this check the indexer would
+    // serve stale blocks from the previous chain run and report isSynced=true even
+    // though the data belongs to a different chain fork.
+    await this.detectAndHandleChainReset();
+
     // Register known protocol contracts
     await this.registerKnownContracts();
 
@@ -268,6 +275,110 @@ export class IndexerEngine {
         console.error('[engine] Sync error:', (err as Error).message);
       }
       await sleep(this.config.pollIntervalMs);
+    }
+  }
+
+  /**
+   * Detect whether the chain has been reset since the last indexer run.
+   *
+   * Strategy: read sync_state.latest_block_hash from the DB and compare it to
+   * the block hash the RPC returns for that block number.
+   *
+   *   • If the block no longer exists on-chain → definitive reset.
+   *   • If the block exists but with a different hash → fork/reset at that height.
+   *
+   * When a reset is detected, ALL chain-derived tables are truncated and
+   * sync_state is cleared so the engine re-indexes from genesis on the next
+   * poll cycle. This is safe for the dev chain (single-node, deterministic
+   * genesis) and produces a trustworthy isSynced flag.
+   *
+   * Intended invariant (C12):
+   *   isSynced = (latestIndexed >= chainHead - confirmations)
+   * This invariant is only meaningful when latestIndexed refers to blocks that
+   * are actually present on the current chain with matching hashes.
+   */
+  private async detectAndHandleChainReset(): Promise<void> {
+    const pool   = getPool();
+    const client = await pool.connect();
+    let lastIndexed: number;
+    let lastHash:    string | null;
+    try {
+      const res = await client.query<{ latest_block: string; latest_block_hash: string | null }>(
+        'SELECT latest_block, latest_block_hash FROM sync_state WHERE chain_id = $1',
+        [this.config.chainId]
+      );
+      if ((res.rowCount ?? 0) === 0) return; // No sync state — fresh start
+      lastIndexed = Number(res.rows[0]!.latest_block);
+      lastHash    = res.rows[0]!.latest_block_hash ?? null;
+    } finally {
+      client.release();
+    }
+
+    if (lastIndexed < 0) return; // Never indexed anything — nothing to validate
+
+    // Compare the stored block hash against the RPC.
+    // AvalancheGo returns a JSON-RPC error ("cannot query unfinalized data") when
+    // eth_getBlockByNumber is called for a block that does not exist on the current
+    // chain. The RpcClient surfaces this as a thrown Error (non-retryable). We
+    // treat ANY error here as "block not present on current chain" — a definitive
+    // chain-reset indicator — because a genuine RPC transport failure would be
+    // transient and would have already retried maxRetries times before throwing.
+    let rpcBlock: { hash: string } | null = null;
+    let resetReason: string | null = null;
+
+    try {
+      rpcBlock = await this.rpc.getBlockByNumber(lastIndexed, false);
+    } catch (err) {
+      resetReason = `block ${lastIndexed} not found on RPC (${(err as Error).message})`;
+    }
+
+    if (!resetReason) {
+      const rpcHash = rpcBlock ? rpcBlock.hash.toLowerCase() : null;
+      if (rpcBlock === null) {
+        resetReason = `block ${lastIndexed} no longer exists on-chain (chain head is lower)`;
+      } else if (lastHash !== null && rpcHash !== null && lastHash !== rpcHash) {
+        resetReason = `block ${lastIndexed} hash mismatch — DB: ${lastHash} | RPC: ${rpcHash}`;
+      }
+    }
+
+    if (!resetReason) return; // Chain is consistent — nothing to do
+
+    console.warn(`[engine] CHAIN RESET DETECTED: ${resetReason}`);
+    console.warn('[engine] Purging stale chain data — will re-index from genesis.');
+
+    const purgeClient = await pool.connect();
+    try {
+      await purgeClient.query('BEGIN');
+      // Truncate all chain-derived tables. CASCADE handles FK dependencies
+      // (e.g. decoded_events → transaction_logs, receipts → transactions → blocks).
+      // schema_migrations is deliberately excluded.
+      await purgeClient.query(`
+        TRUNCATE TABLE
+          governance_events,
+          fee_distribution,
+          reward_events,
+          reward_vault_state,
+          staking_events,
+          staking_positions,
+          validator_events,
+          validators,
+          contracts,
+          addresses,
+          decoded_events,
+          transaction_logs,
+          transaction_receipts,
+          transactions,
+          blocks,
+          sync_state
+        RESTART IDENTITY CASCADE
+      `);
+      await purgeClient.query('COMMIT');
+      console.warn('[engine] Purge complete. Indexer will re-index from genesis.');
+    } catch (err) {
+      await purgeClient.query('ROLLBACK');
+      throw err;
+    } finally {
+      purgeClient.release();
     }
   }
 
