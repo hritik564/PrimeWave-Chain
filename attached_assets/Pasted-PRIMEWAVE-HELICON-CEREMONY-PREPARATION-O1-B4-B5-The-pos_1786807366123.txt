@@ -1,0 +1,259 @@
+PRIMEWAVE — HELICON CEREMONY PREPARATION / O1 + B4 + B5
+
+The post-upgrade audit is complete.
+
+DO NOT execute any Fuji ceremony transactions yet.
+
+DO NOT create a subnet.
+DO NOT create a blockchain.
+DO NOT execute ConvertSubnetToL1Tx.
+DO NOT install the subnet-EVM plugin on the validator.
+DO NOT deploy contracts.
+DO NOT modify genesis addresses.
+DO NOT spend the Fuji deployer balance.
+
+We are now resolving the remaining repository-level blockers and the Avalanche CLI compatibility question.
+
+==================================================
+PHASE 1 — O1: AVALANCHE CLI HELICON COMPATIBILITY
+==================================================
+
+Current CLI:
+Avalanche CLI v1.9.5
+
+Perform a READ-ONLY compatibility test against the live Fuji P-Chain.
+
+Test commands equivalent to:
+
+avalanche network status --fuji
+
+avalanche subnet list --fuji
+
+and any other SAFE read-only command necessary to confirm that the CLI can:
+
+1. connect to Fuji
+2. read P-Chain state
+3. read network status
+4. read subnet information
+5. correctly parse post-Helicon responses
+
+DO NOT:
+- create transactions
+- submit transactions
+- create subnets
+- create blockchains
+- transfer funds
+- modify wallets
+- modify local keys
+
+Record exact command output and exit codes.
+
+Determine:
+
+CLI v1.9.5:
+PASS / FAIL / INCONCLUSIVE
+
+If it fails, investigate whether a newer Avalanche CLI is required.
+
+DO NOT upgrade the CLI automatically.
+
+==================================================
+PHASE 2 — B5: UPDATE TESTNET SETUP SCRIPT
+==================================================
+
+Update:
+
+scripts/testnet/setup-testnet-node.sh
+
+Change:
+
+AVALANCHEGO_VERSION="v1.14.2"
+
+to:
+
+AVALANCHEGO_VERSION="v1.15.0-fuji"
+
+Change:
+
+SUBNET_EVM_VERSION="v1.14.2"
+
+to:
+
+SUBNET_EVM_VERSION="v1.15.0-fuji"
+
+Update all related download URLs and version checks.
+
+Search the entire script for stale v1.14.2 references.
+
+Do not modify unrelated logic.
+
+==================================================
+PHASE 3 — B4: UPDATE SUBNET-EVM
+==================================================
+
+The current repository binary is:
+
+local-bin/subnet-evm
+v1.14.2
+rpcchainvm=45
+
+Replace it with the official:
+
+subnet-evm-linux-amd64-v1.15.0-fuji.tar.gz
+
+from the official AvalancheGo v1.15.0-fuji release.
+
+Verify:
+
+- binary version
+- RPCChainVM = 46
+- VMID remains:
+  rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8
+
+Do NOT install this plugin on the live validator yet.
+
+This is a repository artifact update only.
+
+Do not change genesis.
+
+==================================================
+PHASE 4 — SEARCH FOR STALE VERSION REFERENCES
+==================================================
+
+Search the repository for:
+
+v1.14.2
+rpcchainvm=45
+rpcchainvm 45
+subnet-evm v1.14.2
+AvalancheGo v1.14.2
+
+Classify every remaining occurrence:
+
+ACTIVE CONFIG
+SCRIPT
+CODE
+DOCUMENTATION
+HISTORICAL RECORD
+AUDIT TRAIL
+
+Do not blindly replace historical records.
+
+Every active deployment/configuration reference must be updated.
+
+==================================================
+PHASE 5 — DOCUMENTATION
+==================================================
+
+Update only the relevant active documentation:
+
+- C14 deployment runbook
+- dependency compatibility document
+- testnet setup documentation
+- deployment manifests
+- validator onboarding instructions
+
+Make clear:
+
+AvalancheGo = v1.15.0-fuji
+RPCChainVM = 46
+Subnet-EVM = v1.15.0-fuji
+
+Do not rewrite historical audit records.
+
+==================================================
+PHASE 6 — REGRESSION
+==================================================
+
+Run:
+
+Forge
+Indexer Jest
+Keeper Jest
+
+Expected baseline:
+
+Forge: 792/792
+Indexer Jest: 57/57
+Keeper Jest: 20/20
+
+Also run:
+
+- subnet-EVM version check
+- genesis static validation
+- chain ID audit
+- testnet preflight
+- setup script validation
+
+Do not deploy anything.
+
+==================================================
+PHASE 7 — ICM AUDIT
+==================================================
+
+Do NOT upgrade ICM yet.
+
+Perform a READ-ONLY dependency/source audit of:
+
+icm-relayer-v1.7.5
+commit 40e1c89
+
+Determine exactly what version/API changes occurred between v1.7.5 and v1.8.0-fuji that could affect:
+
+- Fuji P-Chain RPC
+- Fuji C-Chain RPC
+- Warp messaging
+- signature aggregation
+- validator registration
+- completeValidatorRegistration
+- PoAValidatorManager
+- PrimeWaveStakingManager
+
+Compare against the actual PrimeWave implementation.
+
+Classify:
+
+ICM v1.7.5:
+COMPATIBLE
+INCOMPATIBLE
+INCONCLUSIVE
+
+Do not modify the ICM dependency yet.
+
+==================================================
+PHASE 8 — FINAL REPORT
+==================================================
+
+Report:
+
+1. Avalanche CLI v1.9.5 compatibility result
+2. Whether CLI upgrade is required
+3. setup-testnet-node.sh updated
+4. subnet-EVM updated
+5. RPCChainVM confirmed = 46
+6. stale active references remaining
+7. documentation updated
+8. Forge result
+9. Indexer result
+10. Keeper result
+11. Genesis validation
+12. Chain ID validation
+13. ICM v1.7.5 compatibility result
+14. Remaining blockers
+15. Exact next actions
+
+IMPORTANT:
+
+Do NOT:
+- fund wallets
+- transfer AVAX
+- create subnet
+- create blockchain
+- execute ConvertSubnetToL1Tx
+- generate ceremony addresses
+- fill genesis placeholders
+- provision additional validators
+- install subnet-EVM on the live validator
+- deploy contracts
+
+STOP after this phase.

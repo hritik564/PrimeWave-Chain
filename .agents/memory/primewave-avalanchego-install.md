@@ -55,6 +55,27 @@ Note: `--track-subnets` intentionally omitted — no PrimeWave subnet ID exists 
 - "peer attempting to connect with newer version" log spam — fully resolved; all peers now run v1.15.0
 - External TCP 9651 confirmed OPEN from Replit: `nc -z -w 8 159.195.193.209 9651` → OPEN
 
+## ICM Compatibility Finding (2026-08-15)
+- go.mod v1.7.5 uses avalanchego v1.14.1 (Granite); v1.8.0-fuji uses v1.15.0-fuji (Helicon)
+- ValidatorManager.sol: IDENTICAL between v1.7.5 and v1.8.0-fuji (32504 bytes, same content)
+- Solidity contracts: COMPATIBLE — contracts unchanged, run on our L1 EVM independent of Helicon
+- Go relayer binary: INCONCLUSIVE — uses Granite SDK against Helicon nodes; upgrade to v1.8.0-fuji required before ceremony relayer setup
+- Ceremony txs (CreateSubnetTx/CreateChainTx/ConvertSubnetToL1Tx): relayer NOT involved → COMPATIBLE
+
+## Avalanche CLI v1.9.5 (verified 2026-08-15)
+- `blockchain convert --fuji` flag confirmed PASS
+- `key list` reads post-Helicon Fuji state PASS
+- `blockchain deploy --fuji` implied PASS (--key flag says "[fuji/devnet deploy only]")
+- CLI v1.9.5: COMPATIBLE for ceremony
+
+## subnet-evm v1.15.0-fuji (updated 2026-08-15)
+- local-bin/subnet-evm replaced: SHA-256 aed4886f1e82abae04f8a71c0633325bfd97895513a0df4d137fb6dd978eb21e
+- rpcchainvm=46 confirmed; VMID unchanged
+- Backup: local-bin/subnet-evm.v1.14.2.bak
+
+## Forge test count note
+- Baseline updated: 823/823 (was 792; 31 tests added by sprints C09-C11, all pass)
+
 ## Next Required Actions (in order)
 1. Fund testnet-deployer on Fuji: faucet.avax.network → 0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60 (currently 0 AVAX)
 2. Update setup-testnet-node.sh: AVALANCHEGO_VERSION and SUBNET_EVM_VERSION from v1.14.2 → v1.15.0-fuji

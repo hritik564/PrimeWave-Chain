@@ -22,8 +22,8 @@ set -euo pipefail
 
 NODE_ROLE="${NODE_ROLE:?NODE_ROLE must be 'validator' or 'rpc'}"
 TESTNET_SUBNET_ID="${TESTNET_SUBNET_ID:?}"
-AVALANCHEGO_VERSION="v1.14.2"
-SUBNET_EVM_VERSION="v1.14.2"
+AVALANCHEGO_VERSION="v1.15.0-fuji"
+SUBNET_EVM_VERSION="v1.15.0-fuji"
 NODE_USER="avalanche"
 DATA_DIR="/data/avalanchego"
 LOG_DIR="/var/log/avalanchego"
@@ -63,10 +63,17 @@ chmod +x "$BIN_DIR/avalanchego"
 echo "[OK]    AvalancheGo installed: $("$BIN_DIR/avalanchego" --version 2>&1 | head -1)"
 
 # Place subnet-evm plugin
-# Plugin (VM ID: rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8) must be compiled
-# from the pinned subnet-evm commit matching the testnet genesis.
-echo "[INFO]  Place subnet-evm binary at: $PLUGIN_DIR/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8"
-echo "        (Compile from source — see docs/PW-C14-DEPLOYMENT-RUNBOOK.md Section 3)"
+# Plugin (VM ID: rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8) is distributed as a
+# pre-built tarball in the AvalancheGo v1.15.0-fuji release (subnet-evm moved into the
+# AvalancheGo monorepo in v1.15.x — no separate compilation required).
+# Download: https://github.com/ava-labs/avalanchego/releases/download/v1.15.0-fuji/subnet-evm-linux-amd64-v1.15.0-fuji.tar.gz
+# The binary from the repository (local-bin/subnet-evm) is the correct v1.15.0-fuji binary.
+SUBNET_EVM_URL="https://github.com/ava-labs/avalanchego/releases/download/${AVALANCHEGO_VERSION}/subnet-evm-linux-amd64-${SUBNET_EVM_VERSION}.tar.gz"
+echo "[INFO]  Downloading subnet-evm $SUBNET_EVM_VERSION ..."
+curl -fsSL "$SUBNET_EVM_URL" | tar -xz -C /tmp --strip-components=1
+cp /tmp/subnet-evm "$PLUGIN_DIR/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8"
+chmod +x "$PLUGIN_DIR/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8"
+echo "[OK]    subnet-evm installed: $("$PLUGIN_DIR/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8" --version 2>&1 | head -1)"
 
 # Write chain config
 BLOCKCHAIN_ID="${TESTNET_BLOCKCHAIN_ID:-__REPLACE_BLOCKCHAIN_ID__}"
@@ -109,7 +116,6 @@ ExecStart=$BIN_DIR/avalanchego \\
   --http-host=$HTTP_HOST \\
   --http-port=9650 \\
   --staking-port=9651 \\
-  --api-keystore-enabled=false \\
   --api-admin-enabled=false \\
   --track-subnets=$TESTNET_SUBNET_ID \\
   --db-dir=$DATA_DIR/db \\

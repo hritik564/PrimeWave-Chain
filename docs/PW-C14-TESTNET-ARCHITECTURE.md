@@ -23,8 +23,8 @@ PW-C14 moves PrimeWave Chain from local development validation to a real public 
 | Network | Avalanche Fuji (testnet) | |
 | Native Token | PW (TESTNET) | |
 | Total Supply | 100,000,000 PW (fixed) | No inflation |
-| AvalancheGo | v1.14.2 (pinned) | |
-| Subnet-EVM | v1.14.2 (pinned) | |
+| AvalancheGo | v1.15.0-fuji (updated 2026-08-15) | |
+| Subnet-EVM | v1.15.0-fuji (updated 2026-08-15) | |
 | ICM Relayer | icm-relayer-v1.7.5 (commit 40e1c89) | |
 
 **Why 77:** Changed from the initial C14 candidate (77777) post-C14. Chain ID 77 is used for PrimeWave Testnet. Dev ID 73571 and mainnet ID (TBD) are unaffected. **Verify uniqueness on chainlist.org before finalizing the genesis.**
@@ -80,8 +80,8 @@ Internet
 
 | Component | Version | Location | Port(s) |
 |---|---|---|---|
-| AvalancheGo | v1.14.2 | All nodes | 9650 (API, private), 9651 (P2P) |
-| Subnet-EVM plugin | v1.14.2 | All nodes | — |
+| AvalancheGo | v1.15.0-fuji | All nodes | 9650 (API, private), 9651 (P2P) |
+| Subnet-EVM plugin | v1.15.0-fuji | All nodes | — |
 | ICM Relayer | icm-relayer-v1.7.5 | Sentinel | Internal |
 | C12 Indexer | C12 (from this repo) | Explorer Host | 4000 (private) |
 | C13 PWCScan | C13 (from this repo) | Explorer Host | 443 (via nginx) |

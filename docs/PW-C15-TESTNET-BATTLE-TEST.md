@@ -111,7 +111,7 @@ bash scripts/testnet/validate-testnet-genesis.sh config/testnet/genesis.json
 
 ### 3.1 Transaction Sequence
 
-Execute in order using Avalanche CLI v1.9.5+ with AvalancheGo v1.14.2:
+Execute in order using Avalanche CLI v1.9.5+ with AvalancheGo v1.15.0-fuji:
 
 ```bash
 # Step 1: Create subnet
@@ -142,7 +142,7 @@ avalanche blockchain deploy primewave-testnet \
 |---|---|
 | Subnet ID | TBD |
 | Blockchain ID | TBD |
-| AvalancheGo version | v1.14.2 (pinned) |
+| AvalancheGo version | v1.15.0-fuji (updated for Helicon) |
 | subnet-evm version | matching C14 pin |
 
 > **NOTE:** Chain ID 77 (EVM application layer) is distinct from Blockchain ID

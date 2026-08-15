@@ -33,9 +33,9 @@
 
 | Dependency | Version | Pin Reason |
 |---|---|---|
-| AvalancheGo | v1.14.2 | ICM compatibility; pinned C11 |
-| Subnet-EVM | v0.6.2 (compatible with AvalancheGo v1.14.2) | Pinned C11 |
-| ICM Relayer | icm-relayer-v1.7.5 (commit 40e1c89) | Warp relay; pinned C11 |
+| AvalancheGo | v1.15.0-fuji (RPCChainVM=46) | Helicon upgrade 2026-08-15; required for Fuji post-Helicon |
+| Subnet-EVM | v1.15.0-fuji (RPCChainVM=46) | Updated 2026-08-15; tarball from AvalancheGo monorepo release |
+| ICM Relayer | icm-relayer-v1.8.0-fuji | Upgrade from v1.7.5; required for post-Helicon Warp messaging |
 | Solidity | 0.8.30 | Protocol contracts |
 | OpenZeppelin | 5.6.1 (project), 5.1.0 (StakingManager dep) | Pinned C00 |
 | Foundry | v1.7.1 | Test and deploy toolchain |

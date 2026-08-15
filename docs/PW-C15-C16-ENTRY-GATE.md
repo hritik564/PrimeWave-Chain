@@ -22,7 +22,7 @@ No ambiguous statuses. The gate only opens when real evidence exists.
 | Resource | Available | Detail |
 |---|---|---|
 | Avalanche CLI v1.9.5 | ✅ YES | `local-bin/avalanche` |
-| AvalancheGo v1.14.2 | ✅ YES | `local-bin/avalanchego` — 4 local nodes running |
+| AvalancheGo v1.15.0-fuji | ✅ YES | Validator #1 (159.195.193.209) running v1.15.0-fuji, 56 peers, NRestarts=0 |
 | subnet-evm binary | ✅ YES | `local-bin/subnet-evm` |
 | Foundry (forge/cast) | ✅ YES | `local-bin/foundry/` |
 | PostgreSQL 16.10 | ✅ YES | Replit managed DB at `PGHOST=helium` |
@@ -55,7 +55,7 @@ No ambiguous statuses. The gate only opens when real evidence exists.
 
 | # | Item | Status | Evidence / Blocker |
 |---|---|---|---|
-| G-06 | Validators operational (actual count reported) | BLOCKED | Missing: cloud VPS servers. Provision ≥3 VPS, deploy AvalancheGo v1.14.2, run `setup-testnet-node.sh`. Target: 15 / Actual: 0 |
+| G-06 | Validators operational (actual count reported) | BLOCKED | Missing: cloud VPS servers. Provision ≥3 VPS, deploy AvalancheGo v1.15.0-fuji, run `setup-testnet-node.sh`. Target: 15 / Actual: 1 (bootstrap validator running on 159.195.193.209) |
 | G-07 | P-Chain integration proven | BLOCKED | Depends on G-01 + G-06 |
 | G-08 | ACP-99 registration proven | BLOCKED | Depends on G-01 + G-06 + ICM relayer |
 | G-09 | Validator churn proven | BLOCKED | Depends on G-06 |

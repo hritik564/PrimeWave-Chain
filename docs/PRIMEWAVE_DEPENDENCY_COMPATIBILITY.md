@@ -163,14 +163,15 @@ This document records the exact, pinned version of every external dependency in 
 
 | Dependency | Version | Compatible With | Status |
 |---|---|---|---|
-| AvalancheGo | v1.14.2 | Granite protocol (ACP-77, ACP-99) | ✅ Pinned |
-| Subnet-EVM | **Merged into AvalancheGo ≥ v1.14.1** | N/A (no longer separate) | ✅ N/A |
-| ICM Services contracts | icm-relayer-v1.7.5 / `40e1c89` | AvalancheGo v1.14.0–v1.14.2 (Granite family) | ✅ Pinned |
+| AvalancheGo | **v1.15.0-fuji** | Helicon protocol (ACP-77, ACP-99, ACP-236); RPCChainVM=46 | ✅ Updated 2026-08-15 |
+| Subnet-EVM | **v1.15.0-fuji** (RPCChainVM=46) | Merged into AvalancheGo monorepo ≥ v1.14.1; distributed as release tarball | ✅ Updated 2026-08-15 |
+| ICM Services contracts (Solidity) | icm-relayer-v1.7.5 / `40e1c89` | ValidatorManager.sol identical to v1.8.0-fuji; contracts run on our L1 — COMPATIBLE | ✅ Pinned (contracts only) |
+| ICM Services relayer (Go binary) | icm-relayer-v1.7.5 | Uses AvalancheGo v1.14.1 SDK; post-Helicon runtime compat INCONCLUSIVE — upgrade to v1.8.0-fuji before ceremony relayer setup | ⚠️ Upgrade required before Warp |
 | Solidity | 0.8.30 | icm-services contracts, OpenZeppelin v5.6.1 | ✅ Pinned |
 | OpenZeppelin Contracts | v5.6.1 | Solidity ≥ 0.8.20; EVM Shanghai+ | ✅ Pinned |
 | OpenZeppelin Upgradeable | v5.6.1 | Synchronized with OZ Contracts v5.6.1 | ✅ Pinned |
-| Foundry | v1.7.1 / `4072e48705` | Solidity 0.8.30, OZ v5.x, AvalancheGo v1.14.2 | ✅ Pinned |
-| Avalanche CLI | TBD | AvalancheGo v1.14.2 | 🔵 Deferred |
+| Foundry | v1.7.1 / `4072e48705` | Solidity 0.8.30, OZ v5.x | ✅ Pinned |
+| Avalanche CLI | v1.9.5 | `--fuji` flag confirmed on `blockchain convert`; key list reads Fuji state; COMPATIBLE | ✅ Compatible (verified 2026-08-15) |
 
 ---
 

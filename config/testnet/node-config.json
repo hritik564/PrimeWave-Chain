@@ -1,11 +1,10 @@
 {
   "_comment": "PrimeWave Testnet — AvalancheGo Node Config | TESTNET ONLY",
-  "_version": "AvalancheGo v1.14.2 (pinned)",
+  "_version": "AvalancheGo v1.15.0-fuji (updated 2026-08-15 — Helicon)",
   "network-id": "fuji",
   "http-host": "127.0.0.1",
   "http-port": 9650,
   "staking-port": 9651,
-  "api-keystore-enabled": false,
   "api-admin-enabled": false,
   "api-ipcs-enabled": false,
   "api-metrics-enabled": true,

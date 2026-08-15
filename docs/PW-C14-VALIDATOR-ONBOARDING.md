@@ -14,7 +14,7 @@
 
 This guide walks a new testnet validator operator through:
 1. Provisioning a server
-2. Installing AvalancheGo v1.14.2
+2. Installing AvalancheGo v1.15.0-fuji
 3. Joining the PrimeWave testnet subnet
 4. Providing NodeID and BLS key to PrimeWave for registration
 5. Completing ACP-99 registration via the PoAManager
@@ -36,18 +36,18 @@ This guide walks a new testnet validator operator through:
 
 ## 3. Step-by-Step Validator Setup
 
-### Step 1: Install AvalancheGo v1.14.2
+### Step 1: Install AvalancheGo v1.15.0-fuji
 
 ```bash
 # Download (pinned version — DO NOT use a different version)
-AVAGO_VER="v1.14.2"
+AVAGO_VER="v1.15.0-fuji"
 curl -fsSL \
   "https://github.com/ava-labs/avalanchego/releases/download/${AVAGO_VER}/avalanchego-linux-amd64-${AVAGO_VER}.tar.gz" \
   | tar -xz -C /opt/avalanchego --strip-components=1
 
 # Verify version
 /opt/avalanchego/avalanchego --version
-# Expected: avalanchego/v1.14.2 [...]
+# Expected: avalanchego/1.15.0 [database=v1.4.5, rpcchainvm=46, ...]
 ```
 
 ### Step 2: Install Subnet-EVM Plugin

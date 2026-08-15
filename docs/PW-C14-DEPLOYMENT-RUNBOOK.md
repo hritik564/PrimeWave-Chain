@@ -16,9 +16,9 @@
 | Item | Required | Status |
 |---|---|---|
 | Cloud servers provisioned (Ubuntu 22.04) | 5 validators + 1 RPC + 1 explorer + 1 sentinel | [ ] |
-| AvalancheGo v1.14.2 downloaded | All nodes | [ ] |
-| Subnet-EVM v1.14.2 compiled from source | All nodes | [ ] |
-| ICM Relayer icm-relayer-v1.7.5 built | Sentinel | [ ] |
+| AvalancheGo v1.15.0-fuji downloaded | All nodes | [ ] |
+| Subnet-EVM v1.15.0-fuji downloaded (tarball from release) | All nodes | [ ] |
+| ICM Relayer icm-relayer-v1.8.0-fuji built | Sentinel | [ ] |
 | Fuji testnet AVAX available (subnet creation) | ~2 AVAX | [ ] |
 | Testnet keys generated | deployer + EMS ×5 + keeper | [ ] |
 | Foundry v1.7.1 available | Deploy machine | [ ] |
@@ -39,13 +39,19 @@ bash scripts/testnet/generate-validator-keys.sh
 
 ---
 
-## Section 2: Compile Subnet-EVM Plugin
+## Section 2: Install Subnet-EVM Plugin
 
 ```bash
-git clone https://github.com/ava-labs/subnet-evm.git
-cd subnet-evm
-git checkout v0.6.2  # Compatible with AvalancheGo v1.14.2
-go build -o build/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy ./plugin/evm
+# Subnet-EVM is now distributed as a pre-built tarball from the AvalancheGo release
+# (merged into AvalancheGo monorepo in v1.15.x — no separate compilation required)
+SUBNET_EVM_VER="v1.15.0-fuji"
+curl -fsSL \
+  "https://github.com/ava-labs/avalanchego/releases/download/${SUBNET_EVM_VER}/subnet-evm-linux-amd64-${SUBNET_EVM_VER}.tar.gz" \
+  | tar -xz -C /tmp --strip-components=1
+sudo cp /tmp/subnet-evm /opt/avalanchego/plugins/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8
+sudo chmod +x /opt/avalanchego/plugins/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8
+# Verify: should report Subnet-EVM/v1.15.0 [rpcchainvm=46]
+/opt/avalanchego/plugins/rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8 --version 2>&1 || true
 # VM ID must match: rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8
 ```
 
