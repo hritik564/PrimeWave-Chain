@@ -1,0 +1,73 @@
+PRIMEWAVE VALIDATOR #1 — FUJI VERSION COMPATIBILITY AUDIT
+
+STOP all deployment work.
+
+Do NOT modify AvalancheGo.
+Do NOT upgrade anything yet.
+Do NOT install subnet-EVM.
+Do NOT create a subnet.
+Do NOT generate validator keys.
+Do NOT modify the PrimeWave genesis.
+Do NOT deploy contracts.
+
+We discovered that the Netcup node is running AvalancheGo v1.14.2 while active Fuji peers are running v1.15.0.
+
+Perform a READ-ONLY compatibility audit before any upgrade.
+
+AUTHORITATIVE SOURCES:
+- AvalancheGo official release information
+- PrimeWave C14/C15 deployment documentation already present in the repository
+- Existing PrimeWave subnet-EVM version/configuration specifications
+
+Determine:
+
+1. What AvalancheGo version is currently installed.
+2. What Fuji version is currently required/active as of today.
+3. Whether v1.15.0-fuji is required for Fuji after Helicon activation.
+4. Exact AvalancheGo version we should run on Validator #1.
+5. Exact subnet-EVM version compatible with that AvalancheGo version.
+6. Exact RPCChainVM compatibility requirement.
+7. Whether our existing PrimeWave C14/C15 subnet-EVM build/configuration is compatible.
+8. Whether upgrading AvalancheGo will require any changes to:
+   - systemd service
+   - staking certificates
+   - database
+   - plugin directory
+   - node configuration
+   - genesis
+   - PrimeWave Chain ID 77
+9. Whether the existing AvalancheGo database can safely be retained during the upgrade or whether a resync is required.
+10. Whether v1.15.0-fuji is a Fuji-only/pre-release build and whether that creates any concern for our eventual PrimeWave mainnet architecture.
+
+Inspect the repository but DO NOT modify it.
+
+Inspect the running server but DO NOT modify it.
+
+Do not download or install anything.
+
+Do not stop or restart AvalancheGo.
+
+Do not change firewall rules.
+
+Do not change SSH.
+
+Produce a compatibility matrix:
+
+Component | Current | Required | Compatible? | Action
+
+Include:
+- AvalancheGo
+- RPCChainVM
+- subnet-EVM
+- Fuji network
+- PrimeWave Chain ID 77
+
+Then provide a recommendation:
+
+A) KEEP v1.14.2
+B) UPGRADE TO v1.15.0-fuji
+C) OTHER — explain
+
+Most importantly, explain whether upgrading to v1.15.0-fuji before creating the PrimeWave subnet is safe and whether it affects our planned PrimeWave testnet architecture.
+
+STOP after the audit.
