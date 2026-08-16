@@ -14,7 +14,7 @@
   "sybil-protection-enabled": true,
   "public-ip-resolution-service": "opendns",
   "partial-sync-primary-network": true,
-  "track-subnets": "__REPLACE_TESTNET_SUBNET_ID__",
+  "track-subnets": "ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv",
   "db-dir": "/data/avalanchego/db",
   "log-dir": "/var/log/avalanchego",
   "plugin-dir": "/opt/avalanchego/plugins",

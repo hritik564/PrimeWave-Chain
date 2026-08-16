@@ -1,0 +1,146 @@
+PrimeWave Chain — STEP 3: DEPLOY PRIMEWAVE TESTNET
+
+Step 1 — C→P funding: COMPLETE
+Step 2 — Genesis generation: COMPLETE
+
+FINAL GENESIS:
+config/testnet/genesis.json
+
+SHA256:
+2e85b9753a51b429725fb768eb09f6208f36cb1cec614bb788886eedaba6a657
+
+CHAIN ID:
+77
+
+DEPLOYER:
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+P-Chain balance:
+~1.499991730 AVAX
+
+C-Chain balance:
+~0.499999999 AVAX
+
+V6–V9:
+All four P-Chain bootstrapped and ceremony-ready.
+
+IMPORTANT:
+This is now an IRREVERSIBLE ON-CHAIN OPERATION.
+
+Before executing anything, perform ONE FINAL AUTOMATED PREFLIGHT.
+
+PREFLIGHT
+
+Verify:
+
+1. genesis.json exists and SHA256 is exactly:
+2e85b9753a51b429725fb768eb09f6208f36cb1cec614bb788886eedaba6a657
+
+2. genesis.json parses successfully.
+
+3. Chain ID = 77.
+
+4. Total PW allocation = exactly 100,000,000 PW.
+
+5. All expected genesis addresses match the approved configuration.
+
+6. FeeDistributor =
+0x27B15970700daC632f0814522118A1c3B200d971
+
+7. Deployer =
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+8. All four validators V6–V9 are present in the final bootstrap configuration.
+
+9. All NodeIDs, BLS keys and PoPs are unique and valid.
+
+10. ChangeOwnerAddr =
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+11. Deployer key `testnet-deployer` resolves to the correct addresses.
+
+12. Deployer has sufficient live P-Chain AVAX.
+
+13. No unresolved placeholders remain.
+
+14. No old deployer address remains in active ceremony configuration.
+
+15. No old FeeDistributor remains in active ceremony configuration.
+
+16. Verify the exact Avalanche CLI command/version that will be used for deployment.
+
+17. Confirm the deployment target is FUJI, not mainnet or a local network.
+
+18. Confirm the exact blockchain name:
+primewave-testnet
+
+19. Confirm no unexpected transaction has been submitted since Step 1.
+
+STOP if ANY preflight check fails.
+
+If every check passes, proceed immediately with the project's documented Step 3 deployment command:
+
+`avalanche blockchain deploy`
+
+Use the exact command/options specified in the verified ceremony runbook. Do NOT improvise CLI flags.
+
+DURING DEPLOYMENT
+
+Capture:
+- every transaction hash
+- subnet ID
+- blockchain/chain ID
+- deployment output
+- any generated configuration
+- validator information
+- contract/deployment addresses
+- any warnings or errors
+
+Do not conceal or omit failed transactions.
+
+AFTER DEPLOYMENT
+
+Verify on Fuji that the created PrimeWave chain actually exists and is reachable.
+
+Verify:
+- subnet ID
+- blockchain ID
+- chain ID = 77
+- genesis/config accepted
+- validator configuration accepted
+- V6–V9 can see/join the new chain as expected
+- no deployment transaction is pending/failed
+
+Create:
+
+docs/PW-C15-STEP-3-DEPLOYMENT-REPORT.md
+
+Include:
+- preflight result
+- exact command used
+- all transaction hashes
+- subnet ID
+- blockchain ID
+- chain ID
+- deployment result
+- validator result
+- post-deployment verification
+- any remaining work
+
+CRITICAL:
+
+Do NOT proceed automatically to:
+- ConvertSubnetToL1Tx
+- contract deployment
+- PoA manager configuration
+- validator registration changes
+- token deployment
+- PWSwap deployment
+
+STOP after the PrimeWave testnet blockchain has been created and verified.
+
+Return the concise deployment result and report path.
