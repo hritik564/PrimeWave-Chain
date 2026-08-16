@@ -1,0 +1,117 @@
+PrimeWave Chain — CEREMONY STEP 2: GENESIS GENERATION ONLY
+
+Step 1 is COMPLETE and verified.
+
+Current deployer:
+
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+Current balances:
+
+C-Chain: 0.499999999 AVAX
+P-Chain: 1.499991730 AVAX
+
+The C→P transfer has already been confirmed on-chain.
+
+NOW EXECUTE ONLY STEP 2: FINAL GENESIS GENERATION.
+
+Use the exact genesis-generation procedure validated in:
+
+docs/PW-C15-FINAL-CEREMONY-READINESS.md
+
+and the existing PrimeWave testnet documentation/scripts.
+
+TASKS
+
+1. Verify the final testnet configuration before generating genesis.
+
+2. Fill all required genesis values using the already-approved configuration.
+
+3. Confirm these addresses are used exactly:
+
+DEPLOYER:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+TREASURY:
+0x1F471d2Dc7CB8b2C773aFeD40d4bD467ed1FdaD8
+
+TEAM:
+0x46a419514f52A4763596F75A9169B0Bd0153C673
+
+COMMUNITY:
+0xA6744C599A0d40082aAF03Bd643cfc30B2B16a0c
+
+ECOSYSTEM:
+0x2c5E541f667768dd1986C73530Dc29250fA86B7B
+
+RESERVE:
+0x3C98105b99bb9dc97B341D11ec264F5127A7221C
+
+FEEDISTRIBUTOR:
+0x27B15970700daC632f0814522118A1c3B200d971
+
+4. Verify all five EMS signer addresses remain populated and non-zero.
+
+5. Verify bootstrap-validators.json still contains exactly V6–V9 with the correct:
+- NodeIDs
+- BLS public keys
+- BLS PoPs
+- ChangeOwnerAddr =
+  P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+6. Generate the final genesis.json using the project's documented procedure.
+
+7. Validate the generated genesis.json:
+- valid JSON
+- no unresolved __REPLACE_*__ placeholders
+- no address(0) where a real address is required
+- correct chain/network configuration
+- correct validator/bootstrap configuration
+- correct allocation addresses
+- deterministic/reproducible output if the project procedure supports this
+
+8. Run any SAFE validation/build commands required by the project.
+
+9. Create:
+
+docs/PW-C15-GENESIS-GENERATION-REPORT.md
+
+Include:
+- exact genesis generation command(s)
+- source template/config used
+- final genesis path
+- SHA256 hash of genesis.json
+- all address validations
+- validator validations
+- any warnings
+- final validation result
+
+CRITICAL STOP CONDITION
+
+DO NOT:
+
+- run `avalanche blockchain deploy`
+- create a subnet
+- create a blockchain
+- convert the subnet to an L1
+- submit any P-Chain transaction
+- submit any C-Chain transaction
+- deploy contracts
+- register validators
+- alter the live validator nodes
+
+Genesis generation must be COMPLETELY OFF-CHAIN at this stage.
+
+STOP after generating and validating genesis.json.
+
+Return:
+1. concise result
+2. final genesis path
+3. SHA256 hash
+4. report path
+
+Nothing beyond Step 2.
