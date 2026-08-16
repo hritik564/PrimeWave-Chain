@@ -93,8 +93,8 @@ if [[ -z "$AVAGO_VER" ]]; then
 fi
 if [[ -z "$AVAGO_VER" ]]; then
   fail "avalanchego not found — expected at local-bin/avalanchego"
-elif [[ "$AVAGO_VER" != "1.14.2" ]]; then
-  fail "avalanchego version $AVAGO_VER — expected exactly 1.14.2 (pinned)"
+elif [[ "$AVAGO_VER" != "1.15.0-fuji" ]]; then
+  fail "avalanchego version $AVAGO_VER — expected exactly 1.15.0-fuji (pinned for testnet)"
 else
   ok "avalanchego $AVAGO_VER"
 fi

@@ -1,0 +1,36 @@
+[
+  {
+    "_comment": "Fill in all fields after each validator node has started and generated its identity.",
+    "_instructions": "Run 'curl -sf http://localhost:9650/ext/info -X POST -H Content-Type:application/json --data {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"info.getNodeID\",\"params\":{}} | python3 -m json.tool' on each node.",
+    "NodeID": "__REPLACE_VALIDATOR_1_NODE_ID__",
+    "Weight": 100,
+    "Balance": 0.375,
+    "BLSPublicKey": "__REPLACE_VALIDATOR_1_BLS_PUBLIC_KEY__",
+    "BLSProofOfPossession": "__REPLACE_VALIDATOR_1_BLS_PROOF_OF_POSSESSION__",
+    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+  },
+  {
+    "NodeID": "__REPLACE_VALIDATOR_2_NODE_ID__",
+    "Weight": 100,
+    "Balance": 0.375,
+    "BLSPublicKey": "__REPLACE_VALIDATOR_2_BLS_PUBLIC_KEY__",
+    "BLSProofOfPossession": "__REPLACE_VALIDATOR_2_BLS_PROOF_OF_POSSESSION__",
+    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+  },
+  {
+    "NodeID": "__REPLACE_VALIDATOR_3_NODE_ID__",
+    "Weight": 100,
+    "Balance": 0.375,
+    "BLSPublicKey": "__REPLACE_VALIDATOR_3_BLS_PUBLIC_KEY__",
+    "BLSProofOfPossession": "__REPLACE_VALIDATOR_3_BLS_PROOF_OF_POSSESSION__",
+    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+  },
+  {
+    "NodeID": "__REPLACE_VALIDATOR_4_NODE_ID__",
+    "Weight": 100,
+    "Balance": 0.375,
+    "BLSPublicKey": "__REPLACE_VALIDATOR_4_BLS_PUBLIC_KEY__",
+    "BLSProofOfPossession": "__REPLACE_VALIDATOR_4_BLS_PROOF_OF_POSSESSION__",
+    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+  }
+]

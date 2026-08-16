@@ -19,3 +19,4 @@
 - [PrimeWave Server Hardening](primewave-server-hardening.md) — Validator #1 hardened: 4G swap ✅ memtester PASS ✅ nftables active ✅; awaiting AvalancheGo install approval
 - [PrimeWave AvalancheGo Install](primewave-avalanchego-install.md) — v1.14.2 running on Validator #1; NodeID 8PrCNxVr…; 0 peers (Netcup firewall 9651 not yet open); 2 pitfalls: removed --api-keystore-enabled, need home dir
 - [Local vs Testnet subnet-evm binary](local-testnet-subnet-evm-split.md) — local dev needs v1.14.2 bak; testnet prep swaps to v1.15.0 — must restore bak after testnet work
+- [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 COMPLETE (Replit-side); arch docs + key ceremony + 12 blocker fixes; 5 external gates remain; POA_MANAGER=0x0Feedc0de...

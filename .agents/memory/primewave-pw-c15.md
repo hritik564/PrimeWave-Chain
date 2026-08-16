@@ -1,73 +1,88 @@
 ---
 name: PrimeWave Chain PW-C15
-description: C15 Testnet Battle Test + Mainnet Readiness — scope, infra audit, chain ID research, deliverables, pitfalls
+description: Testnet pre-launch sprint; arch docs + key ceremony + all blocker fixes; NO-GO (external gates)
 ---
 
-## Status
-C15 IN PROGRESS — In-Replit work complete; PW-C15-External infrastructure audit complete.
-Live testnet execution blocked on external cloud infrastructure.
+# PW-C15 — Testnet Pre-Launch Sprint
 
-## Critical Finding: Mainnet Chain ID
-ALL two-digit EVM chain IDs (1–99) are registered on chainlist.network (verified 2026-08-15).
-No two-digit mainnet chain ID is available. Three-digit candidates (all confirmed available 2026-08-15):
-**149, 209, 229, 235, 241** — verify again at finalization time (list changes monthly).
-DO NOT finalize without leadership approval. Current status: MAINNET CHAIN ID = TBD.
+## State
+COMPLETE (all Replit-side work). External gates remain — operator must act.
 
-## Chain IDs (Locked)
-- Development: 73571 (unchanged forever)
-- Testnet: 77 / hex 0x4d (locked C14/post-C14)
-- Mainnet: TBD — no two-digit IDs available
+## Critical Findings (architectural, persist forever)
 
-## Testnet-Deployer Key (Public Info Only — NEVER commit private key)
-- Generated 2026-08-15 in Replit via `avalanche key create testnet-deployer`
-- C-Chain (EVM): `0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60`
-- P-Chain (Fuji): `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw`
-- X-Chain (Fuji): `X-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw`
-- Balance: 0 AVAX — fund via https://faucet.avax.network
-- SECURITY NOTE: For production-grade testnet, regenerate on air-gapped hardware per KEY_SECURITY_PROCEDURE
+### PoAManager predeploy address
+`0x0Feedc0de0000000000000000000000000000000` — Avalanche CLI standard predeploy for ALL L1 chains.
+Confirmed from `~/.avalanche-cli/subnets/primewavedev/sidecar.json`.
+EIP-55 checksum form (required by Solidity): `0x0Feedc0de0000000000000000000000000000000`
+Human-readable form used in docs: `0x0FEEDC0DE0000000000000000000000000000000`
 
-## Infrastructure Audit Results (2026-08-15)
-- Avalanche CLI v1.9.5: AVAILABLE (local-bin/avalanche)
-- AvalancheGo v1.14.2: AVAILABLE + RUNNING (4 local dev nodes)
-- subnet-evm: AVAILABLE (local-bin/subnet-evm)
-- Fuji P-Chain API: REACHABLE — api.avax-test.network height 292884, networkID 5
-- PostgreSQL 16.10: AVAILABLE (Replit PGHOST=helium)
-- Cloud VPS servers: BLOCKED — no credentials, no SSH keys
-- DNS management: BLOCKED
-- TLS certificates: BLOCKED
-- External validators: BLOCKED (binary exists; needs cloud servers)
-- Fuji AVAX (testnet-deployer): BLOCKED — 0 balance; needs faucet funding
+### PWVR.validatorManager is IMMUTABLE
+`PrimeWaveValidatorRegistry.validatorManager` is `public immutable` — no setter exists.
+It must receive `0x0Feedc0de0000000000000000000000000000000` (POA_MANAGER_ADDR) at constructor time.
+Old code passed `deployer` as placeholder — permanently broken. Fixed in DeployTestnet.s.sol.
 
-## Primary Unblock Path
-1. Fund P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw via faucet.avax.network
-2. Provision ≥3 cloud VPS (Hetzner/AWS/GCP)
-3. Register DNS: rpc.testnet.*, explorer.testnet.*
-4. Issue Let's Encrypt TLS certs
-5. Run: avalanche blockchain deploy primewave-testnet --fuji --key testnet-deployer
-6. Fill genesis placeholders (6 __REPLACE_*__ entries)
-7. Deploy validators, contracts, keeper, indexer, PWCScan
+### CLI flag: --num-bootstrap-validators (not --num-validators)
+All prior docs said `--num-validators`. Correct flag is `--num-bootstrap-validators`.
+`--bootstrap-filepath <json>` for non-interactive validator input.
+`--balance 0.375` = AVAX per validator for continuous P-Chain fee; 4 × 0.375 = 1.5 AVAX total.
+`--change-owner-address P-fuji1...` = required; P-Chain addr when validator exits.
+Do NOT use `--convert-only` — it skips PoAManager initialization.
 
-## In-Replit Deliverables (DONE)
-- 13 docs in docs/PW-C15-*.md + docs/PW-C15-INFRA-PROVISIONING-GUIDE.md
-- Forge 792/792, Indexer 57/57, Keeper 20/20 (regression run 2026-08-15)
-- Genesis static validation: Chain ID 77, 100M PW, NativeMinter disabled ✅
-- deploy-contracts.sh chain ID guard tested: correctly rejects dev chain 73571 ✅
-- C16 entry gate updated: 64 items; 11 PASS, 51 BLOCKED, 1 DEFERRED
-- testnet-deployer key generated (public addresses documented above)
-- Infra provisioning guide with exact commands: docs/PW-C15-INFRA-PROVISIONING-GUIDE.md
+### bootstrap-validators.json format (from sidecar.json BootstrapValidators)
+```json
+[{"NodeID":"NodeID-...","Weight":100,"Balance":0.375,
+  "BLSPublicKey":"0x<48-byte>","BLSProofOfPossession":"0x<96-byte>",
+  "ChangeOwnerAddr":"P-fuji1..."}]
+```
 
-## Deferred Item
-- G-32 / C15-19c: 14-day real-time unbond — cannot complete within sprint; simulation documented.
+### DeployTestnet.s.sol must run AFTER L1 is live (PoAManager predeploy exists from block 0)
+The script references `POA_MANAGER_ADDR` — this address is live as genesis alloc from block 0.
+The script cannot run before the L1 chain exists (chainid 77 guard will fail anyway).
 
-## Key Pitfalls / Rules
-- chainid.network/chains.json is the live check source — re-run before finalizing any chain ID
-- ewoq key (0x8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC) exists in CLI with Fuji balance — DO NOT use for testnet; it is a publicly known key
-- 14-day unbond: NEVER label time-warp simulation as real behavior
-- Keeper is NOT validator authority — ValidatorManager remains authoritative
-- No mainnet private keys may be generated until C16 key ceremony
-- Dev chain (Chain ID 73571, blockchain 2F3BHmNJWP4DNaBbMFQog3TvfcF6GRY7PX99r7Xzae4cRwAv6a) running locally with 4 nodes; blockchain health shows "false" (subnet VM may need restart)
+### cast wallet new --json outputs an ARRAY
+Format: `[{"address":"0x...","private_key":"0x..."}]` — use `d[0]['address']`, not `d['address']`.
+Fixed in generate-validator-keys.sh.
 
-## Regression Baseline
-- Forge: 792/792 ✅
-- Indexer Jest: 57/57 ✅
-- Keeper Jest: 20/20 ✅
+## Key Ceremony (PW-C15, 2026-08-16)
+Keys stored at: `~/.primewave-keys/` (NOT in git; mode 700; each file mode 600)
+Private key files format: JSON array from `cast wallet new --json`
+
+Public addresses:
+- testnet-deployer:     0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+- testnet-keeper-signer:0x56A717F87A8Cdb6e855f44a947B5941f6ba3FfA1
+- testnet-ems-signer-1: 0xb24F3FAF5B9ab7aFb625F105C791d5231b094853
+- testnet-ems-signer-2: 0x508367082eF7A3A8567fa10D92c98524EE2F3d30
+- testnet-ems-signer-3: 0xFa21258c9e5faa7aECbFD13f635863C5da0b8EC3
+- testnet-ems-signer-4: 0xB1346A22773B853552aF028b767bD6cC0171006a
+- testnet-ems-signer-5: 0x2D2d07AB95636Da735BAcBDC018420ca621C3448
+
+FeeDistributor predicted: 0xFd069eE048bB748EE60ce53f99D8c2E6ec1D7f99
+(deployer nonce=4; `cast compute-address 0x44A37aF5... --nonce 4`)
+
+Saved to: local-data/testnet-key-addresses.env
+
+## Blockers Fixed in Code
+1. node-config.json: removed bootstrap-ids/ips placeholders; added partial-sync-primary-network:true
+2. setup-testnet-node.sh: now copies canonical service file (deploy/testnet/systemd/); fixes specs to 4/8/200
+3. preflight-testnet.sh: version check fixed to 1.15.0-fuji
+4. generate-validator-keys.sh: version + JSON parse fixed
+5. check-external-prerequisites.sh: deployer address updated
+6. DeployTestnet.s.sol: POA_MANAGER_ADDR constant; EMS signers filled; registry constructor fixed
+7. Checklist: 7 placeholders (was 6); --num-bootstrap-validators 4 (was --num-validators 3)
+8. bootstrap-validators.json: template created at config/testnet/
+
+## External Gates Still Blocking
+- 4 VPS servers not provisioned
+- Fuji AVAX: deployer 0x44A37aF5... has 0 AVAX (fund via faucet.avax.network)
+- bootstrap-validators.json: needs NodeID+BLS from all 4 nodes after provisioning
+- 5 genesis wallet addresses not yet provided by operator
+- `avalanche blockchain create primewave-testnet` not yet run (depends on genesis being final)
+
+**Why:** These require physical server provisioning and external wallet decisions outside Replit scope.
+
+## Files Created This Sprint
+- docs/PW-C15-VALIDATOR-MANAGER-FLOW.md (PoAManager architecture; 12 Q&A; deployment order)
+- docs/PW-C15-FUJI-CEREMONY-RUNBOOK.md (operator runbook; exact CLI commands; error recovery)
+- docs/PW-C15-EOD-LAUNCH-READINESS.md (GO/NO-GO report; 5 external gates)
+- local-data/testnet-key-addresses.env (public addresses only)
+- config/testnet/bootstrap-validators.json (template; needs node identities)

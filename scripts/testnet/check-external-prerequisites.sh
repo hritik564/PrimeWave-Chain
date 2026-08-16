@@ -39,7 +39,7 @@ fail()    { echo "[FAIL]    $*"; FAIL=$((FAIL+1)); }
 warn()    { echo "[WARN]    $*"; WARN=$((WARN+1)); }
 section() { echo ""; echo "── $* ──"; }
 
-DEPLOYER_CCHAIN="0x2AD3152Ca630e2eF6679EBeb8da7b8311bfbFc60"
+DEPLOYER_CCHAIN="0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f"
 DEPLOYER_PCHAIN="P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw"
 TESTNET_RPC_URL="${TESTNET_RPC_URL:-}"
 TESTNET_RPC_HOST="${TESTNET_RPC_HOST:-rpc.testnet.primewave.xyz}"

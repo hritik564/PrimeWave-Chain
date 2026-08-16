@@ -1,0 +1,228 @@
+We need to move PrimeWave testnet to launch ASAP today.
+
+You have just completed the PRIMEWAVE PRE-FLIGHT L1 LAUNCH AUDIT. Before any irreversible Fuji transaction, I want you to resolve the two remaining architecture uncertainties and then prepare the repository for execution.
+
+DO NOT provision VPSs.
+DO NOT fund wallets.
+DO NOT execute CreateSubnetTx.
+DO NOT execute CreateChainTx.
+DO NOT execute ConvertSubnetToL1Tx.
+DO NOT deploy contracts to Fuji.
+DO NOT modify V2–V5.
+
+This is still a preparation/verification sprint.
+
+==================================================
+PRIORITY 1 — RESOLVE VALIDATOR MANAGER / POAManager
+==================================================
+
+The audit found that:
+
+- DeployTestnet.s.sol deploys the PrimeWave protocol contracts.
+- PrimeWaveValidatorRegistry currently uses the deployer as a temporary ValidatorManager placeholder.
+- PoAManager is NOT deployed by DeployTestnet.s.sol.
+- ConvertSubnetToL1Tx requires the Validator Manager blockchain ID + manager address.
+- Therefore we must prove the exact ValidatorManager/PoAManager architecture BEFORE L1 conversion.
+
+Investigate the actual repository code and current Avalanche ACP-77/L1 architecture.
+
+Determine EXACTLY:
+
+1. What contract is intended to be the ValidatorManager for PrimeWave Phase 1?
+2. Is it:
+   - PoAManager directly,
+   - ValidatorManager + PoAManager,
+   - a proxy,
+   - or another architecture?
+3. Where must that contract live at the moment ConvertSubnetToL1Tx executes?
+4. On which blockchain is it deployed?
+5. How does its address become available to ConvertSubnetToL1Tx?
+6. Does the genesis already contain a ValidatorManager proxy/predeploy?
+7. If yes:
+   - what is its exact address?
+   - how is it initialized?
+   - how does it become connected to PoAManager?
+8. If no:
+   - what exact deployment must happen before ConvertSubnetToL1Tx?
+9. How does PrimeWaveValidatorRegistry obtain the REAL ValidatorManager address?
+10. What exact contract calls initialize the validator set?
+11. What exact contract calls are required after conversion?
+12. Confirm that the final Phase-1 architecture is:
+
+   ConvertSubnetToL1Tx
+        ↓
+   ValidatorManager
+        ↓
+   PoAManager
+        ↓
+   PrimeWaveValidatorRegistry / FeeVault integration
+
+   OR provide the correct architecture if this diagram is wrong.
+
+Use the actual source code and current Avalanche L1/ACP-77 implementation as evidence.
+
+Do NOT guess.
+
+Create:
+
+docs/PW-C15-VALIDATOR-MANAGER-FLOW.md
+
+containing:
+- exact architecture
+- exact contract addresses/placeholders
+- exact deployment order
+- exact transaction order
+- exact commands
+- exact dependencies
+- exact point at which ConvertSubnetToL1Tx can safely be executed
+
+==================================================
+PRIORITY 2 — VALIDATE THE FUJI CLI CEREMONY
+==================================================
+
+Determine exactly how the installed Avalanche CLI v1.9.5 handles:
+
+avalanche blockchain deploy primewave-testnet \
+  --fuji \
+  --key testnet-deployer \
+  --num-validators 4
+
+Specifically verify:
+
+1. Does --num-validators 4 merely control validator count?
+2. Does the CLI prompt for:
+   - NodeID
+   - BLS public key
+   - BLS proof of possession
+   - weight
+3. Can we supply our four EXISTING fresh VPS identities?
+4. What exact interactive prompts appear?
+5. What exact input is expected at each prompt?
+6. Is there a non-interactive/file-based method?
+7. Can we perform a harmless dry-run or local simulation that exercises the exact command flow without broadcasting to Fuji?
+
+Create:
+
+docs/PW-C15-FUJI-CEREMONY-RUNBOOK.md
+
+with the exact operator sequence.
+
+==================================================
+PRIORITY 3 — FIX THE PRE-FLIGHT BLOCKERS
+==================================================
+
+After resolving the above, implement only the safe repository changes required for launch:
+
+1. Add:
+   "partial-sync-primary-network": true
+
+   to the canonical node configuration.
+
+2. Remove invalid:
+   __REPLACE_BOOTSTRAP_NODE_IDS__
+   __REPLACE_BOOTSTRAP_NODE_IPS__
+
+   bootstrap placeholders.
+
+3. Ensure setup-testnet-node.sh uses the same canonical systemd service definition as deploy/testnet/systemd/primewave-testnet-node.service.
+
+4. Add partial-sync support to the actual service/config used by fresh validators.
+
+5. Fix AvalancheGo version checks to 1.15.0-fuji.
+
+6. Fix stale v1.14.2 references.
+
+7. Fix the genesis checklist so ALL 7 placeholders are explicitly handled.
+
+8. Update all validator-count documentation to 4.
+
+9. Create the ICM relayer configuration TEMPLATE, but do not deploy it.
+
+10. Do NOT generate or expose private keys unless the existing repository workflow explicitly requires it. If keys must be generated, store them only under the designated secure path.
+
+==================================================
+PRIORITY 4 — KEY CEREMONY
+==================================================
+
+Verify the existing key-generation script.
+
+If the old testnet-deployer private key is genuinely unrecoverable:
+
+- generate a NEW testnet-deployer
+- generate testnet-keeper-signer
+- generate EMS signer 1–5
+- record public addresses
+- NEVER print private keys in the response
+- store private keys only under:
+
+  /secure/testnet-keys/
+
+Then calculate the FeeDistributor CREATE address using deployer nonce 4.
+
+Verify the predicted address against the deployment script.
+
+==================================================
+PRIORITY 5 — GENESIS VALIDATION
+==================================================
+
+Do NOT finalize genesis until the following are known:
+
+- new deployer address
+- treasury address
+- team address
+- community address
+- ecosystem address
+- reserve address
+- predicted FeeDistributor address
+- actual ValidatorManager/PoAManager architecture
+
+Create a validation script/check that fails if ANY placeholder remains.
+
+Also verify:
+
+- chain ID = 77
+- VM ID correct
+- gas limit = 30,000,000
+- target block rate = 2 seconds
+- min base fee = 25 gwei
+- warp quorum = 67/100
+- RewardManager configuration
+- all alloc totals = 100M PW
+- no malformed EVM addresses
+
+==================================================
+PRIORITY 6 — FINAL GO/NO-GO
+==================================================
+
+At the end, produce:
+
+docs/PW-C15-EOD-LAUNCH-READINESS.md
+
+with exactly:
+
+A. BLOCKERS REMAINING
+B. BLOCKERS RESOLVED
+C. OPERATOR ACTIONS REQUIRED
+D. REPLIT ACTIONS REQUIRED
+E. IRREVERSIBLE ACTIONS
+F. EXACT EXECUTION ORDER
+G. PARALLEL TASKS
+H. ESTIMATED TIME
+I. EOD FEASIBILITY
+J. FINAL GO / NO-GO
+
+The final report must explicitly answer:
+
+"Can we safely begin the Fuji L1 ceremony today?"
+
+and:
+
+"Can PrimeWave testnet realistically be live by EOD?"
+
+IMPORTANT:
+
+Do not tell me "yes" merely because the architecture looks plausible.
+
+We need source/code-level proof for the ValidatorManager flow and the actual CLI ceremony before any irreversible Fuji transaction.
+
+If both are proven, stop and give me the exact next operator actions.

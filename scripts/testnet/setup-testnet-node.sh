@@ -8,8 +8,8 @@
 #
 # Prerequisites:
 #   - Ubuntu 22.04 LTS
-#   - 8+ vCPU, 32GB RAM, 500GB NVMe SSD (validator)
-#   - 16+ vCPU, 64GB RAM, 2TB NVMe SSD (RPC/archive)
+#   - 4 vCPU, 8GB RAM, 200GB SSD (validator)
+#   - 8+ vCPU, 16GB RAM, 500GB NVMe SSD (RPC/archive)
 #   - Node subnet ID and blockchain ID available
 #
 # Usage:
@@ -94,43 +94,37 @@ print('[OK]    Chain config updated for RPC/archive node')
 "
 fi
 
-# Install systemd service
+# Install node configuration file and systemd service
+# Uses the canonical service file from deploy/testnet/systemd/ (single source of truth).
+# The service reads all flags from /etc/primewave/node-config.json via --config-file.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
+mkdir -p /etc/primewave
+
+# Write node-config.json with subnet ID and role-appropriate http-host filled in
+python3 << PYEOF
+import json
+cfg = json.load(open('$REPO_ROOT/config/testnet/node-config.json'))
+cfg['track-subnets'] = '$TESTNET_SUBNET_ID'
+cfg['plugin-dir']    = '$PLUGIN_DIR'
+cfg['db-dir']        = '$DATA_DIR/db'
+cfg['log-dir']       = '$LOG_DIR'
+if '$NODE_ROLE' == 'rpc':
+    cfg['http-host'] = '0.0.0.0'
+    # RPC nodes: disable partial-sync so they have full state for queries
+    cfg.pop('partial-sync-primary-network', None)
+json.dump(cfg, open('/etc/primewave/node-config.json', 'w'), indent=2)
+print('[OK]    Node config written to /etc/primewave/node-config.json')
+PYEOF
+
+# Install canonical service file (source of truth: deploy/testnet/systemd/)
 SERVICE_FILE="/etc/systemd/system/primewave-testnet-node.service"
-HTTP_HOST="127.0.0.1"
-[[ "$NODE_ROLE" == "rpc" ]] && HTTP_HOST="0.0.0.0"
-
-cat > "$SERVICE_FILE" << EOF
-[Unit]
-Description=PrimeWave Testnet AvalancheGo Node ($NODE_ROLE)
-After=network.target
-Wants=network.target
-
-[Service]
-User=$NODE_USER
-Group=$NODE_USER
-Type=simple
-Restart=always
-RestartSec=5s
-ExecStart=$BIN_DIR/avalanchego \\
-  --network-id=fuji \\
-  --http-host=$HTTP_HOST \\
-  --http-port=9650 \\
-  --staking-port=9651 \\
-  --api-admin-enabled=false \\
-  --track-subnets=$TESTNET_SUBNET_ID \\
-  --db-dir=$DATA_DIR/db \\
-  --log-dir=$LOG_DIR \\
-  --plugin-dir=$PLUGIN_DIR \\
-  --log-level=info \\
-  --log-format=json
-StandardOutput=journal
-StandardError=journal
-LimitNOFILE=65536
-LimitNPROC=65536
-
-[Install]
-WantedBy=multi-user.target
-EOF
+cp "$REPO_ROOT/deploy/testnet/systemd/primewave-testnet-node.service" "$SERVICE_FILE"
+# Patch user/group if different from default 'avalanche'
+if [[ "$NODE_USER" != "avalanche" ]]; then
+  sed -i "s|User=avalanche|User=$NODE_USER|g; s|Group=avalanche|Group=$NODE_USER|g" "$SERVICE_FILE"
+fi
+# Patch ReadWritePaths to match DATA_DIR and LOG_DIR
+sed -i "s|ReadWritePaths=/data/avalanchego /var/log/avalanchego|ReadWritePaths=$DATA_DIR $LOG_DIR|g" "$SERVICE_FILE"
 
 systemctl daemon-reload
 echo "[OK]    Systemd service installed: $SERVICE_FILE"
