@@ -1,0 +1,264 @@
+PrimeWave — V5 EMERGENCY DISK / SSH RECOVERY
+
+V5:
+IP: 152.53.17.32
+
+This node is currently unreachable through SSH using BOTH key and password authentication.
+
+Last known state:
+- AvalancheGo v1.15.0
+- DB: ~181 GB
+- Free disk: ~55 GB
+- Previous growth: ~35 GB in ~102 minutes (~20 GB/hour)
+- Entered C-Chain database compaction at ~10:57:16 IST
+- Last known peers: 56
+- Last known service: active
+- Last known NRestarts: 0
+
+The SSH failure is:
+
+Key:
+"kex_exchange_identification: read: Connection reset by peer"
+
+Password:
+"Connection closed by 152.53.17.32 port 22"
+
+We suspect severe filesystem/disk pressure, but DO NOT assume this is the cause without verification.
+
+==================================================
+CRITICAL SAFETY RULES
+==================================================
+
+DO NOT:
+
+- delete /data/avalanchego/db
+- delete any Avalanche blockchain database files
+- wipe or re-sync V5
+- reinstall AvalancheGo
+- regenerate NodeID
+- regenerate BLS keys
+- modify staking identity
+- change network ID
+- change chain configuration
+- change validator configuration
+- downgrade AvalancheGo
+- modify V2/V3/V4
+- create/recreate any subnet
+- modify PrimeWave chain configuration
+
+Do NOT reboot V5 blindly.
+
+First establish the actual state.
+
+==================================================
+1. OUT-OF-BAND / SERVER ACCESS
+==================================================
+
+Use the available Netcup/server management access if necessary.
+
+If normal SSH is unavailable, use the server's console/KVM/VNC/out-of-band mechanism if available.
+
+Determine whether V5 is:
+
+A. alive and responsive
+B. alive but filesystem/SSH is severely constrained
+C. AvalancheGo is running but SSH is failing
+D. system is partially hung
+E. system has crashed/rebooted
+F. genuinely out of disk space
+
+==================================================
+2. IMMEDIATELY CHECK
+==================================================
+
+Once console access is obtained, collect:
+
+df -h /
+df -ih /
+free -h
+swapon --show
+
+systemctl is-active primewave-testnet-node
+systemctl status primewave-testnet-node --no-pager
+
+ps aux | grep avalanchego
+
+ss -lntp | grep -E ':22|:9650|:9651' || true
+
+journalctl -u primewave-testnet-node --since "2 hours ago" --no-pager | tail -100
+
+journalctl -u ssh --since "2 hours ago" --no-pager | tail -100
+
+dmesg -T | tail -100
+
+==================================================
+3. IDENTIFY DISK CONSUMPTION
+==================================================
+
+DO NOT delete anything yet.
+
+Determine where disk space is being consumed:
+
+du -xhd1 / 2>/dev/null | sort -h
+du -xhd1 /data 2>/dev/null | sort -h
+du -xhd1 /var 2>/dev/null | sort -h
+du -xhd1 /opt 2>/dev/null | sort -h
+
+Specifically inspect:
+
+/data/avalanchego/db
+/var/log
+/var/cache
+/tmp
+/opt/avalanchego
+
+Determine whether the rapid growth is:
+
+- AvalancheGo database growth
+- RocksDB compaction temporary files
+- system logs
+- package cache
+- temporary files
+- deleted-but-open files
+- another unexpected process
+
+==================================================
+4. CHECK AVALANCHEGO STATE
+==================================================
+
+If AvalancheGo is running:
+
+- DO NOT restart it automatically.
+- Check PID and resource usage.
+- Check latest C-chain log activity.
+- Determine whether compaction is still running.
+- Determine whether EVM execution has started.
+- Determine whether the DB is actively growing.
+- Check P/X/C bootstrap state if API is accessible.
+
+If AvalancheGo is NOT running:
+
+Determine exactly why it stopped.
+
+Do NOT immediately restart it.
+
+==================================================
+5. DISK RECOVERY — ONLY IF REQUIRED
+==================================================
+
+If disk pressure is confirmed to be the cause of SSH failure:
+
+First identify safe reclaimable space.
+
+Potentially safe candidates include:
+
+- old rotated system logs
+- package manager cache
+- temporary files
+- other clearly disposable OS files
+
+DO NOT touch:
+
+/data/avalanchego/db
+/home/avalanche/.avalanchego/staking
+staker.crt
+staker.key
+signer.key
+BLS identity material
+NodeID identity files
+
+Before deleting anything, report exactly:
+
+- path
+- size
+- why it is safe to remove
+
+Only remove clearly disposable OS data if necessary to restore safe operating space.
+
+Aim to restore a comfortable amount of free disk space, not merely get the filesystem barely above 0%.
+
+==================================================
+6. SSH RECOVERY
+==================================================
+
+Once the system has sufficient resources:
+
+Check:
+
+systemctl status ssh
+sshd -t
+
+Then determine why SSH sessions were being terminated.
+
+Do NOT weaken SSH security.
+
+Do NOT disable the firewall.
+
+Do NOT enable unnecessary authentication methods.
+
+If SSH is simply resource-starved, restore normal SSH operation without changing unrelated configuration.
+
+==================================================
+7. AVALANCHEGO
+==================================================
+
+After V5 is stable and has adequate disk:
+
+DO NOT restart AvalancheGo unless:
+
+- it is actually stopped/crashed, OR
+- it is demonstrably hung and a restart is the safest recovery action.
+
+If it is actively compacting or executing EVM blocks, LEAVE IT RUNNING.
+
+Do not interrupt active database compaction/execution merely because it is slow.
+
+==================================================
+8. FINAL VERIFICATION
+==================================================
+
+After any necessary recovery, report:
+
+| Field | V5 |
+|---|---|
+| SSH | |
+| Service | |
+| PID | |
+| NRestarts | |
+| AvalancheGo version | |
+| Peers | |
+| DB size | |
+| Free disk | |
+| Disk usage | |
+| CPU | |
+| RAM/swap | |
+| Compaction | |
+| EVM execution | |
+| P-chain | |
+| X-chain | |
+| C-chain | |
+| Recent errors | |
+| Node identity changed? | MUST be NO |
+| Recovery action | |
+
+Then give a final verdict:
+
+GREEN — V5 recovered and safely continuing C-chain execution
+
+YELLOW — V5 recovered but requires monitoring
+
+RED — V5 requires operator intervention and must NOT continue blindly
+
+==================================================
+ABSOLUTE FINAL RULE
+==================================================
+
+Preserve the existing V5 blockchain database and staking identity at all costs.
+
+The objective is:
+
+RECOVER V5 → PRESERVE DATABASE → PRESERVE NODE IDENTITY → RESTORE SSH → ENSURE SAFE DISK SPACE → ALLOW C-CHAIN EXECUTION TO CONTINUE.
+
+Do not touch V2, V3 or V4.
+
+STOP after the consolidated report.
