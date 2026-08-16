@@ -1,0 +1,92 @@
+PrimeWave Chain — CEREMONY STEP 1 ONLY: C→P FUND TRANSFER
+
+The final ceremony readiness check is GO.
+
+We are now beginning the ceremony, but execute ONLY Step 1.
+
+DEPLOYER
+
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+Avalanche CLI key:
+testnet-deployer
+
+Current verified balance:
+2.0 AVAX on Fuji C-Chain
+
+TASK
+
+Transfer exactly 1.5 AVAX from the testnet deployer's C-Chain to its P-Chain using the exact verified command:
+
+./local-bin/avalanche key transfer \
+  --key testnet-deployer \
+  --fuji \
+  --amount 1.5 \
+  --source-chain C \
+  --destination-chain P
+
+IMPORTANT SAFETY RULES
+
+1. Execute ONLY this C→P transfer.
+2. Do NOT run `avalanche blockchain deploy`.
+3. Do NOT create the subnet.
+4. Do NOT create the blockchain.
+5. Do NOT convert the subnet to an L1.
+6. Do NOT deploy any contracts.
+7. Do NOT register validators.
+8. Do NOT generate or modify genesis.
+9. Do NOT execute any other transaction.
+10. Do NOT regenerate the deployer key.
+11. Do NOT expose or print the private key.
+
+AFTER THE TRANSFER
+
+Verify the transaction succeeded.
+
+Then verify the deployer's balances on both chains.
+
+Confirm:
+
+- C-Chain balance is approximately 0.5 AVAX minus any transfer fee
+- P-Chain balance is approximately 1.5 AVAX minus applicable fees
+- The receiving P-Chain address is exactly:
+  P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+- The transaction was sent by the correct deployer
+- No unexpected transactions occurred
+
+Also verify the deployer key still resolves to:
+
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+REPORT
+
+Create:
+
+docs/PW-C15-C2P-FUND-TRANSFER-REPORT.md
+
+Include:
+
+- timestamp
+- source address
+- destination P-Chain address
+- amount transferred
+- transaction ID
+- C-Chain balance before/after
+- P-Chain balance before/after
+- confirmation status
+- any fees
+- final result
+
+STOP COMPLETELY after verification and report creation.
+
+Do NOT proceed to genesis generation or blockchain deployment.
+
+Return only a concise summary and the report path.
