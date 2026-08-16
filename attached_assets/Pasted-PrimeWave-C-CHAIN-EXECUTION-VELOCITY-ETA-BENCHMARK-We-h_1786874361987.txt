@@ -1,0 +1,96 @@
+PrimeWave — C-CHAIN EXECUTION VELOCITY / ETA BENCHMARK
+
+We have been waiting nearly 24 hours and need a realistic planning ETA.
+
+READ-ONLY ONLY.
+Do NOT restart, modify, optimize, wipe, or reconfigure any node.
+
+Primary benchmark: V2 (152.53.19.19), because it has already entered C-Chain EVM execution.
+
+STEP 1 — IMMEDIATE SNAPSHOT
+
+For V2 record:
+
+- current C-chain executed blocks
+- total C-chain blocks
+- percentage complete
+- execution rate
+- timestamp
+- DB size
+- free disk
+- CPU
+- iowait
+- RAM/swap
+- service status
+- errors
+
+Also check whether V3/V4/V5 have entered:
+- compaction
+- EVM execution
+- or are still downloading
+
+STEP 2 — WAIT 30 MINUTES
+
+Do not restart or modify anything during this period.
+
+After approximately 30 minutes, take the same V2 measurements again.
+
+STEP 3 — CALCULATE REAL EXECUTION RATE
+
+Calculate:
+
+blocks executed during interval
+blocks/second
+blocks/minute
+blocks/hour
+
+Calculate remaining blocks and theoretical remaining time using the OBSERVED sustained rate.
+
+Do NOT use the early 0.2% ETA unless it agrees with the measured rate.
+
+STEP 4 — CHECK WHETHER EXECUTION RATE IS STABLE
+
+Compare the first and second measurements.
+
+If possible, inspect the execution logs for multiple recent samples and determine whether execution rate is:
+
+- increasing
+- stable
+- decreasing
+
+Give a realistic ETA RANGE rather than a single false-precision number.
+
+For example:
+
+Best case: X hours
+Likely case: Y–Z hours
+Worst reasonable case: W hours
+
+Only provide estimates supported by the observed execution data.
+
+STEP 5 — FLEET STATUS
+
+Report:
+
+| Node | Stage | Executed | Total | % | Rate | DB | Free Disk | ETA |
+|------|-------|----------|-------|---|------|----|-----------|-----|
+
+For V3/V4/V5 determine whether they have reached EVM execution.
+
+STEP 6 — PLANNING RECOMMENDATION
+
+Based on the measured V2 execution rate, tell me:
+
+1. Realistic time until V2 C-chain bootstrap
+2. Whether V3/V4/V5 are likely to finish around the same time
+3. Earliest realistic time we should plan the PrimeWave subnet ceremony
+4. Whether there is anything we can safely work on in parallel
+5. Whether disk capacity remains adequate for the expected remaining execution
+
+IMPORTANT:
+
+Do NOT change anything on the nodes.
+
+The purpose of this exercise is to obtain a DATA-BASED ETA so development and deployment work can be planned around Fuji completion.
+
+STOP after the report.
