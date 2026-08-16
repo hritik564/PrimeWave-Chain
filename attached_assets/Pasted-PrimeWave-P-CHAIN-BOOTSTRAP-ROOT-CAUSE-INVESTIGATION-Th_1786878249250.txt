@@ -1,0 +1,183 @@
+PrimeWave — P-CHAIN BOOTSTRAP ROOT-CAUSE INVESTIGATION
+
+This is now the ONLY blocker preventing the Fuji L1 ceremony.
+
+IMPORTANT:
+Do NOT modify, restart, wipe, resize, or reconfigure any node.
+READ-ONLY ONLY.
+
+We need to determine exactly why:
+
+info.isBootstrapped({"chain":"P"})
+
+returns false on V2/V3/V4/V5 even though P-chain block-fetch logs stopped many hours ago.
+
+Do NOT assume that C-Chain EVM execution is the cause.
+Prove the actual dependency from AvalancheGo state/logs.
+
+==================================================
+1. DIRECT P-CHAIN STATUS
+==================================================
+
+On every node:
+
+V2
+V3
+V4
+V5
+
+Query:
+
+POST /ext/info
+method: info.isBootstrapped
+params: {"chain":"P"}
+
+Also query:
+
+platform.getHeight
+platform.getCurrentSupply
+platform.getValidators
+platform.getCurrentSupply
+
+where available.
+
+Record exact responses.
+
+==================================================
+2. P-CHAIN LOG INVESTIGATION
+==================================================
+
+Inspect the COMPLETE P-chain logs, not only the tail.
+
+Determine:
+
+- exact last P-chain bootstrap message
+- last accepted P-chain block
+- last accepted P-chain height
+- whether P-chain entered "bootstrapped" state internally
+- whether database reindexing/compaction is occurring
+- whether any P-chain execution is waiting on another subsystem
+- whether there are warnings/errors after block fetching completed
+
+Search specifically for:
+
+bootstrap
+bootstrapped
+finished bootstrap
+completed bootstrap
+executing
+compacting
+reindex
+lastAccepted
+height
+P Chain
+waiting
+timeout
+error
+fatal
+contiguousFailures
+
+==================================================
+3. COMPARE V2/V3/V4/V5
+
+Determine whether all four nodes are stuck at the same P-chain state.
+
+For each node report:
+
+| Node | P last accepted height | P target/latest height | P bootstrap stage | P DB status | P log last event | API isBootstrapped |
+|------|------------------------|-----------------------|-------------------|-------------|------------------|--------------------|
+
+==================================================
+4. CHECK PRIMARY NETWORK BOOTSTRAP SEMANTICS
+
+Verify from the installed AvalancheGo v1.15.0 behavior/logs whether:
+
+- P-chain bootstrap completion is independent of C-chain EVM execution
+OR
+- P-chain readiness is intentionally held until another condition is satisfied.
+
+Do not infer this from generic internet knowledge.
+
+Use the installed binary's behavior and logs/configuration as the primary evidence.
+
+If external Avalanche documentation is consulted, clearly separate it from node evidence.
+
+==================================================
+5. CHECK HEALTH SUBSYSTEM
+
+Query the health endpoint and identify EVERY failing check.
+
+Do not simply report:
+
+"subnets not bootstrapped"
+
+Determine which exact chain/check is responsible.
+
+Report:
+
+- network
+- P
+- X
+- C
+- bootstrapped
+- readiness
+- database
+- diskspace
+- router
+- BLS
+- futureupgrade
+
+and their exact status.
+
+==================================================
+6. CHECK WHETHER P-CHAIN IS ACTUALLY ADVANCING
+
+Take two P-chain height/status measurements approximately 5 minutes apart.
+
+Determine whether:
+
+- P-chain height is advancing
+- P-chain is completely stalled
+- P-chain is waiting for a prerequisite
+- P-chain is already caught up but bootstrap flag is blocked
+
+==================================================
+7. CRITICAL DECISION
+
+Return ONE of:
+
+A) P-CHAIN IS ACTUALLY BOOTSTRAPPED BUT API/HEALTH REPORTING IS MISLEADING
+
+B) P-CHAIN IS STILL BOOTSTRAPPING — IDENTIFY EXACT REMAINING STEP
+
+C) P-CHAIN IS STALLED — IDENTIFY EXACT CAUSE
+
+D) P-CHAIN READINESS IS INTENTIONALLY DEPENDENT ON ANOTHER CHAIN/SUBSYSTEM — PROVE THE DEPENDENCY
+
+E) CONFIGURATION/INSTALLATION ISSUE
+
+==================================================
+8. ETA
+
+Only after identifying the actual state:
+
+Provide a realistic ETA for P-chain readiness.
+
+Do NOT give a 5–11 day estimate based on C-chain execution unless you can prove that P-chain bootstrap is intentionally blocked by C-chain execution.
+
+==================================================
+ABSOLUTE RULE
+
+Do NOT modify anything.
+
+Do NOT restart anything.
+
+Do NOT buy/resize storage.
+
+Do NOT create the L1.
+
+Do NOT fund/spend the deployer wallet.
+
+This is a ROOT-CAUSE investigation of P-chain bootstrap only.
+
+STOP after the report.
