@@ -15,6 +15,7 @@
 - [PrimeWave Chain PW-C13](primewave-pw-c13.md) — C13 COMPLETE; PWCScan explorer; 15 routes; design subagent; stats hook unwraps (no .data); 792/792+57/57+20/20
 - [PrimeWave Chain PW-C14](primewave-pw-c14.md) — C14 COMPLETE; testnet Chain ID 77 (was 77777); fuzz/em-dash pitfalls; genesis validated; 792/792+57/57+20/20
 - [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 COMPLETE; 62/0 preflight; 8 bugs fixed; security clean; DB restore pass; genesis 9/9; 792/792+57/57+20/20; §27 report written
+- [PrimeWave L1 Launch Audit](primewave-l1-launch-audit.md) — 13 inconsistencies; 10 blockers before L1 creation; critical: partial-sync flag missing, bootstrap placeholders broken, testnet-deployer key gone, FeeDistributor omitted from checklist
 - [PrimeWave Server Hardening](primewave-server-hardening.md) — Validator #1 hardened: 4G swap ✅ memtester PASS ✅ nftables active ✅; awaiting AvalancheGo install approval
 - [PrimeWave AvalancheGo Install](primewave-avalanchego-install.md) — v1.14.2 running on Validator #1; NodeID 8PrCNxVr…; 0 peers (Netcup firewall 9651 not yet open); 2 pitfalls: removed --api-keystore-enabled, need home dir
 - [Local vs Testnet subnet-evm binary](local-testnet-subnet-evm-split.md) — local dev needs v1.14.2 bak; testnet prep swaps to v1.15.0 — must restore bak after testnet work
