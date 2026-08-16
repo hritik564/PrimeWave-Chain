@@ -1,0 +1,147 @@
+PrimeWave — URGENT ALTERNATIVE BOOTSTRAP / L1 DEPLOYMENT PATH INVESTIGATION
+
+We need to get the PrimeWave Fuji testnet operational ASAP.
+
+Do NOT modify or restart V2/V3/V4/V5 yet.
+
+Do NOT wipe their databases.
+
+Do NOT purchase or resize storage.
+
+The current four nodes are performing a full Fuji Primary Network historical bootstrap and C-Chain EVM execution is taking several days.
+
+We need to determine whether there is an Avalanche-supported FASTER path that allows us to proceed with PrimeWave L1 deployment without waiting for this full historical sync.
+
+==================================================
+1. CHECK AVALANCHE SUPPORTED BOOTSTRAP OPTIONS
+==================================================
+
+Using the currently installed AvalancheGo version:
+
+avalanchego/1.15.0
+
+Determine whether Fuji supports:
+
+- state sync
+- bootstrapping from a trusted snapshot
+- database snapshot restoration
+- partial sync
+- other officially supported fast-bootstrap mechanisms
+
+Do NOT enable anything yet.
+
+Explain exactly which options are compatible with AvalancheGo v1.15.0 and Fuji.
+
+==================================================
+2. CHECK CURRENT AVALANCHE L1 DEPLOYMENT WORKFLOW
+==================================================
+
+Determine the fastest officially supported workflow for:
+
+PrimeWave L1 → Fuji
+
+using our own validator infrastructure.
+
+Specifically determine:
+
+- whether a fully bootstrapped Fuji Primary Network node is mandatory for the deployer
+- whether the Avalanche CLI can use another Fuji bootstrap node
+- whether a managed/temporary Fuji bootstrap node can be used
+- whether we can create the L1 first and attach V2–V5 afterward
+- whether our four currently syncing nodes can remain running while the L1 is created elsewhere
+
+Do NOT create anything yet.
+
+==================================================
+3. CHECK AVALANCHE CLI
+==================================================
+
+Inspect installed Avalanche CLI version and available commands.
+
+Run:
+
+avalanche --version
+
+and relevant help commands.
+
+Determine the exact workflow for:
+
+avalanche blockchain create
+avalanche blockchain deploy
+avalanche blockchain addValidator
+
+for Fuji.
+
+Do NOT execute deployment.
+
+==================================================
+4. CHECK PRIMEWAVE L1 CONFIGURATION
+
+Inspect the existing PrimeWave Chain project/configuration and determine what is already prepared for:
+
+- VM
+- genesis
+- chain ID
+- subnet/L1 configuration
+- consensus
+- validator set
+- token parameters
+- network parameters
+
+Do not change configuration.
+
+==================================================
+5. CHECK WHETHER WE CAN SEPARATE:
+
+A. L1 CREATION
+B. VALIDATOR BOOTSTRAP
+C. V2–V5 FULL PRIMARY NETWORK SYNC
+
+We specifically want to know whether V2–V5 need to finish full Fuji P/X/C bootstrap BEFORE the PrimeWave L1 can be created.
+
+If not, give us the exact supported workflow.
+
+==================================================
+6. STORAGE
+
+Do NOT recommend additional storage unless technically necessary.
+
+Current free disk is approximately:
+
+V2 ~77 GB
+V3 ~77 GB
+V4 ~81 GB
+V5 ~78 GB
+
+The purpose of this investigation is to find a faster supported path before spending additional money.
+
+==================================================
+7. FINAL REPORT
+
+Return:
+
+1. Fastest supported route to PrimeWave Fuji L1
+2. Whether current V2–V5 nodes can be reused
+3. Whether full Fuji C-Chain historical execution is actually necessary for our final architecture
+4. Whether state sync/snapshot can eliminate the current multi-day wait
+5. Exact commands/configuration required
+6. What must be done manually by the operator
+7. What Replit can safely automate
+8. What we can work on in parallel
+
+CRITICAL:
+
+READ-ONLY INVESTIGATION ONLY.
+
+Do not:
+- restart nodes
+- wipe databases
+- change AvalancheGo config
+- enable state sync
+- resize disks
+- create subnet
+- deploy L1
+- submit transactions
+- spend funds
+
+STOP after the report.
