@@ -1,0 +1,121 @@
+PrimeWave — URGENT L1 CEREMONY READINESS CHECK
+
+We need to determine whether we can proceed with the PrimeWave Avalanche L1 testnet ceremony TODAY.
+
+IMPORTANT:
+This is a READ-ONLY readiness check.
+Do NOT restart, modify, wipe, reconfigure, or resize any server.
+
+Do NOT wait for full C-Chain bootstrap for this check.
+
+==================================================
+1. P-CHAIN BOOTSTRAP — DIRECT API
+==================================================
+
+For V2, V3, V4 and V5 query the AvalancheGo info API directly:
+
+POST /ext/info
+
+method:
+info.isBootstrapped
+
+params:
+{"chain":"P"}
+
+Record the exact boolean response for each node.
+
+Also query:
+
+info.getNetworkID
+info.getNodeID
+
+==================================================
+2. VERIFY P-CHAIN HEALTH
+==================================================
+
+For each node determine:
+
+- P-chain bootstrapped true/false
+- P-chain height if available
+- network ID
+- connected peers
+- service status
+- NRestarts
+- recent P-chain errors
+
+Do NOT use the generic overall health endpoint as the sole bootstrap indicator because C-chain execution is still in progress.
+
+==================================================
+3. VERIFY L1 CEREMONY PREREQUISITES
+==================================================
+
+Check the current PrimeWave deployment prerequisites that can be verified without changing anything:
+
+- P-chain is bootstrapped
+- V2/V3/V4/V5 NodeIDs available
+- V2/V3/V4/V5 BLS public keys available
+- BLS proof of possession available
+- validator identities are unique
+- AvalancheGo version is v1.15.0
+- RPCChainVM=46
+- Fuji network ID correct
+- required subnet/L1 tooling compatibility
+- subnet-EVM v1.15.0-fuji compatibility
+
+Also verify whether the deployer P-chain wallet previously reported as:
+
+P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw
+
+still has 0 AVAX or has since been funded.
+
+Do NOT move or spend funds.
+
+==================================================
+4. C-CHAIN STATUS
+==================================================
+
+Record C-chain status separately.
+
+C-chain being unbootstrapped must NOT automatically be classified as an L1 ceremony blocker.
+
+Report:
+
+V2 C-chain status
+V3 C-chain status
+V4 C-chain status
+V5 C-chain status
+
+But keep this separate from P-chain readiness.
+
+==================================================
+5. FINAL DECISION
+==================================================
+
+Return exactly one of:
+
+A) READY TO PROCEED WITH PRIMEWAVE L1 CEREMONY
+
+B) BLOCKED — P-CHAIN NOT READY
+
+C) BLOCKED — FUNDING REQUIRED
+
+D) BLOCKED — OTHER SPECIFIC PREREQUISITE
+
+If A, list the exact next ceremony steps.
+
+If C, report exactly how much P-chain AVAX is currently available and why funding is required.
+
+If B, show the exact P-chain API responses proving it.
+
+==================================================
+6. IMPORTANT
+==================================================
+
+Do NOT create the subnet.
+Do NOT submit transactions.
+Do NOT deploy the L1.
+Do NOT modify any server.
+
+This is ONLY a readiness verification.
+
+STOP after the report.
