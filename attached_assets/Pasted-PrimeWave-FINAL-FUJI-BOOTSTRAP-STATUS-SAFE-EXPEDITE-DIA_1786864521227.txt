@@ -1,0 +1,185 @@
+PrimeWave — FINAL FUJI BOOTSTRAP STATUS + SAFE EXPEDITE DIAGNOSTIC
+
+Perform a comprehensive check of V2, V3, V4 and V5.
+
+IMPORTANT:
+This is NOT permission to blindly restart, wipe, rebuild, or modify the nodes.
+
+First diagnose. Only make a change if the evidence shows it is safe and likely to improve bootstrap/execution performance.
+
+==================================================
+1. CHECK CURRENT BOOTSTRAP STATUS
+==================================================
+
+For each node, report:
+
+- Service active/running
+- NRestarts
+- AvalancheGo version
+- CPU utilization
+- RAM usage
+- Swap usage
+- Disk usage/free space
+- Disk I/O activity
+- Connected peers
+- Network health
+- P-Chain isBootstrapped
+- X-Chain isBootstrapped
+- C-Chain isBootstrapped
+- Current chain heights/progress where available
+- Database size
+- Database growth since previous check
+- Current bootstrap/execution stage
+- Recent AvalancheGo warnings/errors
+
+Determine whether the node is:
+
+A. actively progressing
+B. slow but progressing
+C. stalled
+D. experiencing an actual error
+
+==================================================
+2. COMPARE ALL FOUR NODES
+==================================================
+
+Compare V2/V3/V4/V5.
+
+Determine whether:
+
+- all four are at approximately the same execution stage
+- one node is significantly behind
+- all four are CPU-bound
+- all four are disk/I/O-bound
+- any node is unusually slow
+- any node has a configuration difference
+- any node is repeatedly retrying/failing work
+
+Do NOT assume that database size alone represents bootstrap progress.
+
+==================================================
+3. INVESTIGATE WHY BOOTSTRAP IS TAKING SO LONG
+==================================================
+
+Check the AvalancheGo logs and APIs for the actual current execution state.
+
+Look specifically for:
+
+- block execution progress
+- current block height
+- blocks remaining
+- execution rate
+- C-Chain execution progress
+- database compaction
+- database stalls
+- repeated retries
+- consensus/network issues
+- resource exhaustion
+- filesystem/I/O bottlenecks
+- insufficient CPU allocation
+- memory pressure
+- swap pressure
+- disk-space pressure
+
+Determine whether the execution is genuinely advancing.
+
+==================================================
+4. SAFE PERFORMANCE OPTIMIZATION
+==================================================
+
+If the nodes are healthy and actively progressing:
+
+DO NOT make unnecessary changes.
+
+If you identify a specific safe optimization that can materially improve execution speed, explain it first in the report.
+
+Potentially safe areas to investigate include:
+
+- CPU/resource utilization
+- file descriptor limits
+- disk I/O conditions
+- AvalancheGo configuration that is explicitly safe for Fuji bootstrap
+- unnecessary competing processes
+
+Do NOT change consensus/network parameters simply to make synchronization faster.
+
+Do NOT modify:
+- NodeIDs
+- staking certificates
+- BLS keys
+- genesis
+- subnet configuration
+- network ID
+- chain IDs
+- validator identity
+- firewall policy
+
+==================================================
+5. ABSOLUTE PROHIBITIONS
+==================================================
+
+DO NOT:
+
+- wipe any database
+- delete blockchain data
+- reinstall AvalancheGo
+- downgrade AvalancheGo
+- change from v1.15.0-fuji
+- regenerate staking identities
+- copy identity files between nodes
+- create a subnet
+- create a blockchain
+- deploy contracts
+- deploy tokens
+- modify PrimeWave chain configuration
+- restart nodes repeatedly
+
+A restart is permitted ONLY if a node is demonstrably stalled/crashed and the restart is the safest corrective action.
+
+If a restart is required, restart ONLY the affected node and explain why.
+
+==================================================
+6. DISK SAFETY
+==================================================
+
+Current disks are approximately 251 GB.
+
+Pay particular attention to free space.
+
+If any node approaches a genuinely unsafe disk level, STOP before making changes and report it.
+
+Do not delete database data to create space.
+
+==================================================
+7. FINAL DECISION
+==================================================
+
+Return a consolidated table:
+
+| Node | Service | Peers | CPU | RAM | DB | Free Disk | P | X | C | Stage | Progress | Errors | Verdict |
+|------|---------|-------|-----|-----|----|-----------|---|---|---|-------|----------|--------|---------|
+
+Then classify each node:
+
+- HEALTHY / ACTIVELY PROGRESSING
+- SLOW BUT PROGRESSING
+- STALLED — ACTION TAKEN
+- STALLED — ACTION REQUIRED
+- ERROR
+
+Then provide:
+
+1. Is Fuji bootstrap progressing normally?
+2. Is there an actual bottleneck?
+3. Can it safely be expedited?
+4. What exact action was taken, if any?
+5. Did the action improve progress?
+6. Current P/X/C bootstrap status for every node.
+
+FINAL RULE:
+
+If all four nodes are actively progressing with no errors, DO NOT change anything merely because bootstrap is taking time.
+
+If all four are genuinely stalled or a clear safe bottleneck is identified, take the minimum safe corrective action and then re-check progress.
+
+STOP after the consolidated report.
