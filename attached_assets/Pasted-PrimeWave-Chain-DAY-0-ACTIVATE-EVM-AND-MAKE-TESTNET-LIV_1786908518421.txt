@@ -1,0 +1,222 @@
+PrimeWave Chain — DAY 0: ACTIVATE EVM AND MAKE TESTNET LIVE
+
+PrimeWave L1 has now been created successfully on Fuji.
+
+CHAIN IDENTIFIERS
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Conversion ID:
+3wDXKHGn9AggJmMfSZXhE2TpMtrghem3ymZ6RPm48KQpiECW4
+
+Manager:
+0x0feedc0de0000000000000000000000000000000
+
+EVM Chain ID:
+77
+
+Native token:
+PW
+
+VALIDATORS
+
+V6:
+152.53.66.93
+
+V7:
+152.53.66.201
+
+V8:
+159.195.44.104
+
+V9:
+159.195.47.126
+
+All four are AvalancheGo v1.15.0, rpcchainvm=46, Fuji NetworkID=5, P-Chain bootstrapped, and have unique validator identities.
+
+GOAL
+
+Make the PrimeWave L1 actually produce EVM blocks and become externally usable.
+
+PHASE 1 — DIAGNOSE VM
+
+Inspect the current state on V6–V9.
+
+Determine exactly:
+
+- whether the PrimeWave VM/plugin is installed
+- VM binary path
+- VM version
+- AvalancheGo compatibility
+- whether the VM is registered correctly
+- whether the PrimeWave blockchain is configured to use the correct VM ID
+- systemd service status
+- relevant AvalancheGo logs
+- exact reason the chain is not currently producing EVM blocks, if applicable
+
+IMPORTANT:
+
+DO NOT install a random public Subnet-EVM release.
+
+Our validators use AvalancheGo v1.15.0 / rpcchainvm=46.
+
+Determine the exact compatible VM source/version/build required by the existing PrimeWave repository and architecture.
+
+If the VM must be built from source, inspect the existing repository/configuration and build the correct compatible artifact.
+
+PHASE 2 — VM INSTALLATION
+
+If the VM is missing or incorrect:
+
+- build/install the correct compatible PrimeWave EVM VM
+- verify its checksum/version
+- install it consistently on V6–V9
+- do not downgrade AvalancheGo
+- do not change the validator identities
+- do not recreate the L1
+- do not alter the Subnet ID
+- do not alter the Blockchain ID
+- do not alter genesis
+- do not change chain ID 77
+
+Restart only the necessary AvalancheGo service if required.
+
+PHASE 3 — ACTIVATE CHAIN
+
+Once the VM is correctly installed:
+
+Verify all four validators recognize:
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Then verify:
+
+- VM loads successfully
+- no VM compatibility errors
+- no consensus errors
+- no validator errors
+- no database errors
+- no repeated restart loops
+
+Confirm whether the chain starts producing blocks.
+
+PHASE 4 — VERIFY BLOCK PRODUCTION
+
+Determine:
+
+- current block height
+- block timestamp
+- block production interval
+- which validators are participating
+- whether all four validators see the same tip
+- whether the EVM RPC is responding
+
+Test at minimum:
+
+eth_chainId
+eth_blockNumber
+eth_getBlockByNumber
+net_version
+web3_clientVersion
+
+The EVM chain ID MUST be 77.
+
+PHASE 5 — PUBLIC RPC
+
+ONLY AFTER LOCAL RPC WORKS:
+
+Determine the safest architecture for exposing a public RPC endpoint.
+
+Do not expose AvalancheGo's general administrative APIs.
+
+Expose only the PrimeWave EVM RPC required by MetaMask/dApps.
+
+Preferred architecture:
+
+Internet
+→ reverse proxy
+→ PrimeWave EVM RPC
+→ localhost AvalancheGo/VM endpoint
+
+Use HTTPS if the RPC will be public.
+
+Do not expose:
+- staking keys
+- SSH
+- AvalancheGo admin APIs
+- P-Chain APIs unnecessarily
+- unrestricted management endpoints
+
+PHASE 6 — RPC VERIFICATION
+
+Once public RPC is configured, verify from an external machine:
+
+eth_chainId
+eth_blockNumber
+
+Confirm:
+
+chainId = 77
+
+Confirm blocks continue increasing.
+
+PHASE 7 — METAMASK READINESS
+
+Do NOT modify MetaMask yet.
+
+Instead create:
+
+docs/PW-C15-METAMASK-CONNECTION.md
+
+with the exact final values:
+
+Network Name:
+PrimeWave Testnet
+
+RPC URL:
+<final HTTPS RPC URL>
+
+Chain ID:
+77
+
+Currency Symbol:
+PW
+
+Block Explorer:
+<leave blank until PWCScan is live>
+
+Also include a ready-to-copy MetaMask configuration.
+
+STOP after the RPC is publicly reachable and verified.
+
+DO NOT deploy contracts yet.
+
+DO NOT configure PWCScan yet.
+
+DO NOT start PWSwap yet.
+
+DO NOT make additional irreversible blockchain transactions.
+
+Create:
+
+docs/PW-C15-DAY-0-EVM-ACTIVATION-REPORT.md
+
+Include:
+- VM diagnosis
+- VM version
+- compatibility evidence
+- installation/build actions
+- V6–V9 status
+- block production evidence
+- local RPC test results
+- public RPC URL
+- external RPC test results
+- chain ID verification
+- remaining blockers
+
+Return a concise summary and report paths.

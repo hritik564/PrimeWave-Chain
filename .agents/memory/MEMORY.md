@@ -20,3 +20,4 @@
 - [PrimeWave AvalancheGo Install](primewave-avalanchego-install.md) — v1.14.2 running on Validator #1; NodeID 8PrCNxVr…; 0 peers (Netcup firewall 9651 not yet open); 2 pitfalls: removed --api-keystore-enabled, need home dir
 - [Local vs Testnet subnet-evm binary](local-testnet-subnet-evm-split.md) — local dev needs v1.14.2 bak; testnet prep swaps to v1.15.0 — must restore bak after testnet work
 - [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 COMPLETE (Replit-side); arch docs + key ceremony + 12 blocker fixes; 5 external gates remain; POA_MANAGER=0x0Feedc0de...
+- [PrimeWave Chain PW-C16](primewave-pw-c16.md) — C16 COMPLETE; patched subnet-evm (Durango check); chain LIVE; block production active; 4×nginx RPC on port 80; MetaMask doc written
