@@ -6,7 +6,7 @@
     "Balance": 0.375,
     "BLSPublicKey": "0xafec5f5a47c85569c4d556ed429b7cd6b5919199d82f9c58427494acf4ca2eb20f916650ec104623db2f0a1dd8cc94d9",
     "BLSProofOfPossession": "0x950565d5c6fd5f299b27261588a2dcb9eede3096a951271b892de5d103594aa91de415e9e07f61b77931d6558325877c01e24460a84c20b70e2b18ca78608527d8939a7603bf325ac8ae2d781382870a3490e2e35c8fa43991245f06bdd55786",
-    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+    "ChangeOwnerAddr": "P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz"
   },
   {
     "_note": "V7 — 152.53.66.201 — provisioned 2026-08-16 PW-C15",
@@ -15,7 +15,7 @@
     "Balance": 0.375,
     "BLSPublicKey": "0xa73965b62007d986c05c2379d70c254d6e518529dc58cf08173679d030accf9a87b1ecb4e6be5ce585442682d5d7f933",
     "BLSProofOfPossession": "0x93bed700938e659b5e574698a3edfef13a710090a44b9bdab5d39b8e02783765cf8e07c83ac157bce033d3a89c1cd469043a6d53ba42ac5ea6c0c739ebe2a1874371f83f087af98f58d63b185032466b0bb0eec3aa6a6d15303b65ef28b66a84",
-    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+    "ChangeOwnerAddr": "P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz"
   },
   {
     "_note": "V8 — 159.195.44.104 — provisioned 2026-08-16 PW-C15",
@@ -24,7 +24,7 @@
     "Balance": 0.375,
     "BLSPublicKey": "0xa61adbff78c2843d4804abb0f5563cc023a46f5c8a54348a7da42637b201e825e647ec550fb6cd5c839d8e37d4efdc23",
     "BLSProofOfPossession": "0x90ef97c3fed536212d6b088149898eff201c38e8237a35e3096331efe200f99fbd4aa37bb6ab4cd5a2ccd53bc9fafae918e9ccf9f0368b55c0832693dda0ce3be80bf007a54b6b3f8a2c7d5f66d634e771cc75effdb653a75f9be791ffcac109",
-    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+    "ChangeOwnerAddr": "P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz"
   },
   {
     "_note": "V9 — 159.195.47.126 — provisioned 2026-08-16 PW-C15",
@@ -33,6 +33,6 @@
     "Balance": 0.375,
     "BLSPublicKey": "0x932046c8e02bb715e5ce2c1452df82dee673a025d4e698116a8febc68c430694b03da6890af86e32025eb75eb3939e27",
     "BLSProofOfPossession": "0x9571c3523f2824b4a1b26cd2202fe517e5d3ff4c9697b9e4255dc9a5ea2671697a2d69a0c18dff118366e29c1fba5e17097d795e591c920de400240e78faa3762473449c943923bbfdfda9d9c71f4c405bb5c6b3deff11808205f4c92197669f",
-    "ChangeOwnerAddr": "P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__"
+    "ChangeOwnerAddr": "P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz"
   }
 ]

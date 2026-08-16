@@ -1,0 +1,147 @@
+PrimeWave Chain — CREATE NEW TESTNET DEPLOYER
+
+The original deployer key for:
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+is permanently unrecoverable.
+
+We are abandoning that deployer and creating a NEW testnet deployer.
+
+IMPORTANT:
+- This is Fuji TESTNET only.
+- Do NOT use this key for PrimeWave mainnet.
+- Do NOT touch or attempt to recover the old deployer.
+- Do NOT move or spend the old deployer's 2 AVAX.
+- Do NOT modify the five genesis wallet addresses.
+- Do NOT execute any blockchain creation or ceremony transaction yet.
+
+TASK 1 — CREATE NEW AVALANCHE CLI KEY
+
+Use the existing Avalanche CLI:
+
+./local-bin/avalanche key create testnet-deployer
+
+If a key with that exact name somehow exists, STOP and report it rather than overwriting it.
+
+Then run:
+
+./local-bin/avalanche key list --fuji --keys testnet-deployer
+
+Capture ONLY the public information:
+
+- C-Chain address
+- Fuji P-Chain address
+
+NEVER print the private key.
+
+TASK 2 — BACKUP THE NEW KEY
+
+The original key was lost because it was stored in ephemeral home storage.
+
+This MUST NOT happen again.
+
+Determine the safest documented way in this project to persist the new testnet-deployer private key outside ephemeral Replit home storage.
+
+Do NOT put the private key into:
+- git
+- source files
+- normal project files
+- public logs
+- chat output
+
+If the project already has an approved secure key-storage/backup procedure, follow it.
+
+If no secure persistence mechanism exists, STOP after key creation and tell me exactly what manual backup is required.
+
+TASK 3 — VERIFY ADDRESS
+
+The new C-Chain address must be different from:
+
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+Report:
+
+NEW DEPLOYER
+C-Chain: 0x...
+P-Chain: P-fuji1...
+
+Do not expose any secret material.
+
+TASK 4 — UPDATE BOOTSTRAP CONFIG
+
+Once the new Fuji P-Chain address is known, replace:
+
+P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__
+
+in:
+
+config/testnet/bootstrap-validators.json
+
+with the NEW deployer's P-Fuji address.
+
+Do not modify:
+- NodeIDs
+- BLS public keys
+- BLS proofs
+- validator weights
+- any other fields
+
+TASK 5 — UPDATE ALL PROJECT REFERENCES
+
+Search the project for the OLD deployer address:
+
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+Identify every place where it represents the testnet deployer.
+
+Replace only those deployer references with the NEW deployer's C-Chain address.
+
+Also search for references to the old deployer's P-Chain address if present.
+
+Do NOT replace unrelated historical documentation where the old address is intentionally recorded as an abandoned address.
+
+TASK 6 — FUNDING
+
+DO NOT move any funds automatically.
+
+Report the new C-Chain address and new P-Chain address.
+
+We will fund the NEW deployer manually after verification.
+
+TASK 7 — VALIDATE
+
+After the address/config updates, verify:
+
+- no unresolved deployer-address placeholder remains
+- bootstrap-validators.json is valid JSON
+- new P-Chain ChangeOwnerAddr is correct
+- genesis-template.json references the NEW deployer
+- DeployTestnet.s.sol references the NEW deployer where appropriate
+- no accidental replacement of unrelated addresses occurred
+- no transaction has been submitted
+
+Create/update:
+
+docs/PW-C15-DEPLOYER-REPLACEMENT-REPORT.md
+
+Include:
+- old deployer address (public only)
+- new deployer C-Chain address
+- new deployer P-Fuji address
+- all files updated
+- all remaining placeholders
+- funding status
+- secure backup status
+- final GO/NO-GO
+
+STOP after this.
+
+Do NOT run:
+- avalanche blockchain create
+- CreateSubnetTx
+- CreateChainTx
+- ConvertSubnetToL1Tx
+- contract deployment
+- validator registration
+
+Return a concise summary and the report path.

@@ -71,6 +71,16 @@ Saved to: local-data/testnet-key-addresses.env
 7. Checklist: 7 placeholders (was 6); --num-bootstrap-validators 4 (was --num-validators 3)
 8. bootstrap-validators.json: template created at config/testnet/
 
+## Deployer Replacement (2026-08-16)
+ORIGINAL deployer 0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f — key permanently lost (ephemeral ~/.primewave-keys/). 2.0 AVAX stranded. DO NOT RECOVER.
+NEW deployer C-Chain: 0xB518397E3D65a0E7475635F01C225E9426a76F11
+NEW deployer P-Chain: P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+Key stored: ~/.avalanche-cli/key/testnet-deployer.pk (EPHEMERAL — must back up before container restart)
+New FeeDistributor (nonce=4): 0x27B15970700daC632f0814522118A1c3B200d971
+Files updated: bootstrap-validators.json, testnet-key-addresses.env, check-external-prerequisites.sh, PW-C15-TESTNET-DAY-0-CHECKLIST.md
+Ceremony status: NOT YET FUNDED. Fund 0xB518397E... on Fuji then run ceremony.
+Report: docs/PW-C15-DEPLOYER-REPLACEMENT-REPORT.md
+
 ## V6–V9 Provisioning (2026-08-16)
 4 fresh Debian 13 (trixie) VPS nodes provisioned as testnet validators.
 - V6 (152.53.66.93):   NodeID-144dTzcL2vgpbKzX943xy5pEF3M8oGyiQ
