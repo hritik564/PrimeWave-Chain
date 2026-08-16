@@ -126,7 +126,7 @@ avalanche key transfer \
   --destination-chain P
 ```
 
-**EXPECTED RESULT:** P-Chain balance ≥ 1.5 AVAX on `P-fuji1p25rk6kz9lwg2plwmfmvkvzxsa5qd02kla0vsw`
+**EXPECTED RESULT:** P-Chain balance ≥ 1.5 AVAX on `P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz`
 
 **FAILURE CONDITION:** Balance too low; export fails.
 
@@ -407,7 +407,7 @@ curl -sf -X POST -H 'Content-Type: application/json' \
 
 ```
 __REPLACE_TESTNET_DEPLOYER_ADDRESS__   → testnet-deployer address (0xB518397E3D65a0E7475635F01C225E9426a76F11)
-__REPLACE_FEE_DISTRIBUTOR_ADDRESS__    → FeeDistributor predicted address (0xFd069eE048bB748EE60ce53f99D8c2E6ec1D7f99)
+__REPLACE_FEE_DISTRIBUTOR_ADDRESS__    → FeeDistributor predicted address (0x27B15970700daC632f0814522118A1c3B200d971)
 __REPLACE_TESTNET_TREASURY_ADDRESS__   → treasury multisig address
 __REPLACE_TESTNET_TEAM_ADDRESS__       → team vesting address
 __REPLACE_TESTNET_COMMUNITY_ADDRESS__  → community pool address

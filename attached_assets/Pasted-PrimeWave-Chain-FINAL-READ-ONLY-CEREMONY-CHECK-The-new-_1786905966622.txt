@@ -1,0 +1,169 @@
+PrimeWave Chain — FINAL READ-ONLY CEREMONY CHECK
+
+The new testnet deployer is now secured and funded.
+
+NEW DEPLOYER
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+Funding:
+2 AVAX Fuji sent to the new C-Chain deployer.
+
+The private key has been backed up securely by the operator.
+
+V6–V9 are fully provisioned and P-Chain bootstrapped.
+
+Perform ONE FINAL READ-ONLY CEREMONY READINESS CHECK.
+
+DO NOT execute any transaction.
+DO NOT create the blockchain.
+DO NOT create a subnet.
+DO NOT convert the subnet to an L1.
+DO NOT deploy contracts.
+DO NOT register validators.
+DO NOT spend or transfer AVAX.
+
+Verify all of the following:
+
+1. DEPLOYER
+
+Confirm the Avalanche CLI key named testnet-deployer derives EXACTLY:
+
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Fuji:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+Never output the private key.
+
+2. FUNDING
+
+Query the live Fuji balance of the new deployer.
+
+Report:
+- C-Chain balance
+- P-Chain balance
+- nonce
+- whether the balance is sufficient for the planned ceremony
+
+Do not transfer funds.
+
+3. VALIDATORS
+
+Verify V6, V7, V8, V9:
+
+- service active
+- AvalancheGo version
+- NetworkID=5
+- P-Chain isBootstrapped=true
+- current P-Chain height
+- peer count
+- NodeID
+- BLS public key
+- BLS proof of possession
+- unique identity across all four nodes
+- no restarts/errors
+
+4. BOOTSTRAP CONFIG
+
+Validate:
+
+config/testnet/bootstrap-validators.json
+
+Confirm:
+- exactly 4 validators
+- all NodeIDs unique
+- all BLS keys unique
+- PoPs present
+- ChangeOwnerAddr =
+  P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+- no unresolved placeholders
+- valid JSON
+
+5. GENESIS
+
+Validate:
+
+config/testnet/genesis-template.json
+
+Confirm:
+- all 7 replacement values are populated
+- deployer address =
+  0xB518397E3D65a0E7475635F01C225E9426a76F11
+- treasury =
+  0x1F471d2Dc7CB8b2C773aFeD40d4bD467ed1FdaD8
+- team =
+  0x46a419514f52A4763596F75A9169B0Bd0153C673
+- community =
+  0xA6744C599A0d40082aAF03Bd643cfc30B2B16a0c
+- ecosystem =
+  0x2c5E541f667768dd1986C73530Dc29250fA86B7B
+- reserve =
+  0x3C98105b99bb9dc97B341D11ec264F5127A7221C
+- FeeDistributor =
+  0x27B15970700daC632f0814522118A1c3B200d971
+
+6. DEPLOYMENT SCRIPT
+
+Verify contracts/script/DeployTestnet.s.sol:
+
+- deployer references the NEW deployer
+- POA_MANAGER_ADDR is correct
+- all 5 EMS signer addresses are non-zero
+- no old deployer address remains in active deployment configuration
+- forge build succeeds
+
+7. PROJECT-WIDE PLACEHOLDER AUDIT
+
+Search active configuration/scripts for:
+
+__REPLACE_
+TODO
+PLACEHOLDER
+address(0)
+44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+Ignore the old deployer address only where it is explicitly marked as historical/abandoned documentation.
+
+8. CEREMONY COMMAND VALIDATION
+
+Inspect the actual ceremony runbook and scripts.
+
+Determine the EXACT next commands that will be executed after this check.
+
+Verify that:
+- the correct deployer key will be used
+- the correct Fuji network is used
+- the correct validator bootstrap file is used
+- no stale addresses are referenced
+- no missing environment variables/secrets exist
+
+9. DRY RUN
+
+If the existing project scripts provide a genuinely non-mutating dry-run/validation mode, execute ONLY that.
+
+If no safe dry-run exists, do not improvise one.
+
+10. FINAL DECISION
+
+Create/update:
+
+docs/PW-C15-FINAL-CEREMONY-READINESS.md
+
+Give an explicit:
+
+GO
+or
+NO-GO
+
+If NO-GO, list ONLY actual blockers.
+
+If GO, provide the exact sequence of ceremony commands we should execute next, but DO NOT execute them.
+
+STOP.
+
+Return a concise summary and the report path.
