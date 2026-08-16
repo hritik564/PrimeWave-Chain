@@ -1,0 +1,177 @@
+PrimeWave Chain — V6–V9 Validator Provisioning
+
+The credentials for the four new VPS servers are now stored in Replit Secrets.
+
+Use ONLY these secrets:
+
+V6:
+PRIMEWAVE_V6_HOST
+PRIMEWAVE_V6_ROOT_PASSWORD
+
+V7:
+PRIMEWAVE_V7_HOST
+PRIMEWAVE_V7_ROOT_PASSWORD
+
+V8:
+PRIMEWAVE_V8_HOST
+PRIMEWAVE_V8_ROOT_PASSWORD
+
+V9:
+PRIMEWAVE_V9_HOST
+PRIMEWAVE_V9_ROOT_PASSWORD
+
+Expected hosts:
+V6 = 152.53.66.93
+V7 = 152.53.66.201
+V8 = 159.195.44.104
+V9 = 159.195.47.126
+
+IMPORTANT:
+Do NOT print, expose, log, commit, or write any root passwords anywhere.
+
+OBJECTIVE
+
+Provision V6–V9 as the four PrimeWave Chain testnet validator nodes using the completed PW-C15 architecture.
+
+The previous V2–V5 nodes were full Fuji nodes and entered the extremely long Fuji C-Chain historical replay. DO NOT reproduce that architecture.
+
+Use the documented PARTIAL PRIMARY NETWORK SYNC configuration from the existing PrimeWave PW-C15 documentation/repository.
+
+Before doing anything, inspect:
+
+- docs/PW-C15-INFRA-PROVISIONING-GUIDE.md
+- docs/PW-C15-FUJI-CEREMONY-RUNBOOK.md
+- docs/PW-C15-EOD-LAUNCH-READINESS.md
+- config/testnet/bootstrap-validators.json
+- existing node provisioning/systemd configuration
+- existing PrimeWave testnet configuration
+
+PROVISIONING ONLY.
+
+DO NOT:
+- create the PrimeWave blockchain
+- create/finalize genesis
+- deploy contracts
+- register validators
+- execute the L1 ceremony
+- modify the existing PrimeWave software keys
+- modify V2–V5
+- move any AVAX
+- modify the five genesis wallet addresses
+
+NODE REQUIREMENTS
+
+For each V6–V9:
+
+1. Connect using the corresponding Replit Secrets.
+
+2. Verify VPS:
+   - 4 vCPU
+   - ~8 GB RAM
+   - available SSD
+   - Debian/compatible supported OS
+   - root access
+   - time synchronization
+
+3. Install/configure:
+   - AvalancheGo v1.15.0
+   - rpcchainvm=46
+   - Fuji network
+   - dedicated avalanche user
+   - persistent AvalancheGo data directory
+   - plugin directory
+   - systemd service
+   - automatic restart
+   - appropriate file descriptor limits
+
+4. Configure the EXACT documented partial-primary-network sync architecture.
+
+CRITICAL:
+The purpose is to avoid the historical Fuji C-Chain replay that V2–V5 are currently performing.
+
+Verify from the actual resulting configuration/logs that V6–V9 are NOT downloading and replaying the full historical Fuji C-Chain in the same manner as V2–V5.
+
+Do not invent a new sync configuration. Use the repository's documented configuration.
+
+5. Network/security:
+   - API bound appropriately, preferably localhost-only as documented
+   - P2P 9651 exposed as required
+   - required TCP/UDP firewall rules
+   - SSH remains accessible
+   - no unnecessary public RPC exposure
+
+6. Generate fresh staking identities independently on each VPS.
+
+Every node MUST have its own unique:
+   - NodeID
+   - staking key
+   - BLS keypair
+   - BLS public key
+   - BLS proof of possession
+
+NEVER copy a staking directory or identity between nodes.
+
+NEVER reuse V2–V5 identities.
+
+7. Start AvalancheGo and verify:
+   - systemd active/running
+   - NRestarts = 0
+   - NetworkID = 5
+   - AvalancheGo = 1.15.0
+   - rpcchainvm = 46
+   - P2P 9651 listening
+   - expected peer connectivity
+   - intended sync mode active
+   - no fatal errors
+   - no OOM
+   - no filesystem/I/O errors
+
+8. Verify identity uniqueness across ALL NINE nodes where the existing V2–V5 identity data is available.
+
+V6 != V7 != V8 != V9
+
+And none of V6–V9 may duplicate V2, V3, V4 or V5.
+
+9. Do not wait for full Fuji bootstrap.
+
+We specifically want these nodes provisioned without requiring the multi-day full Fuji C-Chain historical replay.
+
+10. Create this report:
+
+docs/PW-C15-V6-V9-PROVISIONING-REPORT.md
+
+Include:
+
+- VPS specification
+- IP
+- AvalancheGo version
+- Network ID
+- sync mode
+- systemd status
+- PID/restart count
+- peer count
+- 9651 status
+- API binding
+- firewall status
+- disk usage/free space
+- RAM/CPU
+- NodeID
+- BLS public key
+- BLS proof of possession
+- identity uniqueness verification
+- exact evidence proving partial-sync configuration
+- confirmation that full historical Fuji C-Chain replay is NOT occurring
+- errors/warnings
+- GO/NO-GO for the next phase
+
+IMPORTANT STOP CONDITION:
+
+If the repository documentation, existing configuration, or actual AvalancheGo behavior does not support the intended partial-sync architecture, STOP and report the discrepancy.
+
+Do NOT improvise an architecture.
+
+When finished, return a concise summary in chat and give the exact path:
+
+docs/PW-C15-V6-V9-PROVISIONING-REPORT.md
+
+Do not proceed beyond provisioning and verification.

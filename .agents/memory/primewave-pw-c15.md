@@ -71,6 +71,19 @@ Saved to: local-data/testnet-key-addresses.env
 7. Checklist: 7 placeholders (was 6); --num-bootstrap-validators 4 (was --num-validators 3)
 8. bootstrap-validators.json: template created at config/testnet/
 
+## V6–V9 Provisioning (2026-08-16)
+4 fresh Debian 13 (trixie) VPS nodes provisioned as testnet validators.
+- V6 (152.53.66.93):   NodeID-144dTzcL2vgpbKzX943xy5pEF3M8oGyiQ
+- V7 (152.53.66.201):  NodeID-cwX3HFmaR5QmbxuZaDJCXAueJeyewjni
+- V8 (159.195.44.104): NodeID-7DLuPUaMiDbyVoZ6P92RQdNRFS81cpYb5
+- V9 (159.195.47.126): NodeID-9TiHzx7DZgtCjB9pqyY6db55pZgVZELvJ
+All 9 nodes (V2-V9) have unique NodeIDs. BLS keys in bootstrap-validators.json.
+Partial-sync confirmed: "skipping primary network chain creation" in logs on all 4.
+Staking keys at /home/avalanche/.avalanchego/staking/ (not /data/avalanchego/staking/).
+AvalancheGo uses nodePOP.publicKey / nodePOP.proofOfPossession (not top-level) in info.getNodeID.
+bootstrap-validators.json: filled except ChangeOwnerAddr (needs deployer P-Chain addr).
+Report: docs/PW-C15-V6-V9-PROVISIONING-REPORT.md
+
 ## External Gates Still Blocking
 - 4 VPS servers not provisioned
 - Fuji AVAX: deployer 0x44A37aF5... has 0 AVAX (fund via faucet.avax.network)
