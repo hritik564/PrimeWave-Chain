@@ -1,0 +1,161 @@
+PrimeWave Chain — FINAL PRE-CEREMONY VERIFICATION
+
+V6–V9 provisioning is complete and verified.
+
+IMPORTANT: Several items in the previous report are stale. Do NOT report them as outstanding without re-checking the live project state.
+
+Already completed by operator:
+
+1. Four validator VPSs purchased and provisioned:
+   V6 = 152.53.66.93
+   V7 = 152.53.66.201
+   V8 = 159.195.44.104
+   V9 = 159.195.47.126
+
+2. All four use:
+   - AvalancheGo 1.15.0
+   - rpcchainvm=46
+   - Fuji NetworkID=5
+   - partial-sync-primary-network=true
+
+3. Five genesis allocation addresses have been supplied:
+
+Treasury:
+0x1F471d2Dc7CB8b2C773aFeD40d4bD467ed1FdaD8
+
+Team:
+0x46a419514f52A4763596F75A9169B0Bd0153C673
+
+Community:
+0xA6744C599A0d40082aAF03Bd643cfc30B2B16a0c
+
+Ecosystem:
+0x2c5E541f667768dd1986C73530Dc29250fA86B7B
+
+Reserve:
+0x3C98105b99bb9dc97B341D11ec264F5127A7221C
+
+4. Testnet deployer:
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+Operator has sent 0.99 AVAX to this address.
+
+DO NOT generate replacement wallet addresses.
+DO NOT regenerate existing software keys.
+DO NOT modify the five supplied genesis wallet addresses.
+
+TASK — READ-ONLY / PRE-CEREMONY ONLY
+
+A. Check the live Fuji C-Chain balance of:
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+Report the actual confirmed balance and transaction evidence.
+
+B. Locate the actual testnet-deployer Avalanche CLI key currently stored in the project environment.
+
+Use the existing key; DO NOT generate another one.
+
+Derive its Fuji P-Chain address.
+
+C. Update ONLY the placeholder:
+
+P-fuji1__REPLACE_DEPLOYER_P_CHAIN_ADDR__
+
+in:
+
+config/testnet/bootstrap-validators.json
+
+with the actual deployer's Fuji P-Chain address.
+
+Do not modify NodeIDs, BLS keys, proofs of possession, or any other validator data.
+
+D. Verify V6–V9 P-Chain bootstrap status LIVE.
+
+For each:
+
+V6
+V7
+V8
+V9
+
+Check:
+- service active
+- NetworkID 5
+- P-chain isBootstrapped
+- P-chain API availability
+- current P-chain height if available
+- peer count
+- errors
+- restart count
+
+Do not wait for C-Chain bootstrap. These validators intentionally use partial primary-network sync.
+
+E. Validate bootstrap-validators.json.
+
+Confirm:
+- exactly 4 validators
+- all four NodeIDs unique
+- all four BLS keys unique
+- all four BLS proofs valid/present
+- ChangeOwnerAddr identical and correct
+- no unresolved placeholders
+- JSON valid
+- validator weights/quorum configuration matches the documented PrimeWave architecture
+
+F. Validate genesis-template.json.
+
+Confirm:
+- all 7 __REPLACE_*__ placeholders are resolvable
+- deployer address is correct
+- FeeDistributor address is correct according to the existing deployment architecture
+- treasury/team/community/ecosystem/reserve addresses match EXACTLY the five addresses supplied above
+- EMS signer configuration is populated
+- no address(0) remains where the ceremony requires a real address
+
+G. Check the existing PW-C15 documentation and scripts for any additional unresolved pre-ceremony blocker.
+
+Search specifically for:
+- TODO
+- REPLACE
+- PLACEHOLDER
+- address(0)
+- missing key
+- missing environment variable
+- missing NodeID
+- missing BLS
+- missing funding
+- ceremony prerequisite
+
+H. DO NOT execute:
+- avalanche blockchain create
+- CreateSubnetTx
+- CreateChainTx
+- ConvertSubnetToL1Tx
+- contract deployment
+- validator registration
+- genesis deployment
+- any irreversible transaction
+
+I. Create:
+
+docs/PW-C15-FINAL-PRE-CEREMONY-CHECK.md
+
+Include:
+
+1. Live funding verification
+2. Deployer C-Chain address
+3. Deployer P-Chain address
+4. V6–V9 P-chain status
+5. Final bootstrap-validators.json validation
+6. Final genesis validation
+7. All unresolved placeholders/TODOs
+8. All remaining external prerequisites
+9. Explicit GO/NO-GO decision
+
+IMPORTANT:
+If everything is ready except P-chain bootstrap, say exactly that.
+
+Do not invent additional blockers.
+
+STOP after producing the report.
+Return a concise summary in chat and the exact report path.
