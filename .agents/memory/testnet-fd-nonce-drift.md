@@ -37,4 +37,8 @@ Any time the deployer's current nonce ≠ 0 at contract deployment time, the Fee
 ## Resolution options presented to operator
 
 - **Option A**: Deploy as-is; fee routing broken for this chain; only RewardVault staking rewards work
-- **Option B/D**: Update genesis `rewardAddress` → `0x8C41F8A20C63f174C27B9dc9A610615c36c801Ca`; recreate chain; then redeploy
+- **Option E (RECOMMENDED)**: Recreate blockchain only (subnet/validators unchanged); genesis.json is ALREADY CORRECT for deployer nonce=0; no genesis change needed; strict rule: no pre-deploy TXs from deployer key; add nonce==0 guard to DeployTestnet.s.sol
+
+## Critical rule going forward
+
+The deployer key MUST NOT be used for ANY purpose before `DeployTestnet.s.sol` completes on any chain. Block-production kicks and diagnostics must use a different funded account. Avalanche subnet-evm produces empty blocks automatically — no TX kick is needed.

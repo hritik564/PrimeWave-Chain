@@ -1,0 +1,161 @@
+PRIMEWAVE TESTNET — FEE DISTRIBUTOR GENESIS MISMATCH / CHAIN RECREATION ANALYSIS
+
+We have hit a HARD STOP before contract deployment.
+
+Current chain:
+- Chain ID: 77
+- Subnet ID: ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+- Blockchain ID: 22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Problem:
+
+genesis.json contains:
+
+rewardManagerConfig.rewardAddress =
+0x27B15970700daC632f0814522118A1c3B200d971
+
+This was originally predicted using deployer nonce 0, assuming FeeDistributor would be deployed at nonce 4.
+
+The deployer has since sent diagnostic transactions, so its current nonce is 5.
+
+Therefore the next CREATE deployment sequence would place FeeDistributor at a different address.
+
+DO NOT deploy contracts.
+DO NOT recreate the chain yet.
+DO NOT modify genesis.json yet.
+
+First perform a DESIGN-LEVEL INVESTIGATION.
+
+==================================================
+PHASE 1 — VERIFY THE EXISTING ASSUMPTION
+==================================================
+
+Inspect:
+
+- contracts/script/DeployTestnet.s.sol
+- FeeDistributor contract
+- all deployment scripts
+- genesis.json
+- genesis-template.json
+- deployment documentation
+- any existing CREATE2/deployer utilities
+
+Determine exactly how FeeDistributor's address is currently derived.
+
+Confirm whether:
+
+1. FeeDistributor is actually the fifth CREATE deployment.
+2. Its address depends on deployer nonce.
+3. Any earlier deployment can change its nonce.
+4. DeployTestnet.s.sol can intentionally deploy FeeDistributor at a predetermined address.
+5. The genesis RewardManager precompile requires the FeeDistributor address to exist before genesis.
+6. FeeDistributor supports CREATE2 deployment or can safely be deployed through a CREATE2 factory.
+7. Any existing deterministic deployment mechanism already exists in the repository.
+
+==================================================
+PHASE 2 — DO NOT GUESS
+==================================================
+
+We need to determine whether we can make the FeeDistributor address deterministic.
+
+Evaluate these options:
+
+A. CREATE2 deployment
+
+B. Existing deterministic deployment factory
+
+C. Deploying a dedicated CREATE2 factory at a known deterministic address
+
+D. Deliberately controlling the deployer nonce
+
+E. Keeping the current nonce-derived approach but ensuring the genesis is generated from the exact final deployment nonce
+
+For each option explain:
+
+- feasibility with current contracts
+- whether it changes contract bytecode
+- whether constructor arguments affect the address
+- whether deployment ordering matters
+- whether genesis must be regenerated
+- whether the resulting address can be known BEFORE genesis generation
+- whether it introduces a new trust/security dependency
+
+IMPORTANT:
+
+Do not modify production/testnet files during this analysis.
+
+==================================================
+PHASE 3 — DETERMINE THE SAFEST ARCHITECTURE
+==================================================
+
+Our requirement is:
+
+The genesis RewardManager rewardAddress MUST point to the actual FeeDistributor contract address that will exist after deployment.
+
+The solution must NOT depend on accidentally preserving a nonce assumption.
+
+Prefer a deterministic address mechanism if it is compatible with the current architecture.
+
+However, do not force CREATE2 merely because it sounds better.
+
+If the current deployment architecture cannot safely support deterministic deployment, say so.
+
+==================================================
+PHASE 4 — CHAIN RECREATION PLAN
+==================================================
+
+Only after the architecture decision is established, calculate the exact sequence for recreating the testnet.
+
+We need:
+
+1. New deployer nonce state
+2. Final FeeDistributor address
+3. Final genesis rewardAddress
+4. Genesis SHA256
+5. New subnet/blockchain IDs
+6. Validator bootstrap configuration
+7. Contract deployment sequence
+8. Any required changes to DeployTestnet.s.sol
+9. Whether diagnostic transactions should be completely avoided before deployment
+10. Exact point at which the genesis becomes immutable
+
+IMPORTANT:
+
+The new chain MUST NOT be created until we know the final FeeDistributor address with certainty.
+
+==================================================
+PHASE 5 — PRODUCE A DECISION REPORT
+==================================================
+
+Create:
+
+docs/PW-C17-FEEDISTRIBUTOR-DETERMINISTIC-DEPLOYMENT-ANALYSIS.md
+
+Include:
+
+1. Root cause
+2. Current nonce state
+3. Current genesis rewardAddress
+4. Current predicted FeeDistributor address
+5. Why the mismatch occurred
+6. Deterministic deployment options
+7. Recommended architecture
+8. Exact deployment sequence
+9. Exact genesis-generation sequence
+10. Chain recreation procedure
+11. Risks
+12. Rollback/abort conditions
+13. Final GO/NO-GO
+
+STOP HERE.
+
+Do NOT:
+
+- recreate the blockchain
+- modify genesis
+- deploy FeeDistributor
+- deploy any contract
+- send transactions
+- change validator configuration
+
+We will review the report before authorizing chain recreation.
