@@ -21,3 +21,4 @@
 - [Local vs Testnet subnet-evm binary](local-testnet-subnet-evm-split.md) — local dev needs v1.14.2 bak; testnet prep swaps to v1.15.0 — must restore bak after testnet work
 - [PrimeWave Chain PW-C15](primewave-pw-c15.md) — C15 COMPLETE (Replit-side); arch docs + key ceremony + 12 blocker fixes; 5 external gates remain; POA_MANAGER=0x0Feedc0de...
 - [PrimeWave Chain PW-C16](primewave-pw-c16.md) — C16 COMPLETE; patched subnet-evm (Durango check); chain LIVE; block production active; 4×nginx RPC on port 80; MetaMask doc written
+- [Testnet FeeDistributor Nonce Drift](testnet-fd-nonce-drift.md) — HARD STOP: deployer nonce=5 (was 0 at ceremony); genesis rewardAddress 0x27B159… never gets code; fee routing broken

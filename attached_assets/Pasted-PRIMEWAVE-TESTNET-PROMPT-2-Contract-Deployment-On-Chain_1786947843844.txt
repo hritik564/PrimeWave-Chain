@@ -1,0 +1,427 @@
+PRIMEWAVE TESTNET — PROMPT 2
+Contract Deployment + On-Chain Verification
+
+We have now passed the complete validator/VM integrity test with a GREEN result.
+
+PrimeWave Testnet is LIVE and stable.
+
+DO NOT modify the validator architecture.
+DO NOT recreate the subnet.
+DO NOT recreate the blockchain.
+DO NOT regenerate genesis.json.
+DO NOT change Chain ID 77.
+DO NOT change Subnet ID.
+DO NOT change Blockchain ID.
+DO NOT change validator identities.
+DO NOT modify consensus parameters.
+
+CURRENT NETWORK
+
+Chain name:
+PrimeWave Testnet
+
+Chain ID:
+77
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+RPC currently available:
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Backup RPCs:
+
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+DEPLOYER
+
+The new testnet deployer is:
+
+C-Chain:
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+P-Chain:
+P-fuji17c7fuusyh76r74zwge4sl0nc3458xdkv477adz
+
+The deployer key exists in:
+
+~/.avalanche-cli/key/testnet-deployer.pk
+
+The deployer was funded with 2 AVAX on Fuji.
+
+Approximately 0.5 AVAX remains on C-Chain after the C→P transfer.
+
+The deployer also has the initial PW allocation from genesis.
+
+IMPORTANT:
+Never print, display, log, commit, or write the deployer's private key into any project file.
+
+==================================================
+PHASE 1 — DEPLOYMENT SCRIPT AUDIT
+==================================================
+
+Before sending ANY transaction, inspect:
+
+contracts/script/DeployTestnet.s.sol
+
+Also inspect all contracts that DeployTestnet.s.sol deploys or initializes.
+
+Determine the EXACT deployment sequence.
+
+Produce a table:
+
+1. Contract name
+2. Constructor arguments
+3. Initialization arguments
+4. Expected deployer/owner
+5. Expected dependencies
+6. Whether address is predicted
+7. Whether address is subsequently written into another contract
+8. Whether any address is hardcoded
+9. Whether any address is expected to match genesis
+10. Whether deployment is safe to execute on Chain ID 77
+
+Do not assume.
+
+Cross-check against:
+
+- config/testnet/genesis.json
+- config/testnet/bootstrap-validators.json
+- local-data/testnet-key-addresses.env
+- contracts/script/DeployTestnet.s.sol
+- relevant deployment/configuration documentation
+- actual contract source code
+
+==================================================
+PHASE 2 — PREDEPLOYMENT SAFETY CHECK
+==================================================
+
+Verify:
+
+- RPC responds
+- eth_chainId = 0x4d
+- deployer address derived from the key is exactly:
+
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+- deployer C-Chain AVAX balance is sufficient
+- deployer PW balance is sufficient
+- nonce is known
+- forge build succeeds
+- no contract contains an unexpected address(0)
+- no old deployer address is used by active deployment code
+- no old FeeDistributor address is used by active deployment code
+- all required EMS signer addresses are populated
+- POA_MANAGER_ADDR is correct
+- FeeDistributor prediction is correct for the current deployer/nonce if still used
+- Chain ID is 77
+
+IMPORTANT:
+
+Do not use the old lost deployer:
+
+0x44A37aF5F03807B1AaA1b20D1BFb3d77959B4B5f
+
+That address is abandoned.
+
+If ANY active deployment dependency still points to the old deployer, STOP and report it.
+
+==================================================
+PHASE 3 — DEPLOYMENT DRY RUN
+==================================================
+
+Perform the safest available Forge simulation/dry-run first.
+
+Show:
+
+- contracts expected to deploy
+- expected transaction count
+- expected gas
+- expected nonce sequence
+- predicted contract addresses where applicable
+- constructor arguments
+- initialization calls
+
+Do NOT broadcast yet.
+
+Check that the simulated deployment does not:
+
+- attempt to use Chain ID other than 77
+- reference Fuji's old P-Chain deployer
+- reference the abandoned deployer
+- reference an old FeeDistributor
+- use zero addresses
+- overwrite an unexpected owner
+- configure validators incorrectly
+
+If simulation fails, STOP and diagnose.
+
+==================================================
+PHASE 4 — BROADCAST
+==================================================
+
+Only after Phases 1–3 pass, execute DeployTestnet.s.sol against the PrimeWave Testnet.
+
+Use the existing testnet deployer.
+
+Use the PrimeWave Testnet RPC.
+
+Do NOT deploy to Fuji C-Chain.
+
+Do NOT deploy to any local development chain.
+
+Explicitly verify the RPC network before broadcasting.
+
+The deployment must be atomic in intent:
+if the script itself reverts, do not improvise partial deployments.
+
+If the deployment script requires multiple transactions, record every transaction.
+
+For every transaction capture:
+
+- nonce
+- tx hash
+- gas used
+- gas price
+- block number
+- status
+- contract address if created
+
+==================================================
+PHASE 5 — ON-CHAIN CONTRACT VERIFICATION
+==================================================
+
+After deployment, verify every contract.
+
+For every expected contract:
+
+- address
+- bytecode exists
+- deployment block
+- deployment tx
+- owner
+- admin
+- roles
+- constructor/initialization state
+- relevant configuration
+
+Check that all deployed addresses are actually reachable using eth_getCode.
+
+No expected contract may have:
+
+eth_getCode(address) = 0x
+
+unless it is intentionally an EOA.
+
+==================================================
+PHASE 6 — WIRING VERIFICATION
+==================================================
+
+This is critical.
+
+Verify the complete PrimeWave contract graph.
+
+Check every contract reference established by DeployTestnet.s.sol.
+
+At minimum verify:
+
+- FeeDistributor
+- PoAManager / ValidatorManager architecture
+- StakingManager
+- PWVR / relevant PrimeWave protocol contracts
+- EMS configuration
+- treasury
+- team
+- community
+- ecosystem
+- reserve
+- deployer/owner configuration
+
+Use the ACTUAL contract getter functions where available.
+
+Do not merely trust the deployment script's intended values.
+
+For every important relationship produce:
+
+SOURCE CONTRACT
+    ↓
+CONFIGURATION / GETTER
+    ↓
+TARGET ADDRESS
+
+Then verify that TARGET ADDRESS contains the expected contract code or is the expected EOA.
+
+==================================================
+PHASE 7 — GENESIS ALLOCATION VERIFICATION
+==================================================
+
+Verify the genesis allocations on Chain ID 77.
+
+Check balances for:
+
+- deployer
+- treasury
+- team
+- community
+- ecosystem
+- reserve
+
+Compare against the intended genesis allocations.
+
+Expected total PW supply:
+
+100,000,000 PW
+
+Confirm that the deployed contract configuration is consistent with the genesis allocations.
+
+Do not alter genesis.
+
+==================================================
+PHASE 8 — FUNCTIONAL SMOKE TEST
+==================================================
+
+Perform safe testnet-only smoke tests.
+
+At minimum:
+
+1. Read deployer PW balance.
+2. Read a second test wallet balance.
+3. Verify normal ERC-20/PW transfer functionality if the deployed token contract supports it.
+4. Verify transaction receipt.
+5. Verify resulting balances.
+6. Verify the transaction appears in the PrimeWave chain.
+
+Do not perform destructive tests.
+
+Do not modify validator configuration.
+
+If the system has a specific intended initialization/funding sequence, follow the project's existing architecture rather than inventing one.
+
+==================================================
+PHASE 9 — ADDRESS MANIFEST
+==================================================
+
+Create:
+
+docs/PW-C15-TESTNET-CONTRACT-ADDRESS-MANIFEST.md
+
+The manifest must contain:
+
+- Network
+- Chain ID
+- Subnet ID
+- Blockchain ID
+- RPC
+- deployment timestamp
+- deployer address
+- every deployed contract
+- contract address
+- deployment tx
+- deployment block
+- owner/admin
+- important configured addresses
+- genesis allocation addresses
+- EMS signer addresses
+- FeeDistributor address
+- any predicted-vs-actual address comparison
+
+Also update the appropriate project environment/address registry files if the project already has a canonical location for deployed testnet addresses.
+
+Do not create competing sources of truth.
+
+==================================================
+PHASE 10 — FINAL VERDICT
+==================================================
+
+Classify the deployment:
+
+A) GREEN — contracts deployed and verified
+
+B) YELLOW — deployment succeeded but one or more configuration/wiring checks need attention
+
+C) RED — deployment failed or critical contract/configuration issue exists
+
+GREEN requires:
+
+- deployment successful
+- all expected contracts have code
+- correct Chain ID 77
+- correct deployer
+- no old deployer references
+- no unexpected zero addresses
+- ownership correct
+- FeeDistributor correct
+- validator-management wiring correct
+- EMS configuration correct
+- treasury/team/community/ecosystem/reserve correct
+- genesis balances consistent
+- smoke test successful
+
+==================================================
+STRICT STOP CONDITIONS
+==================================================
+
+STOP immediately if:
+
+- RPC is not Chain ID 77
+- deployer address does not match
+- deployer balance is insufficient
+- forge build fails
+- simulation fails
+- old deployer is referenced by active deployment code
+- old FeeDistributor is referenced by active deployment code
+- any critical constructor argument is ambiguous
+- any critical address is address(0)
+- deployment transaction reverts
+- ownership/admin configuration differs from the intended architecture
+- an unexpected contract is deployed
+- a contract address cannot be verified
+
+Do NOT "fix" an ambiguity by guessing.
+
+Do NOT recreate anything.
+
+Do NOT regenerate genesis.
+
+Do NOT modify the live validator infrastructure.
+
+==================================================
+FINAL OUTPUT
+==================================================
+
+Create:
+
+docs/PW-C15-CONTRACT-DEPLOYMENT-REPORT.md
+
+Include:
+
+1. Predeployment audit
+2. Dry-run results
+3. Deployment sequence
+4. All transaction hashes
+5. All contract addresses
+6. Gas/nonce information
+7. On-chain bytecode verification
+8. Ownership/admin verification
+9. Contract wiring verification
+10. Genesis allocation verification
+11. Smoke-test results
+12. Final address manifest reference
+13. Any warnings
+14. GREEN/YELLOW/RED verdict
+15. Exact next recommended step
+
+IMPORTANT:
+
+This prompt authorizes contract deployment ONLY after the preflight and dry-run checks pass.
+
+Do not proceed to PWCScan, PWSwap, public RPC domain configuration, or any other milestone after this task.
+
+STOP after the final report and give me the result.
