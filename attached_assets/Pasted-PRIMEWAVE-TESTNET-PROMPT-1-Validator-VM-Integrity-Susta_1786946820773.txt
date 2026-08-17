@@ -1,0 +1,283 @@
+PRIMEWAVE TESTNET — PROMPT 1
+Validator / VM Integrity + Sustained Block Production Verification
+
+We have now successfully activated the PrimeWave sovereign Avalanche L1 on Fuji.
+
+DO NOT make architectural changes.
+
+DO NOT recreate the subnet.
+DO NOT recreate the blockchain.
+DO NOT regenerate genesis.json.
+DO NOT change the Subnet ID.
+DO NOT change the Blockchain ID.
+DO NOT change Chain ID 77.
+DO NOT generate new validator identities.
+DO NOT perform any P-Chain ceremony transactions.
+DO NOT deploy contracts yet.
+DO NOT modify consensus parameters unless absolutely required to diagnose an actual failure.
+
+Current permanent identifiers:
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Chain ID:
+77
+
+Current validators:
+V6 — 152.53.66.93
+V7 — 152.53.66.201
+V8 — 159.195.44.104
+V9 — 159.195.47.126
+
+The chain is currently producing blocks using the PrimeWave-specific patched Subnet-EVM binary that was built to handle the legacy genesis Warp/Durango compatibility issue.
+
+YOUR TASK:
+
+Perform a controlled integrity and stability verification of the existing live chain.
+
+PHASE 1 — VM BINARY INTEGRITY
+
+On V6, V7, V8 and V9, collect:
+
+- AvalancheGo version
+- Subnet-EVM/VM version
+- VM ID
+- exact plugin path
+- binary SHA256
+- file size
+- Go/build metadata if available
+
+Confirm that ALL FOUR validators are running the exact same VM binary.
+
+The SHA256 must match across V6/V7/V8/V9.
+
+If hashes do NOT match:
+STOP and report the mismatch.
+Do NOT rebuild or replace anything automatically.
+
+Also preserve/document the exact source commit and patch used to build the canonical binary.
+
+The patch currently contains the intentional legacy-genesis compatibility modification in:
+
+graft/subnet-evm/precompile/contracts/warp/config.go
+
+Document the exact diff.
+
+Do NOT make any additional patch.
+
+PHASE 2 — GENESIS / CHAIN IDENTITY
+
+Verify on all four validators:
+
+- same genesis
+- same genesis hash where applicable
+- same Subnet ID
+- same Blockchain ID
+- Chain ID = 77
+- same VM ID
+- same chain configuration
+- same relevant upgrade configuration
+
+Confirm that no validator has a different genesis or chain configuration.
+
+If anything differs, STOP and report it.
+
+PHASE 3 — VALIDATOR HEALTH
+
+Check V6–V9 individually.
+
+For each node report:
+
+- service status
+- process PID
+- restart count
+- uptime
+- CPU
+- RAM
+- disk usage/free space
+- peer count
+- AvalancheGo health
+- subnet health
+- PrimeWave chain health
+- latest block height
+- latest block timestamp
+- latest log activity
+- any WARN/ERROR/FATAL/panic messages
+
+Check the logs for:
+
+- consensus errors
+- VM errors
+- database errors
+- state corruption
+- repeated bootstrap failures
+- validator disconnects
+- restart loops
+
+Do not treat normal bootstrap/consensus informational messages as errors.
+
+PHASE 4 — CONSENSUS / PEER AGREEMENT
+
+Verify that all four validators see one another correctly.
+
+For each validator determine:
+
+- connected Avalanche peers
+- connected subnet peers
+- validator connectivity
+- percentConnected
+- whether V6/V7/V8/V9 all participate in the PrimeWave subnet
+
+Confirm that all four validators agree on the latest block height.
+
+Record:
+
+V6 height:
+V7 height:
+V8 height:
+V9 height:
+
+Also verify that the block hashes at the common latest height agree.
+
+PHASE 5 — SUSTAINED BLOCK PRODUCTION
+
+Do NOT merely check that block 3 exists.
+
+Measure actual block production.
+
+Take an initial snapshot:
+
+T0:
+- timestamp
+- block height
+- block hash
+
+Wait approximately 60 seconds.
+
+Take T1:
+- timestamp
+- block height
+- block hash
+
+Then wait approximately 5 minutes.
+
+Take T2:
+- timestamp
+- block height
+- block hash
+
+Calculate:
+
+- blocks/minute
+- approximate block interval
+- whether block production is continuous
+- whether all validators converge on the same chain tip
+
+If block production stops, determine WHY before changing anything.
+
+PHASE 6 — RPC VERIFICATION
+
+Verify locally and externally:
+
+eth_chainId
+eth_blockNumber
+eth_getBlockByNumber
+net_version
+web3_clientVersion
+
+Confirm:
+
+eth_chainId = 0x4d (77)
+
+Confirm eth_blockNumber continues increasing.
+
+Verify the public RPC endpoints currently configured:
+
+V6:
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+V7:
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+V8:
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+V9:
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Do not expose AvalancheGo administrative APIs.
+
+PHASE 7 — TRANSACTION READINESS
+
+Do NOT deploy the PrimeWave contracts yet.
+
+Instead, determine whether the EVM is fully capable of accepting a normal transaction.
+
+Verify:
+
+- latest block is advancing
+- chain ID correct
+- gas price RPC works
+- eth_estimateGas works where applicable
+- eth_getTransactionCount works
+- eth_getBalance works
+- transaction submission endpoint is functioning
+
+Do not send a transaction unless necessary for diagnosis.
+
+PHASE 8 — FINAL VERDICT
+
+Classify the network as one of:
+
+A) GREEN — stable and ready for contract deployment
+
+B) YELLOW — operational but one or more issues need correction
+
+C) RED — chain instability or consensus issue; STOP before proceeding
+
+For GREEN, all of these must be true:
+
+- V6/V7/V8/V9 running
+- identical VM binary SHA256
+- identical chain identity/genesis
+- all validators connected
+- consensus healthy
+- no unexplained errors
+- block production continuously increasing
+- validators agree on chain tip
+- eth_chainId = 77
+- RPC responds correctly
+- EVM transaction infrastructure appears functional
+
+Create:
+
+docs/PW-C15-PROMPT-1-VALIDATOR-VM-INTEGRITY-REPORT.md
+
+The report must contain:
+
+1. VM/build information
+2. SHA256 for all four validators
+3. Exact patch/source information
+4. Genesis/chain identity verification
+5. Per-validator health
+6. Peer/subnet connectivity
+7. Consensus status
+8. Block production measurements
+9. RPC verification
+10. Transaction readiness
+11. Errors/warnings found
+12. Final GREEN/YELLOW/RED verdict
+13. Exact blockers, if any
+14. Exact recommendation for the next step
+
+IMPORTANT:
+
+This is a verification task.
+
+Do not proceed to contract deployment, PWCScan, PWSwap, MetaMask configuration changes, RPC hardening, or any other milestone after producing the report.
+
+STOP after creating the report and give me the final result.
