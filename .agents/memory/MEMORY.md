@@ -23,3 +23,4 @@
 - [PrimeWave Chain PW-C16](primewave-pw-c16.md) — C16 COMPLETE; patched subnet-evm (Durango check); chain LIVE; block production active; 4×nginx RPC on port 80; MetaMask doc written
 - [Testnet FeeDistributor Nonce Drift](testnet-fd-nonce-drift.md) — HARD STOP: deployer nonce=5 (was 0 at ceremony); genesis rewardAddress 0x27B159… never gets code; fee routing broken
 - [PrimeWave Chain PW-C18](primewave-pw-c18.md) — C18 COMPLETE; DB wipe on 4 validators; deployer nonce=0; blockchain ID unchanged; deployer key still lost — must add as Replit secret before Phase 8
+- [PrimeWave Chain PW-C19](primewave-pw-c19.md) — C19 COMPLETE; all 7 contracts live on testnet; FeeDistributor=0x27B159…d971; GREEN verdict; 792/792+57/57+20/20

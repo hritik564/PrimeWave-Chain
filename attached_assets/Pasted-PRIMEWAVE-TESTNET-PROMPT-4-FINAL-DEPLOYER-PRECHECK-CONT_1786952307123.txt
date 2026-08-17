@@ -1,0 +1,315 @@
+PRIMEWAVE TESTNET — PROMPT 4
+FINAL DEPLOYER PRECHECK + CONTRACT DEPLOYMENT
+
+PW-C18 has completed successfully.
+
+The existing PrimeWave Blockchain ID remains unchanged:
+
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+The validator databases were reset to the existing finalized genesis state and all four validators have re-synchronized.
+
+Current expected state:
+
+- Chain ID: 77
+- Blockchain ID: 22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+- Subnet ID: ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+- V6/V7/V8/V9 healthy
+- Deployer nonce = 0
+- No contracts deployed
+- No post-reset deployer transactions permitted
+
+The deployer private key has now been stored as the Replit Secret:
+
+TESTNET_DEPLOYER_KEY
+
+IMPORTANT SECURITY RULE:
+
+Never print, echo, display, commit, or write TESTNET_DEPLOYER_KEY to a file.
+
+==================================================
+PHASE 1 — VERIFY SECRET / ADDRESS
+==================================================
+
+Load TESTNET_DEPLOYER_KEY securely.
+
+Derive the corresponding address.
+
+It MUST equal:
+
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+If it does not match:
+
+STOP immediately.
+
+Do not broadcast anything.
+
+==================================================
+PHASE 2 — VERIFY CURRENT CHAIN
+==================================================
+
+Verify against the live PrimeWave RPC:
+
+eth_chainId = 0x4d
+
+eth_getTransactionCount(deployer, "latest") = 0
+
+eth_getTransactionCount(deployer, "pending") = 0
+
+Confirm:
+
+- blockchain ID matches
+- genesis matches the finalized genesis
+- all four validators are healthy
+- all four validators are connected
+- no validator has restarted unexpectedly
+- no contract deployment has occurred
+
+IMPORTANT:
+
+Do NOT send a diagnostic transaction.
+
+Do NOT send a kick transaction.
+
+Do NOT send a test transfer.
+
+Do NOT create an empty block.
+
+The deployer must remain at nonce 0 until DeployTestnet.s.sol is executed.
+
+==================================================
+PHASE 3 — VERIFY FEE DISTRIBUTOR
+==================================================
+
+Calculate:
+
+deployer CREATE address at nonce 4
+
+Expected:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+Verify that this exactly equals:
+
+genesis.rewardManagerConfig.rewardAddress
+
+If mismatch:
+
+STOP.
+
+==================================================
+PHASE 4 — VERIFY DEPLOYER ASSET BALANCES
+==================================================
+
+Determine separately:
+
+1. AVAX balance
+2. PW/token balance
+
+Do NOT describe PW as AVAX.
+
+Report both independently.
+
+Verify the deployer has enough C-Chain AVAX for contract deployment gas.
+
+Verify the deployer has the expected genesis PW allocation.
+
+Do not transfer funds.
+
+==================================================
+PHASE 5 — BUILD + DEPLOYMENT SIMULATION
+==================================================
+
+Run:
+
+forge build
+
+Then inspect DeployTestnet.s.sol again.
+
+Confirm:
+
+- nonce-zero guard exists
+- correct deployer
+- correct Chain ID
+- correct FeeDistributor prediction
+- correct POA_MANAGER
+- all EMS signers populated
+- no address(0)
+- no abandoned deployer address
+- no abandoned FeeDistributor address
+- correct treasury/team/community/ecosystem/reserve addresses
+
+Run the safest available Forge simulation.
+
+Do NOT broadcast during simulation.
+
+If simulation fails:
+
+STOP and report the exact failure.
+
+==================================================
+PHASE 6 — FINAL BROADCAST AUTHORIZATION
+==================================================
+
+If and ONLY if every previous phase passes:
+
+Execute DeployTestnet.s.sol against:
+
+PrimeWave Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Chain ID:
+77
+
+Use the testnet deployer.
+
+The deployment must be the FIRST transaction(s) from the deployer after the database reset.
+
+Record every transaction:
+
+- nonce
+- tx hash
+- block
+- gas used
+- contract address
+- receipt status
+
+Do not send any unrelated transaction before or between deployment transactions unless the deployment script itself requires it.
+
+==================================================
+PHASE 7 — VERIFY EVERY CONTRACT
+==================================================
+
+After deployment:
+
+For every expected contract verify:
+
+- address
+- bytecode exists
+- deployment tx
+- deployment block
+- owner
+- admin
+- important configuration
+- constructor/initialization state
+
+Verify FeeDistributor specifically:
+
+actual deployed address MUST be:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+If it differs:
+
+STOP and report immediately.
+
+==================================================
+PHASE 8 — VERIFY CONTRACT WIRING
+==================================================
+
+Verify actual on-chain getters for:
+
+- FeeDistributor
+- FeeVault
+- DevTreasury
+- StakingManager
+- PoAManager / ValidatorManager
+- PWVR
+- EMS configuration
+- treasury
+- team
+- community
+- ecosystem
+- reserve
+
+Do not rely solely on deployment-script intent.
+
+Read the deployed contracts and verify their actual state.
+
+==================================================
+PHASE 9 — VERIFY GENESIS ALLOCATIONS
+==================================================
+
+Verify the intended PW allocations:
+
+- deployer
+- treasury
+- team
+- community
+- ecosystem
+- reserve
+
+Confirm total intended PW supply:
+
+100,000,000 PW
+
+Again:
+
+Do NOT confuse PW balances with AVAX balances.
+
+==================================================
+PHASE 10 — SAFE FUNCTIONAL TEST
+==================================================
+
+Perform only safe testnet smoke tests after deployment.
+
+Verify:
+
+- contract calls
+- PW balance reads
+- transaction receipts
+- relevant ownership/permission reads
+
+Do not alter validator configuration.
+
+Do not perform destructive tests.
+
+==================================================
+PHASE 11 — REPORT
+==================================================
+
+Create:
+
+docs/PW-C19-CONTRACT-DEPLOYMENT-REPORT.md
+
+Include:
+
+1. Secret/address verification
+2. Chain verification
+3. Deployer AVAX balance
+4. Deployer PW balance
+5. Nonce verification
+6. FeeDistributor prediction
+7. Genesis rewardAddress
+8. Exact address match
+9. Forge build
+10. Simulation
+11. Every deployment transaction
+12. Every deployed contract address
+13. Bytecode verification
+14. Ownership/admin verification
+15. Contract wiring verification
+16. Genesis allocation verification
+17. Smoke-test results
+18. Any warnings
+19. Final GREEN/YELLOW/RED verdict
+
+GREEN means:
+
+- deployer address correct
+- nonce started at 0
+- FeeDistributor deployed at 0x27B159...
+- all expected contracts deployed
+- all expected bytecode exists
+- ownership correct
+- wiring correct
+- no old addresses
+- no critical warnings
+- smoke tests pass
+
+STOP after the report.
+
+Do NOT proceed to PWCScan, PWSwap, RPC domain configuration, or public launch work.
+
+This task is strictly contract deployment and verification.
