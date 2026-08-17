@@ -1,0 +1,307 @@
+PRIMEWAVE TESTNET — PROMPT 3
+RECREATE BLOCKCHAIN + LOCK DEPLOYER NONCE + PREPARE CONTRACT CEREMONY
+
+We have reviewed:
+
+docs/PW-C17-FEEDISTRIBUTOR-DETERMINISTIC-DEPLOYMENT-ANALYSIS.md
+
+The analysis is accepted.
+
+DECISION:
+
+Proceed with Option E — nonce-zero control.
+
+The existing genesis.json is CORRECT and must NOT be modified.
+
+The existing FeeDistributor rewardAddress:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+is intentionally derived from:
+
+deployer nonce 4
+
+with the deployer starting at nonce 0.
+
+The previous mismatch was caused solely by five diagnostic transactions consuming deployer nonces 0–4 on the old blockchain.
+
+We are therefore recreating ONLY the blockchain.
+
+DO NOT recreate the subnet.
+
+DO NOT change the validator identities.
+
+DO NOT generate new validator keys.
+
+DO NOT modify genesis.json.
+
+DO NOT modify Chain ID 77.
+
+DO NOT deploy any contracts yet.
+
+DO NOT send any transaction from the deployer after the new blockchain is created.
+
+==================================================
+PHASE 1 — PRE-RECREATION AUDIT
+==================================================
+
+Before doing anything irreversible, verify:
+
+Existing Subnet ID:
+
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Current Blockchain ID:
+
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Expected new blockchain:
+
+- same subnet
+- same genesis
+- same Chain ID = 77
+- same four validators
+- new Blockchain ID
+
+Verify the current genesis SHA256 and record it.
+
+Verify:
+
+rewardManagerConfig.rewardAddress =
+0x27B15970700daC632f0814522118A1c3B200d971
+
+Verify:
+
+cast compute-address <DEPLOYER> --nonce 4
+
+still produces exactly:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+Do NOT modify genesis.
+
+==================================================
+PHASE 2 — DEPLOYER NONCE SAFETY
+==================================================
+
+The deployer is:
+
+0xB518397E3D65a0E7475635F01C225E9426a76F11
+
+The deployer private key must remain secret.
+
+Before recreation, document the old chain's current nonce for historical purposes.
+
+After the NEW blockchain exists, the first thing to verify is:
+
+eth_getTransactionCount(
+  0xB518397E3D65a0E7475635F01C225E9426a76F11,
+  "latest"
+)
+
+and:
+
+eth_getTransactionCount(
+  0xB518397E3D65a0E7475635F01C225E9426a76F11,
+  "pending"
+)
+
+Both MUST be 0.
+
+If either is not 0:
+
+STOP.
+
+Do NOT send any transaction.
+
+Do NOT attempt deployment.
+
+==================================================
+PHASE 3 — RECREATE THE BLOCKCHAIN
+==================================================
+
+Recreate the blockchain on the EXISTING PrimeWave subnet.
+
+Do NOT create a new subnet.
+
+Use the existing finalized genesis.json.
+
+Use the exact existing blockchain configuration.
+
+The new blockchain will naturally receive a NEW Blockchain ID.
+
+Record:
+
+- new Blockchain ID
+- creation transaction hash
+- subnet ID
+- genesis hash
+- Chain ID
+- creation block
+- deployer nonce state
+
+Do not send any deployer diagnostic transaction.
+
+==================================================
+PHASE 4 — VALIDATOR TRACKING
+==================================================
+
+Update V6, V7, V8 and V9 so they track the NEW blockchain.
+
+Update ONLY the required blockchain/subnet tracking configuration.
+
+Do not alter:
+
+- validator NodeIDs
+- BLS keys
+- staking identities
+- subnet configuration
+- consensus parameters
+- AvalancheGo version
+- patched Subnet-EVM binary
+- genesis
+
+Restart only where necessary.
+
+Verify all four validators:
+
+V6 — 152.53.66.93
+V7 — 152.53.66.201
+V8 — 159.195.44.104
+V9 — 159.195.47.126
+
+are tracking the NEW Blockchain ID.
+
+==================================================
+PHASE 5 — CHAIN HEALTH
+==================================================
+
+Before any contract deployment, verify:
+
+- all four validators connected
+- subnet consensus healthy
+- blockchain bootstrapped
+- RPC responds
+- Chain ID = 77
+- eth_blockNumber works
+- eth_chainId = 0x4d
+- all four validators agree on chain tip
+- no VM errors
+- no genesis mismatch
+- no database errors
+- no restart loops
+
+A small number of initial diagnostic transactions are NOT permitted.
+
+Do not create transactions merely to make blocks.
+
+The deployment ceremony itself must be the first deployer activity.
+
+==================================================
+PHASE 6 — HARD NONCE-ZERO GUARD
+==================================================
+
+Before finishing this task, modify the deployment workflow so that DeployTestnet.s.sol or its execution wrapper refuses to proceed unless:
+
+deployer nonce == 0
+
+The guard must fail closed.
+
+If nonce != 0:
+
+REVERT / STOP.
+
+Do not attempt to "calculate a new FeeDistributor address."
+
+Do not automatically modify genesis.
+
+Do not automatically change deployment order.
+
+Do not proceed.
+
+Also document this as a permanent ceremony requirement.
+
+Recommended message:
+
+"DEPLOYMENT ABORTED: testnet deployer nonce must be 0 because genesis RewardManager rewardAddress is nonce-derived."
+
+==================================================
+PHASE 7 — FEE DISTRIBUTOR ADDRESS VERIFICATION
+==================================================
+
+Before deployment, calculate:
+
+cast compute-address 0xB518397E3D65a0E7475635F01C225E9426a76F11 --nonce 4
+
+Expected:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+This MUST match:
+
+genesis.rewardManagerConfig.rewardAddress
+
+If it does not match:
+
+STOP.
+
+==================================================
+PHASE 8 — DO NOT DEPLOY CONTRACTS YET
+==================================================
+
+This prompt does NOT authorize DeployTestnet.s.sol.
+
+After the new blockchain is healthy and the nonce-zero guard is verified, STOP.
+
+Do NOT:
+
+- deploy FeeDistributor
+- deploy StakingManager
+- deploy PoAManager-related contracts
+- deploy EMS contracts
+- send test transfers
+- send diagnostic transactions
+- interact with the deployer account
+
+The next operation will be the controlled contract deployment ceremony.
+
+==================================================
+PHASE 9 — REPORT
+==================================================
+
+Create:
+
+docs/PW-C18-BLOCKCHAIN-RECREATION-REPORT.md
+
+Include:
+
+1. Old Blockchain ID
+2. New Blockchain ID
+3. Existing Subnet ID
+4. Genesis SHA256
+5. Chain ID
+6. Validator list
+7. Validator tracking status
+8. New chain bootstrap status
+9. Deployer C-Chain address
+10. Deployer nonce before recreation
+11. Deployer nonce after recreation
+12. Pending nonce after recreation
+13. Expected FeeDistributor address
+14. Genesis rewardAddress
+15. Exact match verification
+16. Any configuration changes
+17. Any errors/warnings
+18. Confirmation that NO contract deployment occurred
+19. Confirmation that NO deployer diagnostic transactions occurred
+20. Final GO/NO-GO for the contract deployment ceremony
+
+FINAL VERDICT:
+
+GREEN = new blockchain healthy + all validators tracking it + deployer nonce 0 + FeeDistributor prediction matches genesis.
+
+YELLOW = chain works but something requires review.
+
+RED = any mismatch, nonce drift, genesis mismatch, validator issue, or unexpected transaction.
+
+STOP after producing the report.

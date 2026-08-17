@@ -84,6 +84,25 @@ contract DeployTestnet is Script {
             "DeployTestnet: REFUSED - dev mnemonic key detected. Use a testnet key."
         );
 
+        // ── HARD NONCE-ZERO GUARD ─────────────────────────────────────────────
+        // The genesis RewardManager rewardAddress (0x27B159...d971) is the address
+        // where FeeDistributor will land when the deployer's nonce is 0 at broadcast
+        // start. FeeDistributor is always deployed at deployer_nonce_start + 4.
+        //
+        // If ANY transaction was sent from the deployer before this script,
+        // FeeDistributor lands at a different address and fee routing is permanently
+        // broken — the genesis rewardAddress cannot be changed after chain creation.
+        //
+        // This guard is PERMANENT CEREMONY REQUIREMENT. It must NEVER be removed.
+        // Do NOT attempt to "calculate a new FeeDistributor address."
+        // Do NOT attempt to modify genesis.
+        // Do NOT attempt to adjust deployment order.
+        // REVERT and investigate.
+        require(
+            vm.getNonce(deployer) == 0,
+            "DEPLOYMENT ABORTED: testnet deployer nonce must be 0 because genesis RewardManager rewardAddress is nonce-derived."
+        );
+
         // Validate EMS signers are set (will be caught below by EMS constructor)
         require(
             EMS_SIGNER_1 != address(0) &&
