@@ -1,0 +1,539 @@
+PRIMEWAVE TESTNET — PROMPT 5
+END-TO-END PROTOCOL / CONTRACT FUNCTIONAL TEST
+
+OBJECTIVE
+
+The PrimeWave Testnet L1 is now live and the core protocol contracts have been successfully deployed and verified.
+
+We now need to prove that the deployed protocol actually functions correctly end-to-end.
+
+This is a TESTNET functional validation task.
+
+DO NOT modify the blockchain genesis.
+DO NOT recreate the blockchain.
+DO NOT wipe validator databases.
+DO NOT modify validator binaries.
+DO NOT change validator membership.
+DO NOT change the Subnet ID or Blockchain ID.
+DO NOT redeploy contracts.
+DO NOT send arbitrary diagnostic/kick transactions.
+DO NOT touch mainnet configuration.
+DO NOT modify PWSwap.
+DO NOT proceed to PWCScan or faucet work.
+
+Only perform the tests described below.
+
+==================================================
+CURRENT NETWORK
+==================================================
+
+PrimeWave Testnet
+
+Chain ID:
+77
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Primary RPC:
+
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Backup RPCs:
+
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Native currency:
+
+PW
+
+==================================================
+DEPLOYED CONTRACTS
+==================================================
+
+Use the actual deployed addresses from:
+
+local-data/testnet-deployed-contracts.env
+
+Expected contracts:
+
+EmergencyMultisig
+PrimeWaveTimelock
+ValidatorFeeVault
+DevTreasury
+FeeDistributor
+ValidatorRegistry
+RewardVault
+
+Do NOT assume addresses from memory if the repository contains the canonical deployment file.
+
+==================================================
+PHASE 1 — READ-ONLY NETWORK HEALTH
+==================================================
+
+Before sending ANY transaction:
+
+Verify:
+
+1. eth_chainId
+2. net_version
+3. eth_blockNumber
+4. eth_syncing
+5. eth_gasPrice
+6. eth_getBlockByNumber(latest)
+7. eth_getTransactionCount(deployer, latest)
+8. eth_getBalance(deployer, latest)
+
+Verify all four validators:
+
+V6
+V7
+V8
+V9
+
+Check:
+
+- service active
+- process uptime
+- restart count
+- peer count
+- subnet peer count
+- consensus health
+- bootstrapped state
+- block height
+- latest block hash
+
+Verify that all validators agree on:
+
+- latest block number
+- latest block hash
+
+If validator disagreement exists:
+
+STOP.
+
+Do not send transactions.
+
+==================================================
+PHASE 2 — CONTRACT BYTECODE
+==================================================
+
+For every deployed contract:
+
+Use eth_getCode.
+
+Verify:
+
+- code exists
+- code is non-empty
+- code hash is recorded
+
+Compare against the deployment report.
+
+If any expected contract has no bytecode:
+
+STOP.
+
+==================================================
+PHASE 3 — READ-ONLY CONTRACT STATE
+==================================================
+
+Read every important public getter available from:
+
+EmergencyMultisig
+PrimeWaveTimelock
+ValidatorFeeVault
+DevTreasury
+FeeDistributor
+ValidatorRegistry
+RewardVault
+
+Verify actual on-chain state.
+
+Specifically verify:
+
+EMERGENCY MULTISIG
+
+- signer count
+- all five expected signers
+- threshold = 3
+
+TIMELOCK
+
+- proposer
+- executor configuration
+- delay
+- ownership/admin state
+
+FEE DISTRIBUTION
+
+FeeDistributor must point to:
+
+ValidatorFeeVault
+DevTreasury
+EmergencyMultisig
+
+Verify the configured percentages / split exactly against the protocol specification.
+
+VALIDATOR REGISTRY
+
+Verify:
+
+- PoAManager address
+- FeeVault address
+- validator state
+- validator count
+- validator identities if exposed
+
+REWARD VAULT
+
+Verify:
+
+- admin
+- pause controller
+- total funded
+- emission rate
+- current balance
+
+Expected initial funding:
+
+15,000,000 PW
+
+Verify that this is actually held by RewardVault.
+
+==================================================
+PHASE 4 — GENESIS BALANCE / SUPPLY VALIDATION
+==================================================
+
+Read balances of all genesis allocation addresses.
+
+Use the canonical addresses from:
+
+config/testnet/genesis.json
+
+Verify:
+
+- deployer
+- treasury
+- team
+- community
+- ecosystem
+- reserve
+
+Verify the expected allocations.
+
+Verify:
+
+Total intended PW supply = 100,000,000 PW
+
+IMPORTANT:
+
+PW is the native token of PrimeWave Testnet.
+
+Do NOT refer to PW as AVAX.
+
+AVAX was only relevant to Fuji/P-Chain deployment.
+
+==================================================
+PHASE 5 — DEPLOYER NONCE / CONTROLLED TEST WALLET
+==================================================
+
+DO NOT use the deployer for arbitrary testing if a separate test wallet can be generated.
+
+Generate a temporary TESTNET-ONLY EOA for functional testing.
+
+The private key MUST NOT be printed, logged, committed, or written into the repository.
+
+Fund the test wallet with a small amount of PW using the deployer.
+
+Only transfer the minimum amount necessary.
+
+Record:
+
+- test wallet address
+- funding transaction hash
+- block
+- amount
+- receipt status
+
+The deployer private key must remain protected.
+
+Do not alter TESTNET_DEPLOYER_KEY.
+
+==================================================
+PHASE 6 — BASIC PW TRANSFER
+==================================================
+
+Using the temporary test wallet:
+
+1. Record balance before.
+2. Send a small PW transfer to a second temporary testnet-only wallet.
+3. Wait for transaction receipt.
+4. Verify receipt status = 1.
+5. Record block number.
+6. Verify sender balance decreased correctly.
+7. Verify recipient balance increased correctly.
+8. Verify transaction appears through eth_getTransactionByHash.
+9. Verify transaction appears in the latest block.
+
+Use a small test amount.
+
+Do NOT use large amounts.
+
+==================================================
+PHASE 7 — GAS / EVM FUNCTIONALITY
+==================================================
+
+Verify:
+
+eth_estimateGas
+
+eth_call
+
+eth_getTransactionReceipt
+
+eth_getTransactionByHash
+
+eth_getLogs
+
+eth_blockNumber
+
+eth_getBalance
+
+eth_getTransactionCount
+
+Verify that gas estimation is sensible and transaction execution works normally.
+
+Do not modify protocol state unnecessarily.
+
+==================================================
+PHASE 8 — FEE DISTRIBUTION TEST
+==================================================
+
+This phase must be handled carefully.
+
+First inspect the FeeDistributor contract interface and determine the intended testnet mechanism for generating distributable protocol fees.
+
+DO NOT invent a method.
+
+DO NOT directly manipulate contract storage.
+
+DO NOT use privileged functions unless the contract's intended test procedure explicitly requires them.
+
+If a normal protocol transaction can legitimately generate a FeeDistributor fee:
+
+1. perform the minimum valid test transaction
+2. capture balances before
+3. capture relevant FeeDistributor state
+4. execute transaction
+5. capture balances after
+6. verify fee routing
+7. verify the configured split
+
+If a safe functional fee-generation test is NOT available:
+
+mark this test as NOT TESTABLE IN THIS PHASE.
+
+Do NOT force it.
+
+==================================================
+PHASE 9 — REWARD VAULT TEST
+==================================================
+
+Inspect the RewardVault interface and determine the safest legitimate testnet operation.
+
+Do NOT alter the emission rate.
+
+Do NOT change admin.
+
+Do NOT pause the vault.
+
+Do NOT transfer the 15M PW allocation away.
+
+If there is a safe view-only or minimal claim/accrual test available:
+
+perform it.
+
+Otherwise report the relevant state and mark the dynamic reward-flow test as deferred.
+
+==================================================
+PHASE 10 — ACCESS CONTROL NEGATIVE TESTS
+==================================================
+
+This is important.
+
+Using an unauthorized temporary test wallet, attempt ONLY safe calls that should fail.
+
+Examples:
+
+- unauthorized admin setter
+- unauthorized pause controller
+- unauthorized validator-management operation
+
+Use eth_call/static simulation where possible before broadcasting.
+
+Prefer simulation.
+
+If an actual transaction is required, use the smallest possible test and verify it reverts.
+
+Verify that protected functions cannot be called by arbitrary users.
+
+DO NOT test destructive functions.
+
+DO NOT modify ownership.
+
+DO NOT modify validator membership.
+
+==================================================
+PHASE 11 — EVENT VALIDATION
+==================================================
+
+Verify emitted events for successful transactions.
+
+At minimum:
+
+- PW transfer event
+- relevant contract events from successful test transactions
+
+Verify:
+
+- contract address
+- event signature
+- indexed parameters
+- sender
+- recipient
+- amount
+- block number
+- transaction hash
+
+==================================================
+PHASE 12 — MULTI-VALIDATOR CONSISTENCY
+==================================================
+
+After all test transactions:
+
+Query all four validators.
+
+Verify:
+
+V6 = V7 = V8 = V9
+
+for:
+
+- latest block height
+- latest block hash
+- transaction receipt
+- tested contract state
+
+If any validator disagrees:
+
+STOP and investigate.
+
+==================================================
+PHASE 13 — RPC FAILOVER
+==================================================
+
+Do NOT modify nginx.
+
+Do NOT change DNS.
+
+Simply test each existing public RPC endpoint independently.
+
+For each endpoint verify:
+
+- eth_chainId
+- eth_blockNumber
+- eth_getBalance
+- eth_getCode
+
+Record response latency.
+
+Verify all four endpoints return the same chain identity and latest block.
+
+==================================================
+PHASE 14 — SECURITY / KEY HYGIENE CHECK
+==================================================
+
+Verify:
+
+- TESTNET_DEPLOYER_KEY exists only as a secret
+- private keys are not committed
+- private keys are not present in git
+- private keys are not present in logs
+- private keys are not present in generated reports
+- temporary test keys are not committed
+- no old deployer private key exists in the workspace
+
+Do NOT print any private key.
+
+==================================================
+PHASE 15 — FINAL VERDICT
+==================================================
+
+Classify every test:
+
+GREEN = passed
+
+YELLOW = safe/deferred/not testable
+
+RED = failed or unsafe
+
+A RED result on:
+
+- consensus
+- validator agreement
+- contract bytecode
+- core contract wiring
+- basic PW transfer
+- access control
+
+is a release blocker.
+
+A YELLOW result is acceptable if it is clearly documented and has a defined follow-up.
+
+==================================================
+PHASE 16 — REPORT
+==================================================
+
+Create:
+
+docs/PW-C20-END-TO-END-PROTOCOL-TEST-REPORT.md
+
+Include:
+
+1. Network health
+2. Validator health
+3. Block agreement
+4. RPC testing
+5. Contract bytecode
+6. Contract state
+7. Genesis allocations
+8. PW transfer test
+9. Gas/EVM tests
+10. FeeDistributor test
+11. RewardVault test
+12. Access-control tests
+13. Event tests
+14. RPC failover
+15. Key-security checks
+16. All transaction hashes
+17. All tested wallet addresses
+18. All relevant block numbers
+19. All failures
+20. All deferred tests
+21. Final GREEN/YELLOW/RED verdict
+
+IMPORTANT:
+
+Do not continue into PWCScan, faucet, domain setup, PWSwap, or mainnet.
+
+STOP after producing the report.
+
+The goal is to establish that the PrimeWave L1 and its deployed protocol contracts are functionally sound before we expose the network to public testers.

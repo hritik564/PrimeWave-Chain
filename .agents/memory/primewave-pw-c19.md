@@ -27,10 +27,11 @@ Also in `local-data/testnet-deployed-contracts.env`.
 - Total PW supply confirmed 100,000,000 PW
 
 ## Pitfall
-`cast call <addr> "fn()(type)" --rpc-url ...` returns raw hex when type is unknown to cast.
-Pipe through `python3 -c "print(int('$HEX',16))"` rather than `cast --from-wei` for uint getters.
+`cast call <addr> "fn()(type)" --rpc-url ...` — when return type is specified, cast returns decimal string.
+If you then pipe to `python3 -c "print(int('$VAL',16))"`, it interprets the decimal string as hex (e.g. "7000" → 28672). Use `int('$VAL')` or just print `$VAL` directly.
 Also: EMS threshold is a constant (`THRESHOLD()`), not a `threshold()` getter.
 RewardVault rate getter is `emissionRatePerSecond()`, not `rewardRate()`.
+BURN_ADDRESS = `0x000000000000000000000000000000000000dEaD` (standard dead address, confirmed on-chain).
 
 ## Test Suite (unchanged)
 Forge: 792/792 | Indexer Jest: 57/57 | Keeper Jest: 20/20
