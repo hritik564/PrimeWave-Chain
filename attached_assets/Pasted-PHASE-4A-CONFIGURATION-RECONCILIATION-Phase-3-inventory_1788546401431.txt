@@ -1,0 +1,229 @@
+PHASE 4A — CONFIGURATION RECONCILIATION
+
+Phase 3 inventory is complete. Now perform a READ-ONLY configuration reconciliation.
+
+IMPORTANT:
+This phase is analysis only.
+
+DO NOT:
+- create or modify Replit Secrets
+- access or print existing secret values
+- connect to any database
+- create a database
+- run database migrations
+- start any application workflow
+- start AvalancheGo/Subnet-EVM
+- start the indexer
+- start the keeper
+- start anvil
+- deploy contracts
+- run Forge deployment scripts
+- generate or modify wallets or private keys
+- modify application source code
+- modify contracts
+- modify .replit
+- modify package.json
+- modify pnpm-workspace.yaml
+- modify any lockfile
+- modify deployment manifests
+- commit or push to GitHub
+
+Use the repository as the source of truth for this analysis.
+
+We need to prepare the project for the EXISTING PRIMEWAVE TESTNET environment, not create a new blockchain and not deploy a new testnet.
+
+KNOWN TESTNET FACTS:
+- Chain ID: 77
+- Network: Avalanche Fuji
+- The existing testnet validators are external infrastructure.
+- Do not start or modify those validators.
+- Do not deploy contracts.
+- Do not assume the local development chain is the testnet.
+
+Analyze and report the following.
+
+1. ENVIRONMENT PROFILES
+
+Clearly separate configuration into:
+
+A. Local development
+B. Existing PrimeWave testnet
+C. Future production/mainnet
+
+For every variable/configuration you identify, state which profile it belongs to.
+
+Do not merge these profiles.
+
+2. INDEXER CONFIGURATION
+
+Determine the exact environment variables the indexer implementation actually reads.
+
+Compare them against every indexer environment template/documentation entry.
+
+Explicitly resolve the following discrepancies:
+
+- INDEXER_BATCH_SIZE vs INDEXER_MAX_BLOCK_BATCH
+- INDEXER_POLL_MS vs INDEXER_POLL_INTERVAL_MS
+- INDEXER_NETWORK
+- INDEXER_API_HOST
+- ADDR_STAKING_MANAGER
+
+Do not modify anything yet.
+
+Recommend the exact variable names we should use for the existing testnet runtime based on the implementation.
+
+3. KEEPER CONFIGURATION
+
+Determine the exact variables the keeper implementation actually reads.
+
+Explicitly analyze:
+
+- KEEPER_REGISTRY_ADDRESS
+- KEEPER_VALIDATOR_MANAGER_ADDRESS
+- KEEPER_REGISTRY_ADDR
+- KEEPER_VAULT_ADDR
+- KEEPER_DB_URL
+- KEEPER_STATE_FILE
+
+Explain which are authoritative according to the current keeper source code and which are stale/template-only.
+
+Also analyze the systemd executable-path mismatch:
+
+- dist/index.js
+- dist/keeper.js
+
+Do not modify the systemd unit.
+
+4. DATABASE CONFIGURATION
+
+Determine whether the new Replit environment actually needs:
+
+- DATABASE_URL
+- INDEXER_DB_URL
+
+for the testnet indexer/PWCScan stack.
+
+Clearly distinguish:
+- generic lib/db / Drizzle
+- indexer PostgreSQL
+- keeper storage
+
+Do not connect to any database.
+
+Do not assume the old Replit database should be reused.
+
+State whether a fresh dedicated indexer PostgreSQL database is the safer architecture for the migrated testnet application.
+
+5. TESTNET RPC CONFIGURATION
+
+Identify every place where testnet RPC configuration is read.
+
+Determine the exact variable names required for:
+
+- indexer
+- keeper
+- PWCScan
+- testnet deployment scripts
+
+Do not access any RPC endpoint.
+
+Do not connect to the testnet.
+
+6. CONTRACT ADDRESSES
+
+Determine every contract address variable required by:
+
+- indexer
+- keeper
+- PWCScan/API where applicable
+
+Do not invent addresses.
+
+Do not deploy contracts.
+
+Do not read or derive addresses from a wallet.
+
+If the repository does not contain authoritative current testnet addresses, explicitly state that they must be supplied from the existing PrimeWave testnet deployment record.
+
+7. SECRETS
+
+Create two lists:
+
+A. Secrets that are potentially required for the migrated TESTNET runtime.
+
+B. Secrets that belong ONLY to deployment/local development and must NOT be added to the runtime environment.
+
+Include names only.
+
+NEVER print secret values.
+
+Pay particular attention to:
+
+- KEEPER_PRIVATE_KEY
+- TESTNET_DEPLOYER_KEY
+- DEPLOYER_PRIVATE_KEY
+- FUNDING_PRIVATE_KEY
+- DEV_PRIVATE_KEY_0
+- PRIVATE_KEY
+
+Do not create any of them.
+
+8. EXISTING TESTNET VS LOCAL AUTO-DEPLOYMENT
+
+Trace the startup behavior of:
+
+- scripts/start-chain.sh
+- scripts/start-indexer.sh
+- .replit workflows
+
+Explain exactly why the existing Replit Project workflow must remain disabled for the testnet migration.
+
+Do not execute these scripts.
+
+9. NODE AND PACKAGE MANAGER
+
+We have already verified:
+
+Node.js 24.13.0
+pnpm 10.26.1
+Foundry 1.8.1
+
+Determine whether any repository configuration specifically requires a different version for the indexer or keeper.
+
+Do not change versions.
+
+10. FINAL RECOMMENDED TESTNET RUNTIME PROFILE
+
+Produce a proposed configuration blueprint containing:
+
+- service
+- command
+- required non-secret variables
+- required secret variables
+- database
+- RPC
+- chain ID
+- contract-address inputs
+- state storage
+- health endpoint
+- dependencies
+
+The blueprint must be for the EXISTING TESTNET (chain ID 77), not local development and not mainnet.
+
+11. CHANGES REQUIRED BEFORE RUNTIME
+
+Create a final list with three categories:
+
+A. Configuration that is already correct and should remain unchanged.
+
+B. Configuration that needs to be changed before testnet runtime.
+
+C. Information that must be supplied externally because the repository cannot determine it.
+
+Do NOT make any of the changes.
+
+At the end, state exactly:
+
+"PHASE 4A COMPLETE — CONFIGURATION RECONCILED, NO RUNTIME CHANGES MADE."
+
+Stop there and wait for my approval.
