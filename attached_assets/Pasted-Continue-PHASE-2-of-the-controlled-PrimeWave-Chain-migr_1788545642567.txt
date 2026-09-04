@@ -1,0 +1,92 @@
+Continue PHASE 2 of the controlled PrimeWave Chain migration.
+
+You have already verified:
+- Node.js: v24.13.0
+- pnpm: 10.26.1
+- forge: 1.8.1
+- cast: 1.8.1
+- anvil: 1.8.1
+
+Now perform the remaining Phase 2 validation automatically.
+
+IMPORTANT SAFETY RULES:
+- Do NOT start the Project workflow.
+- Do NOT start PrimeWave Chain.
+- Do NOT start PrimeWave Indexer.
+- Do NOT start the keeper.
+- Do NOT start anvil.
+- Do NOT connect to or create any database.
+- Do NOT run database migrations.
+- Do NOT deploy contracts.
+- Do NOT generate, access, print, rotate, or modify private keys or seed phrases.
+- Do NOT modify application source code.
+- Do NOT modify contracts.
+- Do NOT modify .replit.
+- Do NOT modify package.json, pnpm-workspace.yaml, pnpm-lock.yaml, or any lockfile.
+- Do NOT upgrade or downgrade dependencies.
+- Do NOT commit or push anything to GitHub.
+
+STEP 1 — Root dependency installation
+
+From the repository root, run:
+
+pnpm install --frozen-lockfile
+
+The lockfile must remain unchanged.
+
+STEP 2 — Verify the lockfile
+
+After installation, verify that the Git working tree has not acquired changes to:
+- pnpm-lock.yaml
+- package.json
+- pnpm-workspace.yaml
+
+Do not revert unrelated pre-existing changes; this repository should already be clean.
+
+STEP 3 — TypeScript validation
+
+Run:
+
+pnpm run typecheck
+
+Do not fix errors automatically. If it fails, stop and report the failure.
+
+STEP 4 — Production build validation
+
+Only if typecheck succeeds, run:
+
+PORT=5000 BASE_PATH=/ pnpm run build
+
+These are temporary environment variables for the build command only.
+
+Do NOT start any server as part of this validation.
+
+STEP 5 — Final report
+
+Report:
+
+A. Dependency installation
+- success/failure
+- exact pnpm version
+
+B. Typecheck
+- success/failure
+- packages checked
+- errors/warnings
+
+C. Production build
+- success/failure
+- packages built
+- errors/warnings
+
+D. Git state
+- whether any tracked project files changed
+
+E. Environment
+- Node version
+- pnpm version
+- Foundry versions
+
+If any step fails, STOP at that step and report the exact failure. Do not attempt fixes without my approval.
+
+Do not perform any runtime, database, blockchain, deployment, wallet, or infrastructure operations after the validation.
