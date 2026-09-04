@@ -1,0 +1,48 @@
+Create a new Replit project by importing the existing GitHub repository:
+
+https://github.com/hritik564/PrimeWave-Chain
+
+IMPORTANT: This is an EXISTING production-oriented blockchain software project. Do NOT rebuild, rewrite, refactor, simplify, or redesign the application. The GitHub repository is the source of truth.
+
+Your first task is ONLY to import and inspect the repository.
+
+Requirements:
+1. Import the repository exactly as it exists from GitHub.
+2. Use the main branch.
+3. Preserve the existing repository structure and files.
+4. Do NOT automatically modify source code.
+5. Do NOT generate replacement implementations for anything that already exists.
+6. Do NOT install random packages or upgrade dependencies unless required by the existing project configuration.
+7. Do NOT modify package.json, pnpm-workspace.yaml, pnpm-lock.yaml, Foundry configuration, contracts, deployment scripts, Replit configuration, or infrastructure configuration during the initial import.
+8. Do NOT create, generate, print, commit, or expose any private keys, seed phrases, mnemonics, passwords, API keys, wallet credentials, or other secrets.
+9. Never put secrets into Git-tracked files.
+10. Any secrets required for runtime must be handled through Replit Secrets/environment variables only.
+11. Do NOT deploy contracts, start a production blockchain, alter an existing network, migrate a database, or perform destructive operations at this stage.
+12. Do NOT delete or overwrite any existing data.
+
+After importing the repository, inspect it and report:
+- repository structure
+- detected workspace projects
+- package manager and version expected by the repository
+- Node.js requirements
+- existing Replit configuration
+- existing build/typecheck commands
+- blockchain/Foundry configuration
+- chain/network configuration
+- indexer configuration
+- database configuration
+- required environment variables/secrets (names only, NEVER values)
+- deployment scripts and what they appear to do
+- any Replit-specific dependencies
+- anything that appears to exist only in the old Replit environment rather than GitHub
+
+Do NOT make changes yet.
+
+At the end, give me a migration-readiness report and clearly separate:
+A. Things already contained in GitHub
+B. Things that must be configured as Replit Secrets
+C. Things that may require database/data migration
+D. Things that may require external infrastructure configuration
+E. Anything you cannot determine from the repository alone
+
+Wait for my approval before making any modifications or running deployment operations.
