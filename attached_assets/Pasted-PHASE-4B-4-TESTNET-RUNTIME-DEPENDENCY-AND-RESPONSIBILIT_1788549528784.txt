@@ -1,0 +1,362 @@
+PHASE 4B-4 — TESTNET RUNTIME DEPENDENCY AND RESPONSIBILITY AUDIT
+
+Phase 4B-3A is COMPLETE and GREEN.
+
+The migrated PWCScan application has been hardened so it no longer silently falls back to local Chain ID 73571.
+
+The existing PrimeWave Chain 77 testnet infrastructure is already deployed externally and must NOT be rebuilt.
+
+The purpose of this phase is to determine exactly which components of the migrated Replit project are:
+
+1. development-only
+2. validation-only
+3. external production/testnet runtime dependencies
+4. unnecessary inside Replit
+
+This is a READ-ONLY AUDIT.
+
+==================================================
+ESTABLISHED ARCHITECTURE
+==================================================
+
+Existing external PrimeWave testnet:
+
+- Chain ID: 77
+- Existing Netcup validator infrastructure: V6–V9
+- Existing deployed contracts
+- Existing Chain 77 RPC endpoints
+
+Replit:
+
+- source development
+- builds
+- typechecking
+- tests
+- controlled validation
+
+Target dedicated infrastructure:
+
+- testnet indexer
+- PostgreSQL
+- keeper
+- PWCScan/nginx
+
+Do NOT rebuild any of these existing external components.
+
+==================================================
+ABSOLUTE SAFETY RULES
+==================================================
+
+DO NOT:
+
+- start the indexer
+- start the keeper
+- start PWCScan
+- start AvalancheGo
+- start Subnet-EVM
+- start Anvil
+- connect to PostgreSQL
+- run migrations
+- access private keys
+- access Replit Secrets
+- create secrets
+- deploy contracts
+- send blockchain transactions
+- modify Netcup
+- modify DNS
+- modify firewall
+- modify systemd
+- install server software
+- modify lockfiles
+- commit
+- push
+
+Read-only repository inspection only.
+
+==================================================
+STEP 1 — MAP EVERY RUNTIME COMPONENT
+==================================================
+
+Inspect:
+
+artifacts/
+indexer/
+keeper/
+scripts/
+deploy/
+infrastructure/
+.replit
+docs/
+
+Identify every runnable component.
+
+For each component determine:
+
+- purpose
+- runtime command
+- required environment variables
+- whether it needs blockchain access
+- whether it needs PostgreSQL
+- whether it needs a private key
+- whether it is intended for local development
+- whether it is intended for testnet runtime
+- whether it should permanently run in Replit
+
+==================================================
+STEP 2 — CLASSIFY COMPONENTS
+==================================================
+
+Create this classification:
+
+### Replit development
+
+List components that belong in Replit for development.
+
+### Replit validation
+
+List components that can safely be executed in Replit for controlled validation.
+
+### External testnet infrastructure
+
+List components that should run on dedicated Netcup infrastructure.
+
+### Not required for runtime
+
+List tooling that does not belong on the runtime host.
+
+==================================================
+STEP 3 — INDEXER
+==================================================
+
+Determine precisely:
+
+- whether the indexer should run in Replit
+- whether it should run on Netcup
+- its required variables
+- whether INDEXER_DB_URL is needed
+- whether it needs a private key
+- whether it sends blockchain transactions
+- whether it automatically mutates PostgreSQL at startup
+- whether it should be considered a production/testnet service
+
+Do not start it.
+
+==================================================
+STEP 4 — KEEPER
+==================================================
+
+Determine precisely:
+
+- whether keeper should run in Replit
+- whether it should run on Netcup
+- whether it requires a private key
+- whether it can broadcast transactions
+- whether it requires PostgreSQL
+- what state it maintains
+- what infrastructure it needs
+
+Do not access or configure KEEPER_PRIVATE_KEY.
+
+Do not start keeper.
+
+==================================================
+STEP 5 — PWCSCAN
+==================================================
+
+Determine:
+
+- whether PWCScan is static
+- whether it needs PostgreSQL
+- whether it needs private keys
+- whether it needs direct blockchain access
+- whether it needs the indexer API
+- whether it should be built in Replit
+- where it should ultimately be served
+
+Confirm that:
+
+VITE_CHAIN_ID=77
+
+is the intended testnet configuration.
+
+==================================================
+STEP 6 — LOCAL DEVELOPMENT
+==================================================
+
+Identify all components that are explicitly local-development-only.
+
+Pay particular attention to:
+
+- Chain ID 73571
+- localhost
+- 127.0.0.1
+- Anvil
+- start-chain.sh
+- start-indexer.sh
+- DevDeploy
+- local-data
+
+Confirm these are not accidentally required for the real testnet.
+
+Do not modify them.
+
+==================================================
+STEP 7 — REPLIT WORKFLOW
+==================================================
+
+Inspect .replit and determine exactly what the current Project workflow does.
+
+Confirm whether it:
+
+- starts local chain
+- starts local indexer
+- performs DevDeploy
+- uses Chain ID 73571
+- uses local PostgreSQL
+
+Determine whether the workflow is safe to leave disabled for the testnet migration.
+
+Do not modify it.
+
+==================================================
+STEP 8 — SECRET BOUNDARIES
+==================================================
+
+Without reading any secret values, determine which secrets belong to which component.
+
+Expected categories include:
+
+INDEXER_DB_URL
+KEEPER_PRIVATE_KEY
+
+and deployment/local-development keys.
+
+Clearly state:
+
+- which secrets belong on Replit
+- which secrets belong on Netcup
+- which secrets should never be needed by the PWCScan frontend
+- which secrets should never be committed
+
+Do not access secret values.
+
+==================================================
+STEP 9 — DATABASE BOUNDARY
+==================================================
+
+Confirm whether the Replit project requires:
+
+DATABASE_URL
+
+or:
+
+INDEXER_DB_URL
+
+for the intended testnet runtime.
+
+Do not connect to either database.
+
+The current intended architecture is:
+
+Netcup Indexer
+    ↓
+Dedicated PostgreSQL
+
+Replit should not become the permanent PostgreSQL host.
+
+==================================================
+STEP 10 — FINAL RESPONSIBILITY MATRIX
+==================================================
+
+Produce:
+
+| Component | Replit | Netcup | Development only | Testnet runtime |
+|---|---|---|---|---|
+
+Populate for:
+
+- AvalancheGo
+- Subnet-EVM
+- Foundry
+- Indexer
+- PostgreSQL
+- Keeper
+- PWCScan
+- nginx
+- local Anvil
+- deployment scripts
+- tests
+
+==================================================
+STEP 11 — MIGRATION CONSEQUENCE
+==================================================
+
+Based on the audit, state what the new Replit account actually needs to retain for the migrated project to be complete.
+
+Separate:
+
+REQUIRED IN REPLIT
+
+from:
+
+REQUIRED EXTERNALLY
+
+Do not propose new infrastructure.
+
+Do not provision anything.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return:
+
+### Runtime component inventory
+
+### Replit development responsibilities
+
+### Replit validation responsibilities
+
+### Netcup testnet responsibilities
+
+### Indexer responsibility
+
+### Keeper responsibility
+
+### PWCScan responsibility
+
+### Database boundary
+
+### Secret boundary
+
+### Local-development boundary
+
+### .replit workflow analysis
+
+### Final responsibility matrix
+
+### What remains to complete the Replit migration
+
+### Files modified
+
+Expected:
+
+"No tracked files modified."
+
+Confirm:
+
+- no services started
+- no blockchain accessed
+- no database accessed
+- no secrets accessed
+- no infrastructure changed
+- no files modified
+- no lockfiles changed
+- no commits
+- no pushes
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-4 COMPLETE — TESTNET RUNTIME RESPONSIBILITIES MAPPED, NO RUNTIME OR INFRASTRUCTURE CHANGED."
