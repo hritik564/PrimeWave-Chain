@@ -1,0 +1,400 @@
+PHASE 4B-2B — INFRA-01 SERVER SPECIFICATION AND PROVISIONING PLAN
+
+Phase 4B-2A is COMPLETE and GREEN.
+
+The architecture is now:
+
+PrimeWave Testnet Validators
+        ↓
+Approved Chain 77 RPC
+        ↓
+Dedicated Netcup infra-01
+        ├── PrimeWave Testnet Indexer
+        ├── PostgreSQL
+        ├── Keeper
+        └── PWCScan / nginx
+
+Replit remains development/build/controlled-validation infrastructure only.
+
+IMPORTANT:
+This phase is READ-ONLY and PLANNING ONLY.
+
+DO NOT:
+- access Netcup
+- SSH to any server
+- create a server
+- modify an existing server
+- install packages
+- install PostgreSQL
+- modify firewall rules
+- modify DNS
+- modify systemd
+- create users
+- create databases
+- create credentials
+- access secrets
+- create Replit Secrets
+- start services
+- deploy contracts
+- connect to the blockchain
+- run migrations
+- modify application source
+- modify Solidity
+- modify lockfiles
+- modify .replit
+- commit or push changes
+
+==================================================
+OBJECTIVE
+==================================================
+
+Produce the exact specification for the dedicated Netcup server that will become:
+
+infra-01
+
+The specification must be based on the CURRENT repository implementation, not generic assumptions.
+
+==================================================
+STEP 1 — DETERMINE SOFTWARE REQUIREMENTS
+==================================================
+
+Inspect the repository and identify the required runtime/software for:
+
+1. PrimeWave Indexer
+2. PostgreSQL
+3. PrimeWave Keeper
+4. PWCScan
+5. nginx/reverse proxy
+6. systemd services
+7. required OS utilities
+
+Use the current source code and deployment files as the authority.
+
+For each component identify:
+
+- required runtime
+- minimum supported version if explicitly documented
+- recommended version if explicitly documented
+- required system packages
+- expected filesystem paths
+- expected service user/group
+
+Do not invent unsupported version requirements.
+
+==================================================
+STEP 2 — DETERMINE SERVER RESOURCE REQUIREMENTS
+==================================================
+
+Based on the actual application and repository configuration, produce recommended:
+
+- CPU cores
+- RAM
+- SSD/NVMe storage
+- expected operating-system storage
+- expected PostgreSQL storage
+- expected indexer data growth considerations
+- backup storage considerations
+- network requirements
+
+Separate:
+
+MINIMUM PRACTICAL
+
+from:
+
+RECOMMENDED INITIAL
+
+Do not over-size the server without evidence.
+
+Do not claim exact blockchain data growth unless the repository provides evidence.
+
+==================================================
+STEP 3 — OPERATING SYSTEM
+==================================================
+
+Inspect repository documentation for an explicitly supported Linux distribution/version.
+
+If the repository does not specify one, state that clearly.
+
+Do not invent an official PrimeWave OS requirement.
+
+Recommend the most conservative compatible Linux option only as a recommendation, clearly labeled as such.
+
+==================================================
+STEP 4 — FILESYSTEM LAYOUT
+==================================================
+
+Design the proposed filesystem layout based on existing deployment paths.
+
+The repository currently references paths including:
+
+/opt/primewave/indexer
+/opt/primewave/pwcscan
+/etc/primewave/
+/var/log/primewave
+/var/lib/primewave/keeper/
+
+Determine where PostgreSQL data should live using the OS/PostgreSQL standard rather than inventing a PrimeWave-specific path unless the repository already specifies one.
+
+Specify ownership and permissions conceptually.
+
+Do not create any directories.
+
+==================================================
+STEP 5 — NETWORK DESIGN
+==================================================
+
+Document required traffic:
+
+OUTBOUND:
+
+infra-01 → PrimeWave Chain 77 RPC
+
+LOCAL:
+
+Indexer → PostgreSQL :5432
+Keeper → Chain RPC
+PWCScan/nginx → Indexer API :4000
+PWCScan static files → nginx
+
+INBOUND:
+
+HTTPS :443 → nginx
+HTTP :80 → nginx for redirect
+
+Determine whether any other inbound ports are actually required by the current architecture.
+
+Do not expose PostgreSQL publicly.
+
+Do not expose the indexer API publicly unless the architecture explicitly requires it.
+
+Do not expose Keeper health port 8080 publicly unless required.
+
+==================================================
+STEP 6 — SECURITY BOUNDARIES
+==================================================
+
+Define the intended firewall policy.
+
+At minimum evaluate:
+
+22/tcp
+80/tcp
+443/tcp
+4000/tcp
+5432/tcp
+8080/tcp
+
+Do not actually change firewall rules.
+
+Explain which should be:
+
+- publicly accessible
+- restricted to localhost/private network
+- restricted to administrator IPs
+- blocked from the Internet
+
+Do not invent an administrator IP.
+
+==================================================
+STEP 7 — SERVICE ARCHITECTURE
+==================================================
+
+Inspect existing systemd units.
+
+Determine the intended services:
+
+primewave-testnet-indexer
+primewave-testnet-keeper
+nginx
+postgresql
+
+Determine:
+
+- service dependencies
+- service users
+- restart behavior
+- environment files
+- state directories
+- logging
+- hardening
+- writable paths
+
+Identify known mismatches that must be fixed before deployment.
+
+Known issues already identified:
+
+1. Keeper unit expects dist/index.js but current build produces dist/keeper.js.
+2. Keeper unit has legacy PostgreSQL dependency despite keeper using JSON state.
+3. Keeper requires a writable state path.
+4. PWCScan unit expects server.js but current package provides Vite static build/preview.
+5. Indexer systemd unit expects local postgresql.service.
+
+Do not fix these yet.
+
+==================================================
+STEP 8 — POSTGRESQL DESIGN
+==================================================
+
+Based on Phase 4B-2:
+
+- dedicated PostgreSQL
+- dedicated testnet indexer database
+- dedicated least-privilege role
+- no generic Replit DATABASE_URL
+- no shared production database
+
+Determine:
+
+- database name recommendation
+- role name recommendation
+- PostgreSQL port
+- local binding recommendation
+- backup requirement
+- connection pooling settings
+
+Do not create the database or credentials.
+
+Remember the indexer uses:
+
+INDEXER_DB_URL
+
+and not:
+
+DATABASE_URL
+
+==================================================
+STEP 9 — BACKUP AND RECOVERY
+==================================================
+
+Produce a basic backup plan for the indexer database.
+
+Specify:
+
+- backup frequency recommendation
+- retention recommendation
+- where backups should reside
+- whether backups should be encrypted
+- restore testing requirement
+
+Clearly distinguish repository-defined requirements from your operational recommendation.
+
+Do not actually configure backups.
+
+==================================================
+STEP 10 — SERVER PURCHASE SPECIFICATION
+==================================================
+
+Produce a simple Netcup purchasing specification.
+
+Use:
+
+### Minimum Practical
+CPU:
+RAM:
+Storage:
+Network:
+OS:
+
+### Recommended Initial
+CPU:
+RAM:
+Storage:
+Network:
+OS:
+
+Do not select a specific Netcup product unless the repository provides enough information to justify it.
+
+Do not use current pricing.
+
+==================================================
+STEP 11 — DEPLOYMENT SEQUENCE
+==================================================
+
+Provide the exact HIGH-LEVEL order in which infra-01 should later be provisioned.
+
+Example structure:
+
+1. Provision server
+2. Harden OS
+3. Configure firewall
+4. Create service users
+5. Install runtime dependencies
+6. Install PostgreSQL
+7. Create dedicated database/role
+8. Install PrimeWave indexer
+9. Configure INDEXER_DB_URL
+10. Build indexer
+11. Run controlled migrations
+12. Validate indexer against Chain 77
+13. Configure Keeper
+14. Configure nginx/PWCScan
+15. Perform end-to-end validation
+
+Adjust this sequence according to actual repository dependencies.
+
+Do not execute any step.
+
+==================================================
+STEP 12 — REPLIT ROLE
+==================================================
+
+Confirm which tasks remain in Replit:
+
+- source development
+- builds
+- typechecking
+- Forge validation
+- controlled testing
+
+Confirm which tasks should NOT permanently run in Replit:
+
+- testnet indexer
+- testnet PostgreSQL
+- testnet keeper
+- production PWCScan
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return:
+
+### 1. Software requirements
+### 2. Minimum practical server
+### 3. Recommended initial server
+### 4. OS recommendation
+### 5. Filesystem layout
+### 6. Network/firewall design
+### 7. Service architecture
+### 8. PostgreSQL design
+### 9. Backup/recovery plan
+### 10. Known deployment blockers
+### 11. Exact provisioning sequence
+### 12. Replit vs Netcup responsibility
+### 13. External information still required
+### 14. Files modified
+
+Expected:
+
+"No tracked files modified."
+
+Confirm:
+
+- no Netcup servers accessed
+- no database accessed
+- no secrets accessed
+- no services started
+- no firewall changes
+- no DNS changes
+- no systemd changes
+- no source changes
+- no lockfile changes
+- no commits
+- no pushes
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-2B COMPLETE — INFRA-01 SPECIFICATION READY, NO INFRASTRUCTURE CHANGED."
