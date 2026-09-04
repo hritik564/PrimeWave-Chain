@@ -1,0 +1,253 @@
+PHASE 4B-2 — DEDICATED TESTNET INDEXER POSTGRESQL PROVISIONING
+
+Phase 4B-1 is COMPLETE.
+
+We now need to prepare the dedicated PostgreSQL database for the EXISTING PrimeWave TESTNET indexer.
+
+This is an infrastructure-preparation phase only.
+
+The target chain remains:
+
+Chain ID: 77
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+IMPORTANT SAFETY RULES:
+
+DO NOT:
+- deploy contracts
+- start AvalancheGo
+- start Subnet-EVM
+- start Anvil
+- start the indexer
+- start the keeper
+- start PWCScan
+- run indexer migrations yet
+- create or modify Replit Secrets containing credentials
+- access or print any existing secret values
+- modify Solidity
+- modify application source code
+- modify lockfiles
+- modify .replit workflows
+- commit or push anything
+- connect to DATABASE_URL
+- reuse an unknown/shared/production database
+- reuse the generic Replit DATABASE_URL
+- invent database credentials
+- invent a PostgreSQL server address
+
+We need a DEDICATED PostgreSQL database for the testnet indexer.
+
+==================================================
+STEP 1 — INSPECT INDEXER DATABASE REQUIREMENTS
+==================================================
+
+Read the actual indexer implementation and determine:
+
+1. PostgreSQL driver/library being used.
+2. Migration system.
+3. Migration directory/location.
+4. Required database schema.
+5. Required PostgreSQL version/features, if explicitly documented.
+6. Whether the indexer requires any extensions.
+7. Whether migrations are automatically executed during normal startup.
+8. Whether the database URL must use sslmode or any other connection parameter.
+9. Whether there are connection-pool requirements.
+10. Whether there are any database-specific environment variables besides INDEXER_DB_URL.
+
+Use the actual source code as the authority.
+
+Do not infer undocumented requirements.
+
+==================================================
+STEP 2 — INSPECT EXISTING DEPLOYMENT DOCUMENTATION
+==================================================
+
+Inspect:
+
+deploy/testnet/
+deploy/testnet/env/
+infrastructure/
+docs/
+indexer/
+
+Look specifically for existing PostgreSQL deployment instructions, systemd configuration, Docker configuration, database naming conventions, usernames, or server assumptions.
+
+Determine whether the repository already defines a dedicated testnet indexer PostgreSQL deployment mechanism.
+
+Do not provision anything yet.
+
+==================================================
+STEP 3 — CHECK AVAILABLE INFRASTRUCTURE
+==================================================
+
+Determine whether this Replit environment has access to an already-provisioned PostgreSQL server that is explicitly designated for the PrimeWave TESTNET INDEXER.
+
+You may inspect configuration metadata and documentation.
+
+You MUST NOT:
+- print database passwords
+- print connection strings containing credentials
+- expose secrets
+- connect to an unknown database merely to test it
+
+If no explicitly designated PostgreSQL server is available, report that as an external infrastructure requirement.
+
+==================================================
+STEP 4 — DATABASE NAMING
+==================================================
+
+If the repository already specifies an authoritative database name/user, use that.
+
+Otherwise DO NOT invent credentials.
+
+You may recommend a clear naming convention such as:
+
+Database:
+primewave_testnet_indexer
+
+User:
+primewave_indexer
+
+But do not actually create those credentials unless an existing infrastructure mechanism explicitly supports doing so safely.
+
+==================================================
+STEP 5 — INDEXER_DB_URL
+==================================================
+
+Do NOT create or set INDEXER_DB_URL yet unless:
+
+A dedicated PostgreSQL database has already been explicitly provisioned for the PrimeWave TESTNET indexer and its credentials are already available through the approved secret-management mechanism.
+
+If such a database does exist, report that fact without exposing its credentials.
+
+Otherwise leave:
+
+INDEXER_DB_URL
+
+unset.
+
+Do NOT use:
+
+DATABASE_URL
+
+as a substitute.
+
+Do NOT fall back to the hardcoded development PostgreSQL URL in scripts/start-indexer.sh.
+
+The dedicated testnet database must be separate from generic/local development database configuration.
+
+==================================================
+STEP 6 — DO NOT RUN MIGRATIONS
+==================================================
+
+Do NOT run:
+
+npm run migrate
+
+Do NOT run:
+
+node dist/main.js
+
+Do NOT start the indexer.
+
+We will run migrations only after the database and secret injection have been explicitly approved.
+
+==================================================
+STEP 7 — DO NOT MODIFY APPLICATION ARCHITECTURE
+==================================================
+
+Do not change indexer source code simply to make PostgreSQL work.
+
+Do not rename INDEXER_DB_URL.
+
+Do not replace INDEXER_DB_URL with DATABASE_URL.
+
+Do not introduce SQLite or another database.
+
+Do not add a new database abstraction.
+
+==================================================
+STEP 8 — FILE CHANGES
+==================================================
+
+Prefer ZERO tracked-file changes in this phase.
+
+If documentation contains an objectively incorrect PostgreSQL deployment instruction that must be corrected, STOP and report it rather than modifying it.
+
+Do not modify templates unless absolutely necessary.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return a structured report containing:
+
+### Database implementation
+- PostgreSQL driver
+- migration framework
+- migration location
+- required extensions
+- relevant pool settings
+- whether startup automatically runs migrations
+
+### Infrastructure status
+State one of:
+
+A) DEDICATED DATABASE ALREADY AVAILABLE
+
+or
+
+B) EXTERNAL DATABASE PROVISIONING REQUIRED
+
+If A:
+- identify the non-sensitive database/server identity
+- confirm it is specifically designated for the PrimeWave testnet indexer
+- DO NOT reveal credentials
+
+If B:
+- clearly state what external infrastructure is required
+- state what information must be supplied later
+- do not create anything
+
+### Secret status
+Confirm:
+- INDEXER_DB_URL remains unset unless an approved dedicated database already exists
+- DATABASE_URL remains untouched
+- no credentials were printed
+- no secrets were created or modified
+
+### Runtime status
+Confirm:
+- indexer not started
+- migrations not run
+- keeper not started
+- PWCScan not started
+- blockchain not started
+- no contracts deployed
+
+### File status
+List every modified file.
+
+Expected result is preferably:
+
+"No tracked files modified."
+
+==================================================
+STOP CONDITION
+==================================================
+
+STOP after this report.
+
+Do not provision a database using guessed credentials or an unapproved server.
+
+End exactly with one of:
+
+"PHASE 4B-2 READY — DEDICATED POSTGRESQL ALREADY AVAILABLE; WAITING FOR APPROVAL TO INJECT INDEXER_DB_URL AND RUN MIGRATIONS."
+
+OR
+
+"PHASE 4B-2 BLOCKED — EXTERNAL DEDICATED POSTGRESQL PROVISIONING REQUIRED."
+
+Do not proceed beyond this phase without approval.
