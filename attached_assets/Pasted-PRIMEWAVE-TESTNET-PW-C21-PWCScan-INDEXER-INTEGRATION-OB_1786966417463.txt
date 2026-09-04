@@ -1,0 +1,741 @@
+PRIMEWAVE TESTNET — PW-C21
+PWCScan + INDEXER INTEGRATION
+
+OBJECTIVE
+
+PrimeWave Testnet and its core protocol have now passed PW-C20 end-to-end functional validation.
+
+The next milestone is to make the network genuinely explorable through PWCScan.
+
+This task is strictly:
+
+1. Audit the existing PWCScan implementation
+2. Audit the existing indexer
+3. Connect the indexer to the live PrimeWave Testnet
+4. Configure PWCScan against the indexer's data
+5. Index historical blocks/transactions currently available
+6. Verify real PrimeWave transactions appear correctly
+7. Verify continuous indexing of new blocks/transactions
+8. Fix integration issues required for PWCScan/indexer functionality
+9. Produce a complete readiness report
+
+DO NOT:
+
+- recreate the blockchain
+- modify genesis.json
+- modify the subnet
+- modify validators
+- modify validator binaries
+- deploy contracts
+- redeploy contracts
+- change Chain ID
+- change Blockchain ID
+- modify contract state
+- modify PWSwap
+- configure the domain
+- configure HTTPS/TLS
+- build the faucet
+- expose private keys
+- introduce a real signing key into the indexer
+- send arbitrary diagnostic transactions
+
+The existing PrimeWave chain is healthy and must be treated as immutable infrastructure during this task.
+
+==================================================
+NETWORK
+==================================================
+
+Network:
+
+PrimeWave Testnet
+
+Chain ID:
+
+77
+
+Native Currency:
+
+PW
+
+Blockchain ID:
+
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Subnet ID:
+
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Primary RPC:
+
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Backup RPCs:
+
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+==================================================
+DEPLOYED CONTRACTS
+==================================================
+
+Canonical addresses are stored in:
+
+local-data/testnet-deployed-contracts.env
+
+Do not hardcode alternative addresses.
+
+Expected core contracts:
+
+EmergencyMultisig
+PrimeWaveTimelock
+ValidatorFeeVault
+DevTreasury
+FeeDistributor
+ValidatorRegistry
+RewardVault
+
+FeeDistributor:
+
+0x27B15970700daC632f0814522118A1c3B200d971
+
+RewardVault:
+
+0x469B3d8B88006ea5b9eeC9c7c6aD650FB929C7e4
+
+Use the repository's canonical deployment file as the authoritative source for all others.
+
+==================================================
+PHASE 1 — REPOSITORY AUDIT
+==================================================
+
+Before modifying anything, inspect the repository.
+
+Locate and document:
+
+- PWCScan frontend
+- PWCScan backend
+- indexer
+- database
+- schema/migrations
+- block ingestion logic
+- transaction ingestion logic
+- log/event ingestion
+- address/balance indexing
+- contract indexing
+- API endpoints
+- configuration files
+- startup scripts
+- Docker/systemd/Replit deployment configuration
+- existing environment variables
+- existing RPC configuration
+- existing database configuration
+
+Determine whether the project already contains a functioning explorer/indexer architecture or whether components are incomplete.
+
+Do NOT assume.
+
+Read the actual implementation.
+
+==================================================
+PHASE 2 — DEV PRIVATE KEY SECURITY
+==================================================
+
+PW-C20 found:
+
+scripts/start-indexer.sh
+
+exports:
+
+DEV_PRIVATE_KEY_0
+
+This is the well-known Hardhat development private key.
+
+Audit why it exists.
+
+Determine whether the indexer actually requires a signing key.
+
+If it does NOT require signing:
+
+REMOVE the DEV_PRIVATE_KEY_0 dependency.
+
+The indexer must operate read-only against the PrimeWave RPC.
+
+Do NOT replace it with a real private key.
+
+Do NOT create a new signing key.
+
+Do NOT put TESTNET_DEPLOYER_KEY into the indexer.
+
+Verify:
+
+- no private keys are committed
+- no private keys are logged
+- no private keys are embedded in frontend code
+- no deployer key is required by PWCScan
+- no well-known development key is used for actual signing
+
+==================================================
+PHASE 3 — RPC CONNECTIVITY
+==================================================
+
+Configure the indexer against the PrimeWave Testnet.
+
+Test the primary RPC.
+
+Verify:
+
+eth_chainId = 0x4d
+
+net_version = 77
+
+eth_blockNumber succeeds.
+
+eth_getBlockByNumber succeeds.
+
+eth_getTransactionByHash succeeds.
+
+eth_getLogs succeeds.
+
+eth_getCode succeeds.
+
+eth_getBalance succeeds.
+
+Verify all four RPC endpoints return:
+
+Chain ID = 77
+
+and consistent blockchain state.
+
+Implement RPC failover if the existing indexer architecture supports it.
+
+Preferred behavior:
+
+Primary RPC
+    ↓
+failure
+    ↓
+Backup RPC
+    ↓
+failure
+    ↓
+Next backup
+
+Do not modify validator infrastructure.
+
+==================================================
+PHASE 4 — DATABASE
+==================================================
+
+Inspect the current database.
+
+Determine:
+
+- database engine
+- schema
+- migration status
+- existing tables
+- indexes
+- constraints
+- retention strategy
+- block cursor/checkpoint
+- transaction cursor/checkpoint
+
+Ensure the indexer can safely resume after restart.
+
+The indexer MUST NOT re-index the entire chain unnecessarily every time it restarts.
+
+Implement or verify:
+
+last_processed_block
+
+or an equivalent durable checkpoint.
+
+Use database transactions where appropriate so a crash cannot leave the indexer claiming a block was processed when its transactions/events were not committed.
+
+==================================================
+PHASE 5 — INITIAL HISTORICAL SYNC
+==================================================
+
+Determine the current PrimeWave block height.
+
+Index all available PrimeWave blocks starting from genesis or the earliest appropriate block.
+
+For each block capture, where supported:
+
+- block number
+- block hash
+- parent hash
+- timestamp
+- gas limit
+- gas used
+- transaction count
+- miner/beneficiary
+- base fee if applicable
+
+Do not assume Ethereum fields are populated identically on Subnet-EVM.
+
+Handle nullable fields correctly.
+
+Do not corrupt the database by forcing unsupported values.
+
+==================================================
+PHASE 6 — TRANSACTION INDEXING
+==================================================
+
+For every indexed transaction capture:
+
+- transaction hash
+- block number
+- transaction index
+- from
+- to
+- value
+- gas
+- gas price / fee fields where available
+- nonce
+- input/calldata
+- transaction type where available
+- receipt status
+- gas used
+
+Handle contract creation transactions where:
+
+to = null
+
+Do not discard them.
+
+==================================================
+PHASE 7 — EVENT / LOG INDEXING
+==================================================
+
+Index EVM logs.
+
+At minimum verify support for:
+
+Transfer events
+
+FeeDistributed
+
+and events emitted by the deployed PrimeWave protocol contracts.
+
+Capture:
+
+- transaction hash
+- block number
+- transaction index
+- log index
+- contract address
+- topics
+- data
+
+Do not hardcode only the C20 transaction hashes.
+
+The indexer must process future events generically.
+
+==================================================
+PHASE 8 — ADDRESS PAGES
+==================================================
+
+Verify that PWCScan can represent an address.
+
+For an address, display where supported:
+
+- current PW balance
+- transaction count
+- sent transactions
+- received transactions
+- contract interactions
+- token/event activity
+- first seen block
+- last seen block
+
+Test using the C20 test wallets.
+
+Do NOT expose private keys.
+
+==================================================
+PHASE 9 — CONTRACT PAGES
+==================================================
+
+Verify PWCScan can display deployed PrimeWave contracts.
+
+At minimum test:
+
+FeeDistributor
+
+RewardVault
+
+ValidatorRegistry
+
+EmergencyMultisig
+
+PrimeWaveTimelock
+
+ValidatorFeeVault
+
+DevTreasury
+
+For each contract page, display where supported:
+
+- address
+- balance
+- deployment transaction
+- deployment block
+- bytecode/code existence
+- transaction activity
+- event activity
+
+Use the actual deployed addresses from the canonical deployment file.
+
+==================================================
+PHASE 10 — TRANSACTION DETAIL
+==================================================
+
+Verify a PWCScan transaction page using actual C20 transactions.
+
+At minimum include:
+
+1. PW transfer transaction
+2. FeeDistributor distribute() transaction
+3. contract deployment transaction
+
+For each verify:
+
+- transaction hash
+- status
+- block
+- timestamp
+- from
+- to
+- value
+- gas limit
+- gas used
+- nonce
+- input
+- logs/events
+
+Verify displayed information against direct RPC responses.
+
+Do not trust the indexer blindly.
+
+==================================================
+PHASE 11 — BLOCK EXPLORER
+==================================================
+
+Verify the blocks page.
+
+Display:
+
+- latest block
+- block number
+- timestamp
+- transaction count
+- gas usage
+- miner/beneficiary where applicable
+- block hash
+
+Open several real PrimeWave blocks and compare them against RPC.
+
+==================================================
+PHASE 12 — CONTRACT EVENT DECODING
+==================================================
+
+If the current PWCScan implementation supports ABI decoding:
+
+configure the seven deployed contracts using the canonical ABI/source artifacts.
+
+Do NOT fabricate ABIs.
+
+Use the actual compiled contract artifacts from the repository.
+
+Verify that:
+
+FeeDistributed
+
+and PW Transfer
+
+are decoded correctly.
+
+Verify indexed/non-indexed parameters.
+
+==================================================
+PHASE 13 — LIVE INDEXING
+==================================================
+
+After historical synchronization:
+
+start the indexer in live mode.
+
+Do not create arbitrary transactions solely to test indexing.
+
+Instead, use a legitimate small testnet operation only if needed.
+
+Verify:
+
+new block
+    ↓
+indexer detects block
+    ↓
+database updated
+    ↓
+transaction indexed
+    ↓
+event indexed
+    ↓
+PWCScan displays it
+
+Record indexing latency.
+
+==================================================
+PHASE 14 — RESTART / RECOVERY TEST
+==================================================
+
+This is mandatory.
+
+Stop the indexer gracefully.
+
+Restart it.
+
+Verify:
+
+- checkpoint is recovered
+- already indexed blocks are not duplicated
+- transactions are not duplicated
+- events are not duplicated
+- indexer resumes from the correct block
+- PWCScan remains consistent
+
+If the architecture uses idempotent upserts, verify the relevant constraints.
+
+==================================================
+PHASE 15 — REORG / ERROR HANDLING REVIEW
+==================================================
+
+PrimeWave is a sovereign Avalanche L1.
+
+Review how the indexer handles:
+
+- RPC timeout
+- RPC error
+- missing block
+- temporary node failure
+- duplicate block processing
+- duplicate transaction processing
+- duplicate logs
+- process restart
+
+Do not manufacture a chain reorganization.
+
+If reorg support is not required by the current consensus architecture, document the assumption.
+
+==================================================
+PHASE 16 — PERFORMANCE
+==================================================
+
+Measure:
+
+- historical indexing rate
+- live indexing latency
+- RPC latency
+- database query latency
+- memory usage
+- CPU usage
+- database growth
+
+The indexer must not continuously hammer a single validator.
+
+Use sensible polling intervals.
+
+Do not introduce aggressive polling that could become a DoS vector.
+
+==================================================
+PHASE 17 — PWCScan UI VALIDATION
+==================================================
+
+Open and verify the actual PWCScan UI.
+
+Test:
+
+- homepage
+- latest blocks
+- latest transactions
+- block details
+- transaction details
+- address page
+- contract page
+- search
+- navigation
+- pagination
+- error states
+- loading states
+
+Verify that Chain ID / network branding says:
+
+PrimeWave Testnet
+
+and does not incorrectly say:
+
+Ethereum
+Fuji
+Avalanche
+Hardhat
+Localhost
+
+Remove accidental references to local development networks from the PUBLIC UI only where they are clearly incorrect.
+
+Do not destroy local development configuration.
+
+==================================================
+PHASE 18 — API VALIDATION
+==================================================
+
+Test the explorer/indexer API endpoints.
+
+Verify:
+
+- blocks
+- transactions
+- addresses
+- contracts
+- events
+- latest block
+- health/status
+
+Return correct HTTP status codes.
+
+No private information should be exposed.
+
+==================================================
+PHASE 19 — DATA CONSISTENCY
+==================================================
+
+Choose at least:
+
+- 5 blocks
+- 5 transactions
+- 3 addresses
+- 3 contracts
+- 5 logs/events
+
+Compare PWCScan/indexer results directly against RPC results.
+
+Any mismatch must be documented.
+
+Critical mismatches are RED.
+
+==================================================
+PHASE 20 — FINAL SECURITY AUDIT
+==================================================
+
+Search the entire PWCScan/indexer implementation for:
+
+- private keys
+- seed phrases
+- TESTNET_DEPLOYER_KEY
+- DEV_PRIVATE_KEY_0
+- hardcoded credentials
+- database passwords
+- SSH credentials
+- validator root passwords
+
+No secrets belong in frontend code.
+
+No secrets belong in git.
+
+No signing key should be required by the explorer.
+
+==================================================
+PHASE 21 — DOCUMENTATION
+==================================================
+
+Create or update:
+
+docs/PW-C21-PWCSCAN-INDEXER-REPORT.md
+
+Include:
+
+1. Architecture discovered
+2. Files/components involved
+3. RPC configuration
+4. Database configuration
+5. Historical sync result
+6. Current indexed block height
+7. Indexing rate
+8. Live indexing latency
+9. Transaction indexing
+10. Event indexing
+11. Address indexing
+12. Contract indexing
+13. PWCScan UI results
+14. API results
+15. Restart/recovery test
+16. RPC failover test
+17. Security audit
+18. DEV_PRIVATE_KEY_0 result and remediation
+19. Data consistency comparison
+20. Known limitations
+21. Recommended next steps
+22. Final GREEN/YELLOW/RED verdict
+
+==================================================
+SUCCESS CRITERIA
+==================================================
+
+GREEN requires:
+
+- PWCScan connects to PrimeWave Testnet
+- Chain ID = 77
+- historical blocks indexed
+- transactions indexed
+- logs/events indexed
+- addresses query correctly
+- contracts query correctly
+- transaction pages match RPC
+- block pages match RPC
+- FeeDistributed event visible
+- PW Transfer visible
+- live indexing works
+- indexer survives restart
+- no duplicate records
+- no private keys required
+- no DEV_PRIVATE_KEY_0 dependency
+- all four RPC endpoints validated
+- no critical data mismatch
+
+YELLOW is acceptable for documented non-critical limitations.
+
+RED if:
+
+- wrong chain is indexed
+- Chain ID mismatch
+- transactions are missing/corrupt
+- events are missing systematically
+- indexer cannot resume safely
+- private key is required
+- public UI exposes secrets
+- critical RPC/data inconsistency exists
+
+==================================================
+STOP CONDITION
+==================================================
+
+STOP after:
+
+docs/PW-C21-PWCSCAN-INDEXER-REPORT.md
+
+has been written.
+
+Do NOT proceed to:
+
+- faucet
+- domain
+- HTTPS
+- PWSwap
+- mainnet
+- validator changes
+- additional contract deployment
+
+The only objective of PW-C21 is a reliable PWCScan + Indexer for PrimeWave Testnet.
