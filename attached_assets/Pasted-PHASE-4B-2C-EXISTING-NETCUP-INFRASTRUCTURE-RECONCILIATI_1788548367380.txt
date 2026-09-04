@@ -1,0 +1,205 @@
+PHASE 4B-2C — EXISTING NETCUP INFRASTRUCTURE RECONCILIATION
+
+We already own Netcup servers for PrimeWave infrastructure.
+
+DO NOT recommend purchasing a new server.
+
+The objective is to determine which EXISTING Netcup server should be designated as the logical PrimeWave "infra-01" host.
+
+This phase is READ-ONLY.
+
+DO NOT:
+- SSH into any server
+- access Netcup
+- access passwords or private keys
+- access Replit Secrets
+- modify any server
+- start or stop services
+- install software
+- modify firewall rules
+- modify DNS
+- modify systemd
+- create databases
+- modify application source
+- modify Solidity
+- modify lockfiles
+- commit or push
+
+==================================================
+KNOWN VALIDATOR SERVERS — DO NOT USE
+==================================================
+
+These are existing PrimeWave validator nodes:
+
+V6:
+152.53.66.93
+
+V7:
+152.53.66.201
+
+V8:
+159.195.44.104
+
+V9:
+159.195.47.126
+
+These validator nodes must remain dedicated to validator/blockchain duties.
+
+Do NOT recommend placing infra-01 on V6, V7, V8, or V9.
+
+==================================================
+OBJECTIVE
+==================================================
+
+Using ONLY information already present in the repository, determine:
+
+1. Whether the repository contains references to additional Netcup servers besides V6–V9.
+2. Whether any existing server is already identified as:
+   - infra-01
+   - RPC
+   - monitoring
+   - explorer
+   - indexer
+   - database
+3. Whether the repository contains concrete IP addresses associated with those roles.
+4. Whether those IPs appear current or historical/placeholders.
+5. Whether the repository gives enough evidence to identify an existing server as infra-01.
+
+Do not guess.
+
+==================================================
+STEP 1 — SEARCH REPOSITORY
+==================================================
+
+Search:
+
+infrastructure/
+deploy/
+docs/
+scripts/
+.agents/
+
+for:
+
+infra-01
+infra01
+indexer host
+indexer server
+postgres host
+postgresql host
+explorer host
+PWCScan host
+monitoring
+RPC server
+Netcup
+server inventory
+IP addresses
+
+==================================================
+STEP 2 — CLASSIFY EVERY SERVER REFERENCE
+==================================================
+
+Create a table:
+
+| Host/Role | IP/Hostname | Role | Current/Historical | Evidence |
+
+For each server reference determine whether it is:
+
+CURRENT
+HISTORICAL
+PLACEHOLDER
+UNKNOWN
+
+Do not treat old documentation as current infrastructure.
+
+==================================================
+STEP 3 — EXISTING PRIMEWAVE ARCHITECTURE
+==================================================
+
+Confirm the intended architecture:
+
+Validator nodes
+    ↓
+Chain 77 RPC
+    ↓
+Dedicated infra-01
+    ├── Indexer
+    ├── PostgreSQL
+    ├── Keeper
+    └── PWCScan/nginx
+
+Confirm that infra-01 should NOT be a validator node.
+
+==================================================
+STEP 4 — SERVER SELECTION
+==================================================
+
+If the repository contains enough evidence to identify an existing non-validator Netcup server as infra-01, report the candidate.
+
+If not, state:
+
+"REPOSITORY DOES NOT CONTAIN ENOUGH EVIDENCE TO IDENTIFY THE EXISTING NETCUP INFRA-01 SERVER."
+
+Do NOT invent a candidate.
+
+Do NOT recommend purchasing another server.
+
+Instead state what information we need from the operator to identify the already-owned server.
+
+==================================================
+STEP 5 — RESOURCE CHECK
+==================================================
+
+If an existing candidate server is identified in the repository, compare its documented resources against:
+
+Recommended initial:
+4 vCPU
+16 GB RAM
+500 GB SSD/NVMe
+
+Minimum practical:
+2 vCPU
+8 GB RAM
+250 GB SSD/NVMe
+
+Clearly label these as operational recommendations, not hard application requirements.
+
+==================================================
+STEP 6 — FINAL REPORT
+==================================================
+
+Return:
+
+### Existing Netcup server inventory
+
+### Validator servers excluded from infra-01
+
+### Existing non-validator candidates
+
+### Evidence quality for each candidate
+
+### Recommended existing server, if evidence supports one
+
+### Information still needed from operator
+
+### Confirmation that no infrastructure was changed
+
+Expected:
+
+- no server accessed
+- no database accessed
+- no secrets accessed
+- no services started
+- no firewall changes
+- no DNS changes
+- no systemd changes
+- no source changes
+- no lockfile changes
+- no commits
+- no pushes
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-2C COMPLETE — EXISTING NETCUP INFRASTRUCTURE RECONCILED, NO INFRASTRUCTURE CHANGED."
