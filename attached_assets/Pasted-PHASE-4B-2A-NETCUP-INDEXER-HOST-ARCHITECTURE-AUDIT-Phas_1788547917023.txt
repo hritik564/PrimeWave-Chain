@@ -1,0 +1,296 @@
+PHASE 4B-2A — NETCUP INDEXER HOST ARCHITECTURE AUDIT
+
+Phase 4B-2 is BLOCKED because no explicitly approved dedicated PostgreSQL server exists.
+
+We have decided on the following architecture:
+
+- PrimeWave testnet validators remain on the existing dedicated Netcup validator servers.
+- The PrimeWave testnet indexer should run on dedicated Netcup infrastructure, NOT permanently inside Replit.
+- PostgreSQL should be dedicated to the PrimeWave testnet indexer.
+- Replit remains development/build infrastructure and must not become a production runtime dependency.
+- PWCScan should remain separately deployable and must not be coupled to the validator nodes.
+
+This phase is READ-ONLY.
+
+DO NOT:
+- SSH to any server
+- connect to PostgreSQL
+- create a database
+- create a PostgreSQL user
+- modify firewall rules
+- modify DNS
+- modify systemd
+- start or stop services
+- access secrets
+- access private keys
+- create secrets
+- modify application source
+- modify Solidity
+- modify deployment scripts
+- modify lockfiles
+- modify .replit
+- commit or push changes
+- deploy anything
+
+==================================================
+OBJECTIVE
+==================================================
+
+Determine the repository's intended architecture for running:
+
+1. PrimeWave Testnet Indexer
+2. PostgreSQL for the indexer
+3. PWCScan
+
+on dedicated infrastructure.
+
+==================================================
+STEP 1 — INSPECT NETCUP / SYSTEMD ARCHITECTURE
+==================================================
+
+Inspect:
+
+infrastructure/
+deploy/testnet/
+docs/
+indexer/
+scripts/
+
+Look for:
+
+- systemd units
+- deployment scripts
+- server roles
+- hostnames
+- IP references
+- PostgreSQL assumptions
+- indexer deployment instructions
+- PWCScan deployment instructions
+- reverse proxy configuration
+- firewall requirements
+- service users
+- filesystem paths
+- environment-file locations
+- backup instructions
+
+Do not assume old documentation is current.
+
+Clearly distinguish:
+- current implementation
+- historical/legacy documentation
+- stale assumptions
+- recommendations
+
+==================================================
+STEP 2 — DETERMINE INDEXER HOST ROLE
+==================================================
+
+Determine whether the repository already specifies a dedicated server role for:
+
+PrimeWave Testnet Indexer
+
+If a specific host/server role is documented, report it.
+
+If no host is specified, report:
+
+"INDEXER HOST NOT SPECIFIED BY REPOSITORY"
+
+Do NOT invent a server.
+
+Do NOT assume one of the validator nodes should host the indexer.
+
+==================================================
+STEP 3 — DETERMINE POSTGRESQL PLACEMENT
+==================================================
+
+Determine whether the repository explicitly specifies:
+
+A) PostgreSQL on the same server as the indexer
+
+B) PostgreSQL on a separate database server
+
+C) either architecture
+
+D) no authoritative current architecture
+
+Report the evidence.
+
+Remember:
+
+The indexer requires:
+
+INDEXER_DB_URL
+
+and does NOT use:
+
+DATABASE_URL
+
+Do not recommend reusing generic Replit PostgreSQL.
+
+==================================================
+STEP 4 — NETWORK REQUIREMENTS
+==================================================
+
+Determine what network connectivity will be required between:
+
+Indexer → PrimeWave Testnet RPC
+
+Indexer → PostgreSQL
+
+PWCScan → Indexer API
+
+Internet → PWCScan
+
+Do not change any firewall configuration.
+
+If the repository specifies ports, report them.
+
+Known application ports from the current implementation:
+
+Indexer API:
+4000
+
+PWCScan:
+5000 during its current application runtime
+
+Do not assume these are final public ports if deployment architecture says otherwise.
+
+==================================================
+STEP 5 — SYSTEMD COMPATIBILITY
+==================================================
+
+Inspect the existing indexer systemd unit.
+
+Determine:
+
+- executable path
+- working directory
+- service user
+- environment file
+- restart policy
+- health checks
+- dependency ordering
+- expected build output
+
+Confirm whether it matches the current indexer implementation.
+
+Do NOT modify it.
+
+==================================================
+STEP 6 — POSTGRESQL REQUIREMENTS
+==================================================
+
+Using the actual indexer source, report:
+
+- PostgreSQL driver
+- supported/required PostgreSQL version
+- extensions
+- pool settings
+- connection timeout
+- idle timeout
+- migration location
+- whether migrations automatically execute at startup
+
+Do not run migrations.
+
+==================================================
+STEP 7 — PWCScan DEPLOYMENT
+==================================================
+
+Inspect the current PWCScan deployment configuration.
+
+Determine why the previously identified:
+
+server.js
+
+deployment-unit discrepancy exists.
+
+Identify:
+
+- actual PWCScan build output
+- actual package scripts
+- expected runtime command
+- existing systemd/deployment command
+- whether PWCScan is static or server-rendered
+- whether a reverse proxy is expected
+
+Do NOT modify anything.
+
+==================================================
+STEP 8 — RECOMMENDED TARGET ARCHITECTURE
+==================================================
+
+Based ONLY on the repository evidence and current implementation, provide a recommended architecture.
+
+Use this structure:
+
+Validator Nodes
+→ Indexer Host
+→ PostgreSQL
+
+and:
+
+Users
+→ Reverse Proxy
+→ PWCScan
+
+and:
+
+PWCScan
+→ Indexer API
+
+Explain whether PostgreSQL should be:
+
+- same host as indexer
+OR
+- separate server
+
+and why, based on the repository and current architecture.
+
+Do not provision anything.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return:
+
+### 1. Current documented architecture
+
+### 2. Indexer host status
+
+### 3. PostgreSQL placement status
+
+### 4. Required network paths and ports
+
+### 5. Existing systemd compatibility
+
+### 6. PWCScan deployment status
+
+### 7. Stale/legacy configuration discovered
+
+### 8. Recommended target architecture
+
+### 9. Infrastructure still required
+
+### 10. Files modified
+
+Expected:
+
+"No tracked files modified."
+
+Confirm:
+
+- no servers accessed
+- no database accessed
+- no secrets accessed
+- no services started
+- no firewall changes
+- no DNS changes
+- no source changes
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-2A COMPLETE — NETCUP ARCHITECTURE AUDITED, NO INFRASTRUCTURE CHANGED."
