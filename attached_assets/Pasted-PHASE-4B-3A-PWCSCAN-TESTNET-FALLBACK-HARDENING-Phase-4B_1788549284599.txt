@@ -1,0 +1,213 @@
+PHASE 4B-3A — PWCSCAN TESTNET FALLBACK HARDENING
+
+Phase 4B-3 is COMPLETE with a YELLOW result.
+
+The existing Chain 77 testnet was successfully reached read-only:
+
+- Primary RPC reports Chain ID 77.
+- All three backup RPCs report Chain ID 77.
+- Latest block is readable.
+- All seven deployed testnet contracts have bytecode.
+- Dedicated testnet configuration correctly specifies Chain ID 77.
+
+One configuration hazard was identified:
+
+artifacts/pwcscan/src/pages/home.tsx
+
+contains a fallback that displays Chain ID 73571 when both indexer statistics and VITE_CHAIN_ID are unavailable.
+
+73571 is the local-development Chain ID.
+
+The dedicated testnet template already correctly specifies:
+
+VITE_CHAIN_ID=77
+
+Therefore this is currently a fallback hazard, not an active testnet configuration mismatch.
+
+We now want to harden PWCScan so that a missing testnet Chain ID cannot silently make the application identify itself as local Chain 73571.
+
+==================================================
+SAFETY
+==================================================
+
+This is an application hardening change only.
+
+DO NOT:
+
+- deploy anything
+- start the indexer
+- start the keeper
+- start PWCScan
+- start AvalancheGo
+- start Subnet-EVM
+- start Anvil
+- connect to PostgreSQL
+- run migrations
+- access secrets
+- access private keys
+- modify Netcup
+- modify DNS
+- modify firewall
+- modify systemd
+- deploy contracts
+- change Chain 77
+- change local development configuration
+- change the testnet RPC
+- change contract addresses
+- modify lockfiles
+- commit
+- push
+
+==================================================
+STEP 1 — INSPECT THE FALLBACK
+==================================================
+
+Read:
+
+artifacts/pwcscan/src/pages/home.tsx
+
+Determine exactly how the Chain ID is selected.
+
+Determine whether:
+
+VITE_CHAIN_ID
+
+is already available through the existing application configuration.
+
+Do not assume.
+
+==================================================
+STEP 2 — REMOVE ONLY THE DANGEROUS 73571 FALLBACK
+==================================================
+
+Change the application so that PWCScan does NOT silently display:
+
+73571
+
+when VITE_CHAIN_ID is missing.
+
+Prefer fail-safe behavior.
+
+The application should either:
+
+A) display an explicit "Chain ID unavailable" / equivalent state,
+
+OR
+
+B) derive the Chain ID only from an authoritative live indexer response,
+
+OR
+
+C) use another existing authoritative testnet configuration source already present in the application.
+
+Do NOT hardcode 77 into application source as a replacement unless the current architecture explicitly requires it.
+
+The purpose is to prevent accidental local-chain identity in a testnet deployment.
+
+Do NOT alter:
+
+config/dev/network.env
+
+The local development Chain ID 73571 is valid for local development and must remain unchanged.
+
+==================================================
+STEP 3 — SEARCH FOR SIMILAR FALLBACKS
+==================================================
+
+Search the PWCScan application for other occurrences where:
+
+- 73571
+- local chain ID
+- localhost
+- 127.0.0.1
+
+could be used as a silent production/testnet fallback.
+
+Distinguish:
+
+1. legitimate local-development configuration
+2. legitimate internal proxy configuration
+3. dangerous runtime fallback
+
+Do not modify legitimate local-development configuration.
+
+If another dangerous runtime fallback exists, report it and fix only if the fix is directly analogous and clearly safe.
+
+Do not make broad architectural changes.
+
+==================================================
+STEP 4 — BUILD VALIDATION
+==================================================
+
+After the minimal source change:
+
+Run the appropriate existing PWCScan typecheck/build validation.
+
+Use the repository's existing commands.
+
+Do NOT start the application.
+
+Confirm the build succeeds.
+
+A pre-existing non-fatal sourcemap warning may remain if it is unchanged and does not affect build success.
+
+==================================================
+STEP 5 — DIFF REVIEW
+==================================================
+
+Inspect git diff.
+
+Confirm:
+
+- only the intended PWCScan source/configuration file(s) changed
+- no Solidity changed
+- no infrastructure changed
+- no deployment scripts changed
+- no lockfiles changed
+- no .replit changes
+- no secrets added
+- no RPC changes
+- no Chain 77 contract addresses changed
+
+Do not commit or push.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Report:
+
+### Fallback found
+Explain the original 73571 fallback.
+
+### Change made
+Give the exact file(s) changed and describe the new fail-safe behavior.
+
+### Other 73571 references
+Classify any remaining occurrences as:
+- legitimate local development
+- legitimate internal configuration
+- dangerous fallback
+
+### Validation
+Report typecheck/build result.
+
+### Safety
+Confirm:
+
+- no blockchain transaction
+- no contract deployment
+- no database access
+- no secrets accessed
+- no Netcup changes
+- no services started
+- no lockfiles changed
+
+### Diff
+List modified files.
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-3A COMPLETE — PWCSCAN LOCAL-CHAIN FALLBACK HARDENED, NO INFRASTRUCTURE OR BLOCKCHAIN STATE CHANGED."

@@ -18,12 +18,14 @@ const networkLabel = import.meta.env.VITE_NETWORK_LABEL ?? ""
 
 export default function Home() {
   const { autoRefresh } = useSettings()
+  const configuredChainId = import.meta.env.VITE_CHAIN_ID?.trim() || undefined
   
   const { data: statsRes, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats(autoRefresh ? 10000 : undefined)
   const { data: blocksRes, isLoading: blocksLoading } = useBlocks({ limit: 10 })
   const { data: txsRes, isLoading: txsLoading } = useTransactions({ limit: 10 })
 
   const stats = statsRes
+  const chainId = stats?.network.chainId ?? configuredChainId
   const blocks = blocksRes?.data || []
   const txs = txsRes?.data || []
 
@@ -58,7 +60,7 @@ export default function Home() {
               </Badge>
             )}
             <Badge variant="outline" className="bg-background/50 backdrop-blur">
-              Chain ID: {stats?.network.chainId || import.meta.env.VITE_CHAIN_ID || '73571'}
+              Chain ID: {chainId ?? "Unavailable"}
             </Badge>
             <Badge variant="outline" className="bg-background/50 backdrop-blur text-primary border-primary/20">
               {stats?.network.isSynced ? '🟢 Synced' : '🟡 Syncing...'}
