@@ -9,23 +9,23 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
+runButton = "LOCAL DEVELOPMENT ONLY"
 
 [[workflows.workflow]]
-name = "Project"
+name = "LOCAL DEVELOPMENT ONLY"
 mode = "parallel"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "PrimeWave Chain"
+args = "PrimeWave Chain (LOCAL DEVELOPMENT ONLY)"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "PrimeWave Indexer"
+args = "PrimeWave Indexer (LOCAL DEVELOPMENT ONLY)"
 
 [[workflows.workflow]]
-name = "PrimeWave Chain"
+name = "PrimeWave Chain (LOCAL DEVELOPMENT ONLY)"
 author = "agent"
 
 [[workflows.workflow.tasks]]
@@ -33,7 +33,7 @@ task = "shell.exec"
 args = "bash scripts/start-chain.sh"
 
 [[workflows.workflow]]
-name = "PrimeWave Indexer"
+name = "PrimeWave Indexer (LOCAL DEVELOPMENT ONLY)"
 author = "agent"
 
 [[workflows.workflow.tasks]]

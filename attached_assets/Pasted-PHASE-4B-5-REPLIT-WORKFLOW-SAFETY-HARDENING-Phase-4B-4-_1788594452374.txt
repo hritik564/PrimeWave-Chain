@@ -1,0 +1,210 @@
+PHASE 4B-5 — REPLIT WORKFLOW SAFETY HARDENING
+
+Phase 4B-4 is COMPLETE and GREEN.
+
+The architecture is now established:
+
+REPLIT
+- Source development
+- Typechecking
+- Builds
+- Tests
+- Controlled validation
+- Read-only Chain 77 checks
+
+EXTERNAL NETCUP
+- Existing Chain 77 validators
+- Existing Chain 77 RPC
+- Testnet indexer
+- Dedicated PostgreSQL
+- Testnet keeper
+- PWCScan serving
+- nginx/TLS
+
+The current Replit Project workflow is LOCAL DEVELOPMENT ONLY.
+
+It runs:
+
+PrimeWave Chain
+    → scripts/start-chain.sh
+
+PrimeWave Indexer
+    → scripts/start-indexer.sh
+
+The workflow uses local Chain ID 73571 and may run local DevDeploy.
+
+We must preserve local development capability but make the separation from Chain 77 testnet explicit and safe.
+
+==================================================
+SAFETY
+==================================================
+
+Do NOT:
+
+- access secrets
+- access private keys
+- start any workflow
+- start local chain
+- start local indexer
+- start keeper
+- start PWCScan
+- connect to PostgreSQL
+- connect to Chain 77
+- send blockchain transactions
+- deploy contracts
+- modify Netcup
+- modify DNS
+- modify firewall
+- modify systemd
+- modify application source unless required for the workflow safety boundary
+- modify Solidity
+- modify lockfiles
+- commit
+- push
+
+==================================================
+STEP 1 — INSPECT .replit
+==================================================
+
+Read the current .replit file.
+
+Determine:
+
+- workflow definitions
+- workflow names
+- commands
+- whether the Project workflow starts local Chain 73571
+- whether the Project workflow starts local indexer
+- whether the workflow could be mistaken for Chain 77 runtime
+
+Do not modify anything yet.
+
+==================================================
+STEP 2 — INSPECT LOCAL WORKFLOW SCRIPTS
+==================================================
+
+Read:
+
+scripts/start-chain.sh
+scripts/start-indexer.sh
+
+Confirm:
+
+- they are local-development-only
+- they use Chain ID 73571
+- start-indexer.sh may run local DevDeploy
+- local DATABASE_URL behavior
+- local-data behavior
+
+Do not modify these scripts unless there is an obvious safety defect directly related to confusing them with testnet runtime.
+
+==================================================
+STEP 3 — DETERMINE SAFEST WORKFLOW DESIGN
+==================================================
+
+We want:
+
+LOCAL DEVELOPMENT
+
+to remain possible.
+
+But:
+
+CHAIN 77 TESTNET
+
+must never be started through the local Project workflow.
+
+Prefer the smallest safe change.
+
+Potential safe approaches include:
+
+1. Rename the workflow to explicitly say "LOCAL DEVELOPMENT ONLY"
+2. Add a clear description/guard
+3. Separate local development workflows from any future testnet validation workflow
+4. Disable automatic startup if the current Replit configuration supports that safely
+
+Do NOT remove local development support.
+
+Do NOT create a Chain 77 runtime workflow.
+
+Do NOT add production secrets.
+
+==================================================
+STEP 4 — DO NOT HARD-CODE TESTNET SECRETS
+==================================================
+
+No workflow should contain:
+
+- private keys
+- database passwords
+- KEEPER_PRIVATE_KEY
+- INDEXER_DB_URL credentials
+- deployment keys
+
+Chain 77 read-only validation may use public RPC configuration only.
+
+==================================================
+STEP 5 — VALIDATE
+==================================================
+
+After making the minimal safety change, validate:
+
+- .replit syntax/configuration
+- local workflow references remain valid
+- no lockfiles changed
+- no application source changed unless explicitly required
+- no secrets added
+- no Chain 77 runtime was introduced
+- no workflow was started
+
+Do not run the workflow.
+
+==================================================
+STEP 6 — DIFF REVIEW
+==================================================
+
+Inspect git diff.
+
+Confirm the changes are limited to workflow safety.
+
+Do not commit or push.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return:
+
+### Current workflow behavior
+
+### Local-development boundary
+
+### Chain 77 boundary
+
+### Changes made
+
+### Validation
+
+### Secret review
+
+### Runtime safety
+
+### Modified files
+
+### Final recommendation
+
+Confirm that:
+
+- local development remains available
+- Chain 77 cannot be mistaken for the local workflow
+- no testnet runtime was introduced into Replit
+- no secrets were added
+- no blockchain state changed
+- no services were started
+- no Netcup infrastructure changed
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 4B-5 COMPLETE — REPLIT LOCAL/TESTNET WORKFLOW BOUNDARY HARDENED, NO RUNTIME OR INFRASTRUCTURE CHANGED."
