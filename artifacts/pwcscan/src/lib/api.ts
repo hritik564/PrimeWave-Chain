@@ -1,6 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNetwork } from './network';
 import type { NetworkDefinition } from './network-config';
+import {
+  isSearchQueryEnabled,
+  parseSearchApiResponse,
+  type SearchApiResponse,
+  type SearchResult,
+} from './search-client';
+
+export { isSearchQueryEnabled, parseSearchApiResponse };
+export type { SearchApiResponse, SearchResult };
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -168,13 +177,6 @@ export interface Contract {
   address: string; creation_tx: string | null; creation_block: number | null;
   is_verified: boolean; is_known_protocol: boolean; protocol_name: string | null; tx_count: number;
   recentEvents?: DecodedEvent[];
-}
-
-export interface SearchResult { type: 'block' | 'transaction' | 'address' | 'validator' | 'not_found' | 'invalid_format'; data: unknown; }
-export interface SearchApiResponse {
-  success: boolean;
-  type: SearchResult['type'];
-  data: unknown;
 }
 
 // ========================
@@ -349,8 +351,11 @@ export function useSearch(q: string) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'search', q],
-    queryFn: () => apiRequest<SearchApiResponse>(network, '/search', { q }),
-    enabled: isConfigured && q.trim().length > 0,
+    queryFn: () =>
+      apiRequest<SearchApiResponse>(network, '/search', { q }).then(
+        parseSearchApiResponse,
+      ),
+    enabled: isConfigured && isSearchQueryEnabled(q),
     retry: false,
   });
 }
