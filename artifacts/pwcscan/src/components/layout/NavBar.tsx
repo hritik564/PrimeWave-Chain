@@ -81,6 +81,11 @@ function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
     orange: "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300",
     green: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   } as const
+  const dotClasses = {
+    blue: "bg-blue-500",
+    orange: "bg-orange-500",
+    green: "bg-emerald-500",
+  } as const
 
   return (
     <DropdownMenu>
@@ -119,7 +124,7 @@ function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
             onSelect={() => selectNetwork(network)}
             className="flex items-start gap-3 py-3"
           >
-            <span className={cn("mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full", network.configured ? `bg-${network.tone}-500` : "bg-muted-foreground/40")} />
+            <span className={cn("mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full", network.configured ? dotClasses[network.tone] : "bg-muted-foreground/40")} />
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="flex items-center justify-between gap-2 font-medium">
                 <span>{network.label}</span>
@@ -221,62 +226,14 @@ export function NavBar() {
             </div>
           )}
 
+          <div className="hidden sm:block">
+            <NetworkSwitcher />
+          </div>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
                 <Settings className="h-5 w-5 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-              <div className="flex items-center justify-between px-2 py-1.5">
-                <span className="text-sm">Theme</span>
-                <div className="flex gap-1 bg-muted p-0.5 rounded-md">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("h-7 w-7 rounded-sm", theme === "light" && "bg-background shadow-sm")} 
-                    onClick={() => setTheme("light")}
-                  >
-                    <Sun className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("h-7 w-7 rounded-sm", theme === "dark" && "bg-background shadow-sm")}
-                    onClick={() => setTheme("dark")}
-                  >
-                    <Moon className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={cn("h-7 w-7 rounded-sm", theme === "system" && "bg-background shadow-sm")}
-                    onClick={() => setTheme("system")}
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Preferences</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setAutoRefresh(!autoRefresh)} className="justify-between">
-                <span>Auto-refresh Data</span>
-                <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded", autoRefresh ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
-                  {autoRefresh ? "ON" : "OFF"}
-                </span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden sm:block">
-            <NetworkSwitcher />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hidden md:inline-flex h-9 w-9" aria-label="Open settings">
-                <Settings className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
