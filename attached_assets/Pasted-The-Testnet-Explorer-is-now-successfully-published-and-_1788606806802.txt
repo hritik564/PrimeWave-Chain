@@ -1,0 +1,54 @@
+The Testnet Explorer is now successfully published and syncing real Chain 77 data.
+
+However, after publishing, switching PWCScan to Devnet produces:
+
+"Network data mismatch for Devnet: expected Chain ID 73571, received Chain ID 77."
+
+This indicates the production deployment is incorrectly routing Devnet requests/configuration to the Testnet Chain 77 backend.
+
+Fix the Devnet production configuration without weakening or removing the existing network Chain ID mismatch protection.
+
+REQUIREMENTS:
+
+1. Devnet must remain Chain ID 73571.
+2. Testnet must remain Chain ID 77.
+3. Mainnet remains unconfigured.
+4. Devnet must use its LOCAL DEVELOPMENT RPC/indexer configuration only.
+5. Testnet must continue using the live Chain 77 indexer and RPC.
+6. Do NOT make Devnet point at Chain 77.
+7. Do NOT make Testnet point at Chain 73571.
+8. Do NOT remove, bypass, or weaken Chain ID validation.
+9. Do NOT introduce any cross-network fallback.
+10. Do NOT change Chain 77, validators, contracts, or blockchain state.
+11. Do NOT expose private keys.
+12. Do NOT break the currently working published Testnet Explorer.
+
+Investigate why the production PWCScan build/runtime is attempting to resolve Devnet against a Chain 77 endpoint.
+
+Pay particular attention to:
+- network-specific environment variables
+- VITE_DEFAULT_NETWORK
+- Devnet RPC configuration
+- Testnet RPC configuration
+- network registry/provider configuration
+- production build-time environment injection
+- API client endpoint selection
+- any fallback precedence
+- whether Devnet is incorrectly inheriting the production Testnet RPC/indexer URL
+
+Implement the minimum safe repository/configuration changes required to restore proper network isolation.
+
+IMPORTANT:
+The published Testnet deployment is currently working. Preserve that behavior.
+
+After fixing, validate:
+
+- Devnet expects 73571 and receives 73571 when running in local development.
+- Testnet expects 77 and receives 77 in the published production deployment.
+- Mainnet remains explicitly unavailable/unconfigured.
+- Switching Devnet → Testnet → Devnet does not retain Testnet data/cache.
+- No 73571 endpoint is used by the production Testnet network.
+- No Chain 77 endpoint is used by Devnet.
+- Typecheck/build pass.
+
+Do not publish again automatically. Make the repository/configuration fix and report exactly what caused the mismatch and what was changed.
