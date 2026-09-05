@@ -1,0 +1,116 @@
+PRIMEWAVE TESTNET — FIND THE ORIGINAL EXPLORER HOST FROM REPOSITORY/GIT HISTORY
+
+We have now verified the complete current Netcup inventory:
+
+1. 159.195.193.209 = MLM server
+2. 152.53.19.19 = old PrimeWave AvalancheGo node
+3. 152.53.236.29 = old PrimeWave AvalancheGo node
+4. 152.53.236.136 = old PrimeWave AvalancheGo node
+5. 152.53.17.32 = old PrimeWave AvalancheGo node
+6. 152.53.66.93 = current validator
+7. 152.53.66.201 = current validator
+8. 159.195.44.104 = current validator
+9. 159.195.47.126 = current validator / primary RPC
+
+All four old PrimeWave servers were inspected via SSH and contain only AvalancheGo node infrastructure. None contains the documented Explorer Host stack.
+
+DO NOT:
+- buy/provision a server
+- modify any server
+- modify Chain 77
+- modify validators
+- modify contracts
+- modify DNS
+- modify secrets
+- deploy anything
+- clean/rebuild old servers
+
+This is strictly repository and Git-history investigation.
+
+OBJECTIVE:
+
+Determine whether the original Testnet Explorer/Indexer Host existed previously and, if so, identify its actual hostname, IP address, provider, or deployment identity.
+
+Search the ENTIRE current repository AND Git history.
+
+Search for all of these terms and close variants:
+
+- infra-01
+- Explorer Host
+- explorer host
+- indexer host
+- testnet explorer
+- testnet indexer
+- api.testnet.primewave.xyz
+- explorer.testnet.primewave.xyz
+- primewave-testnet-indexer
+- /opt/primewave/indexer
+- /opt/primewave/pwcscan
+- PostgreSQL
+- nginx
+- indexer-api
+- 127.0.0.1:4000
+- 4000
+- 5432
+- systemctl
+- ssh root@
+- ssh@
+- scp
+- rsync
+- netcup
+- v220
+- 152.53.
+- 159.195.
+- DigitalOcean
+- Hetzner
+- AWS
+- OVH
+- server IP
+- hostname
+- infrastructure
+- deployment
+- explorer deployment
+- C14
+- PW-C14
+- PW-C15
+
+IMPORTANT:
+Search Git history, including deleted files and previous versions where possible.
+
+Useful commands include:
+- git log --all --name-status
+- git log --all -S'<term>'
+- git log --all --grep='<term>'
+- git log -p --all
+- git rev-list --all
+
+Search for historical environment files, deployment notes, handoff files, shell scripts, systemd units, nginx configs, documentation, and infrastructure notes.
+
+Also inspect the .agents/memory history, but clearly distinguish memory/history from authoritative current configuration.
+
+For every discovered candidate host, report:
+
+1. Host/IP
+2. Where it was found
+3. Git commit/date if historical
+4. What role it was associated with
+5. Whether it appears to be the Explorer Host
+6. Whether the evidence is current or historical
+7. Whether it is one of the nine currently known Netcup servers
+
+CRITICAL:
+Do not assume infra-01 equals any specific IP.
+Do not infer a host merely because it appears in architecture diagrams.
+Only report an actual host identity when there is concrete evidence.
+
+FINAL OUTPUT:
+
+Give me one of these classifications:
+
+A. FOUND — original Explorer Host identified
+B. PARTIALLY FOUND — deployment identity/hostname found but IP/access path missing
+C. NOT FOUND — repository/Git history contains architecture only and no actual host identity
+
+If A or B, provide the exact evidence and the next safest step to verify it.
+
+DO NOT MAKE ANY CHANGES.
