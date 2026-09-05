@@ -14,7 +14,7 @@ import { ErrorState } from "@/components/pwcscan/error-state"
 
 export default function Home() {
   const { autoRefresh } = useSettings()
-  const { network } = useNetwork()
+  const { network, isConfigured } = useNetwork()
   
   const { data: statsRes, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats(autoRefresh ? 10000 : undefined)
   const { data: blocksRes, isLoading: blocksLoading } = useBlocks({ limit: 10 })
@@ -28,7 +28,20 @@ export default function Home() {
     ? '🔵 Loading...'
     : stats?.network.isSynced
       ? '🟢 Synced'
-      : '🟡 Syncing...'
+      : stats
+        ? '🟡 Syncing...'
+        : '⚪ Unavailable'
+
+  if (!isConfigured) {
+    return (
+      <div className="space-y-6">
+        <ErrorState
+          title={`${network.label} indexer unavailable`}
+          message={`The ${network.label} chain is known, but no explorer indexer endpoint is configured for this preview. Connect a live Testnet indexer through VITE_TESTNET_INDEXER_API_URL to load blocks and statistics.`}
+        />
+      </div>
+    )
+  }
 
   if (statsError) {
     return (

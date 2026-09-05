@@ -39,6 +39,7 @@ const queryClient = new QueryClient();
 
 function NetworkUnavailableState() {
   const { network } = useNetwork();
+  const isMainnet = network.id === 'mainnet';
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
@@ -49,14 +50,17 @@ function NetworkUnavailableState() {
         {network.label}
       </h1>
       <h2 className="text-xl text-foreground font-medium mb-4">
-        Configuration pending
+        {isMainnet ? 'Configuration pending' : 'Indexer endpoint unavailable'}
       </h2>
       <p className="text-muted-foreground max-w-md">
-        Mainnet network identity and explorer endpoints will appear here after
-        the architecture and deployment are finalized.
+        {isMainnet
+          ? 'Mainnet network identity and explorer endpoints will appear here after the architecture and deployment are finalized.'
+          : `${network.label} is registered, but its explorer indexer endpoint is not configured for this preview.`}
       </p>
       <p className="text-sm text-muted-foreground mt-3">
-        No {network.label} data source is configured.
+        {isMainnet
+          ? `No ${network.label} data source is configured.`
+          : `Set VITE_${network.id.toUpperCase()}_INDEXER_API_URL to connect this network.`}
       </p>
     </div>
   );

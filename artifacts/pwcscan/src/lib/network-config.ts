@@ -66,6 +66,11 @@ const testnetAddresses: Partial<Record<ContractName, string>> = {
   validatorRegistry: envValue('VITE_TESTNET_ADDR_VALIDATOR_REGISTRY') ?? '0x14c47a0D544684FC0189Bce13220B38523Fff9da',
 };
 
+const testnetIndexerApiUrl =
+  envValue('VITE_TESTNET_INDEXER_API_URL') ??
+  legacyValueForNetwork('testnet') ??
+  null;
+
 const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinition> = {
   devnet: {
     id: 'devnet',
@@ -89,16 +94,15 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
     id: 'testnet',
     label: 'Testnet',
     shortLabel: 'Testnet',
-    description: 'Chain 77 test environment',
-    status: 'configured',
+    description: testnetIndexerApiUrl
+      ? 'Chain 77 test environment'
+      : 'Chain 77 indexer endpoint pending',
+    status: testnetIndexerApiUrl ? 'configured' : 'unconfigured',
     chainId: 77,
     rpcUrl:
       envValue('VITE_TESTNET_RPC_URL') ??
       `https://rpc.testnet.primewave.xyz/ext/bc/${TESTNET_BLOCKCHAIN_ID}/rpc`,
-    indexerApiUrl:
-      envValue('VITE_TESTNET_INDEXER_API_URL') ??
-      legacyValueForNetwork('testnet') ??
-      'https://api.testnet.primewave.xyz',
+    indexerApiUrl: testnetIndexerApiUrl,
     contractAddresses: testnetAddresses,
     visual: {
       color: 'testnet',

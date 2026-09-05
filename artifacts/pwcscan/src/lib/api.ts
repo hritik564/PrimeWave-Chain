@@ -58,8 +58,11 @@ export async function apiRequest<T>(
     });
   }
 
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+
   try {
-    const res = await fetch(url.toString());
+    const res = await fetch(url.toString(), { signal: controller.signal });
     if (!res.ok) {
       throw new ApiError(res.status, `API request failed with status ${res.status}`);
     }
@@ -74,6 +77,8 @@ export async function apiRequest<T>(
       503,
       `Unable to reach the ${network.label} indexer at ${base}. Check that the indexer endpoint and TLS configuration are available.`,
     );
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 
