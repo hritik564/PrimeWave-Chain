@@ -1,0 +1,301 @@
+Run the FINAL production smoke test of the newly published PrimeWave PWCScan Explorer.
+
+LIVE PRODUCTION URL:
+https://pwcscan.com
+
+IMPORTANT:
+This is a VERIFICATION-ONLY task.
+
+Do NOT modify code.
+Do NOT modify configuration.
+Do NOT modify infrastructure.
+Do NOT modify the database.
+Do NOT modify contracts or validators.
+Do NOT modify RPCs or indexer configuration.
+Do NOT add/remove secrets.
+Do NOT restart or redeploy anything.
+Do NOT publish anything.
+
+Test the LIVE published application only.
+
+==================================================
+1. PRODUCTION NETWORK SELECTOR
+==================================================
+
+Verify the live production network selector.
+
+Expected:
+
+- Testnet is available.
+- Mainnet is available.
+- Devnet is completely absent.
+
+Confirm that no Devnet label, Chain ID 73571, or production Devnet endpoint is exposed.
+
+==================================================
+2. TESTNET PRODUCTION HEALTH
+==================================================
+
+Select Testnet.
+
+Verify:
+
+- Chain ID is exactly 77.
+- Testnet Explorer loads successfully.
+- Live indexed data is displayed.
+- `/indexer-api/health` responds successfully.
+- `/indexer-api/stats` reports Chain ID 77.
+- Indexer reports synced/healthy state.
+- Latest/current block information loads.
+- No Chain ID mismatch occurs.
+- No Devnet/73571 endpoint is contacted.
+
+Report the observed:
+
+- Chain ID
+- Current indexed block
+- Chain head
+- Sync status
+- Transaction count, if available
+
+==================================================
+3. MAINNET PRODUCTION STATE
+==================================================
+
+Select Mainnet.
+
+Verify:
+
+- Mainnet remains explicitly unconfigured/unavailable.
+- No fake blockchain data is displayed.
+- No Testnet data is displayed.
+- No Devnet data is displayed.
+- No production Mainnet RPC is contacted.
+- No production Mainnet indexer is contacted.
+
+Then return to Testnet.
+
+==================================================
+4. DEVNET PRODUCTION REMOVAL
+==================================================
+
+Verify:
+
+- Devnet does not appear in the production network selector.
+- Production does not expose a Devnet network option.
+- Direct navigation to:
+
+  /devnet
+
+  safely renders/falls back to Testnet as previously implemented.
+- No production Devnet RPC is configured.
+- No production Devnet indexer is configured.
+- No Chain 73571 production endpoint is used.
+
+Do NOT attempt to enable Devnet.
+
+==================================================
+5. SEARCH BAR — LIVE PRODUCTION END-TO-END TEST
+==================================================
+
+This is the PRIMARY purpose of this smoke test.
+
+Test the actual search bar on the LIVE published Testnet Explorer.
+
+Do not merely inspect source code or API definitions.
+
+Use the real production UI.
+
+--------------------------------------------------
+5A. Search UI
+--------------------------------------------------
+
+Verify:
+
+- Search bar is visible.
+- Search input accepts text.
+- Search can be submitted using the implemented button/icon.
+- Pressing Enter submits the search if supported.
+- Search does not produce a blocking runtime error.
+
+--------------------------------------------------
+5B. VALID BLOCK SEARCH
+--------------------------------------------------
+
+Search for:
+
+5
+
+This is a real indexed Testnet block.
+
+Expected:
+
+- Search request reaches the Testnet `/indexer-api`.
+- Search result is recognized as a block.
+- UI does NOT display "No Results Found".
+- Result identifies Block #5.
+- Selecting/submitting the result navigates to:
+
+  /testnet/blocks/5
+
+- Block #5 page loads successfully.
+- Displayed block belongs to Chain 77/Testnet.
+
+Report the final URL and observed result.
+
+--------------------------------------------------
+5C. VALID TRANSACTION SEARCH
+--------------------------------------------------
+
+Search for this real indexed Testnet transaction:
+
+0xd41117d82d2978912b0f3123e866a3de123ffe71dcec31380c07e324d44544f3
+
+Expected:
+
+- Search request reaches the Testnet `/indexer-api`.
+- Search result is recognized as a transaction.
+- UI does NOT display "No Results Found".
+- Result identifies the transaction.
+- Selecting/submitting the result navigates to:
+
+  /testnet/tx/0xd41117d82d2978912b0f3123e866a3de123ffe71dcec31380c07e324d44544f3
+
+- Transaction page loads successfully.
+- Transaction belongs to Chain 77/Testnet.
+
+Report the final URL and observed result.
+
+--------------------------------------------------
+5D. VALID ADDRESS SEARCH
+--------------------------------------------------
+
+Search for this real indexed Testnet address:
+
+0xb518397e3d65a0e7475635f01c225e9426a76f11
+
+Expected:
+
+- Search request reaches the Testnet `/indexer-api`.
+- Search result is recognized as an address.
+- UI does NOT display "No Results Found".
+- Result identifies the address.
+- Selecting/submitting the result navigates to:
+
+  /testnet/address/0xb518397e3d65a0e7475635f01c225e9426a76f11
+
+- Address page loads successfully.
+- Address data belongs to Chain 77/Testnet.
+
+Report the final URL and observed result.
+
+--------------------------------------------------
+5E. INVALID SEARCH
+--------------------------------------------------
+
+Search:
+
+definitely-not-a-real-value-xyz
+
+Expected:
+
+- Search completes normally.
+- UI displays the existing "No Results Found" state.
+- No crash.
+- No hang.
+- No redirect to another network.
+- No unrelated blockchain data appears.
+
+==================================================
+6. SEARCH NETWORK ISOLATION
+==================================================
+
+While performing all valid searches, verify:
+
+- Requests use the Testnet `/indexer-api`.
+- Responses identify Chain 77.
+- No Chain 73571/Devnet fallback occurs.
+- No Mainnet data appears.
+- Network remains Testnet throughout the search flow.
+- Search result URLs remain under `/testnet/...`.
+
+==================================================
+7. BASIC EXPLORER NAVIGATION
+==================================================
+
+On Testnet verify:
+
+- Homepage loads.
+- Latest/current block loads.
+- Block #5 page loads.
+- Transaction page loads.
+- Address page loads.
+- Search page works.
+- Search result navigation works.
+- Browser back navigation does not unexpectedly switch networks.
+
+==================================================
+8. PRODUCTION API / DEPLOYMENT HEALTH
+==================================================
+
+Verify read-only:
+
+- https://pwcscan.com returns successfully.
+- `/api/healthz` returns healthy.
+- `/indexer-api/health` returns HTTP 200.
+- `/indexer-api/stats` returns Chain ID 77.
+- Testnet indexer is synced/responding.
+- No obvious production crash/runtime failure exists.
+
+Do not restart anything.
+
+==================================================
+9. FINAL REPORT
+==================================================
+
+Create a clear PASS/FAIL table.
+
+For every test include:
+
+- Test
+- Expected
+- Observed
+- Result
+- Final URL where relevant
+- Chain ID where relevant
+
+For SEARCH specifically, report:
+
+- Search UI
+- Block 5 search
+- Transaction search
+- Address search
+- Invalid search
+- Correct result recognition
+- Correct routing
+- Testnet network isolation
+- Any runtime/console errors
+
+IMPORTANT:
+
+Do not treat API success alone as a successful search test.
+
+The critical requirement is that the LIVE USER-FACING UI correctly displays and routes valid search results.
+
+Also verify that the invalid query continues to show "No Results Found".
+
+Do not modify anything.
+Do not fix anything.
+Do not publish anything.
+
+Finish with exactly one of:
+
+OVERALL: PASS — Production Explorer smoke test passed.
+
+or
+
+OVERALL: FAIL — Production Explorer smoke test has failures requiring investigation.
+
+or, only if every applicable test passes:
+
+OVERALL: PASS — All applicable production Explorer smoke tests passed.
