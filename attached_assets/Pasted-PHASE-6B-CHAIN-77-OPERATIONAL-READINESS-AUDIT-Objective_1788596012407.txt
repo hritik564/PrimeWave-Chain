@@ -1,0 +1,247 @@
+PHASE 6B — CHAIN 77 OPERATIONAL READINESS AUDIT
+
+Objective:
+Perform a READ-ONLY operational readiness audit of the existing PrimeWave Chain 77 testnet from the migrated repository.
+
+IMPORTANT:
+The Chain 77 testnet infrastructure already exists and is operational.
+DO NOT provision, rebuild, migrate, restart, reconfigure, or modify any Netcup server.
+DO NOT create any new server.
+DO NOT change DNS, firewall, nginx, systemd, PostgreSQL, validator configuration, or keeper configuration.
+
+STRICT SAFETY RULES:
+- READ-ONLY ONLY.
+- No blockchain transactions.
+- No contract writes.
+- No private keys.
+- Do not read Replit Secret values.
+- Do not access or modify production/testnet databases.
+- Do not start or restart services.
+- Do not modify project files.
+- Do not modify environment templates.
+- Do not install dependencies.
+- Do not commit or push.
+- Do not create tags.
+- Do not alter Chain 77 state.
+
+Use only the already-documented public Chain 77 RPC endpoints and repository configuration.
+
+KNOWN TESTNET:
+
+Chain ID:
+77
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+Conversion ID:
+3wDXKHGn9AggJmMfSZXhE2TpMtrghem3ymZ6RPm48KQpiECW4
+
+Native token:
+PW
+
+PoAManager:
+0x0feedc0de0000000000000000000000000000000
+
+PRIMARY RPC:
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+BACKUP RPCs:
+
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+KNOWN DEPLOYED CONTRACTS:
+
+EmergencyMultisig
+0x59a419F3160fa9B4b6aE98b18C2ABA3d5aBb81Fa
+
+PrimeWaveTimelock
+0x7D50dBEb0d38Fe2E3AcdaBF70Fa99228E3Ec6AEE
+
+ValidatorFeeVault
+0x8008e22DB31e787b98dfC891E1076747D17A3EE8
+
+DevTreasury
+0x7Edc50F7cD417d0ac94f3c17E5D57EE4eaa23B89
+
+FeeDistributor
+0x27B15970700daC632f0814522118A1c3B200d971
+
+ValidatorRegistry
+0x14c47a0D544684FC0189Bce13220B38523Fff9da
+
+RewardVault
+0x469B3d8B88006ea5b9eeC9c7c6aD650FB929C7e4
+
+AUDIT TASKS:
+
+1. RPC HEALTH
+
+For each of the four RPC endpoints:
+
+- eth_chainId
+- net_version
+- eth_blockNumber
+- eth_getBlockByNumber latest
+- Confirm the endpoint responds successfully.
+- Confirm Chain ID = 77.
+- Record the latest block number and timestamp.
+- Compare the four endpoints.
+
+Do not submit transactions.
+
+2. CONTRACT BYTECODE
+
+For each of the seven known contract addresses:
+
+- Call eth_getCode.
+- Confirm non-empty bytecode.
+- Record whether the result is consistent across the primary RPC.
+- Do not call state-changing methods.
+
+3. TESTNET CONFIGURATION
+
+Inspect the repository's testnet environment templates only.
+
+Confirm:
+
+INDEXER_CHAIN_ID=77
+KEEPER_CHAIN_ID=77
+VITE_CHAIN_ID=77
+VITE_NETWORK_LABEL=Testnet
+
+Confirm the documented RPC points to Chain 77.
+
+Confirm all seven contract addresses match the known addresses above.
+
+Do not expose any secret values.
+
+4. LOCAL/TESTNET SEPARATION
+
+Confirm:
+
+- Local Chain ID remains 73571.
+- start-chain.sh remains local-only.
+- start-indexer.sh remains local-development tooling.
+- No Chain 77 transaction path has been introduced into local workflows.
+- PWCScan does not fall back to 73571 when the authoritative indexer Chain ID is unavailable.
+- No testnet private key is embedded in tracked configuration.
+
+5. PWCScan READINESS
+
+Inspect configuration only.
+
+Confirm:
+
+VITE_INDEXER_API_URL=/indexer-api
+VITE_NETWORK_LABEL=Testnet
+VITE_CHAIN_ID=77
+
+Confirm the application does not silently substitute Chain ID 73571.
+
+Do not start PWCScan.
+
+6. INDEXER READINESS
+
+Inspect the indexer configuration and source.
+
+Confirm:
+
+- INDEXER_RPC_URL is the Chain 77 endpoint.
+- INDEXER_CHAIN_ID=77.
+- INDEXER_DB_URL is expected as an external runtime value and is not hardcoded as a testnet credential.
+- No private key is required by the indexer runtime.
+- ADDR_STAKING_MANAGER remains unset because StakingManager is not deployed.
+- No stale template-only variables have been reintroduced.
+
+Do not start the indexer.
+
+7. KEEPER READINESS
+
+Inspect keeper configuration and source.
+
+Confirm:
+
+- KEEPER_CHAIN_ID=77.
+- KEEPER_RPC_URL points to Chain 77.
+- KEEPER_REGISTRY_ADDRESS is ValidatorRegistry.
+- KEEPER_VALIDATOR_MANAGER_ADDRESS is PoAManager.
+- KEEPER_PRIVATE_KEY remains unset from tracked templates.
+- Keeper remains externally operated and does not use PostgreSQL.
+- Keeper state remains JSON-based.
+
+Do not start the keeper.
+
+8. KNOWN DEPLOYMENT STATE
+
+Confirm from repository documentation/configuration only:
+
+- Total supply = 100,000,000 PW.
+- RewardVault funding was previously verified as 15,000,000 PW.
+- FeeDistributor routing was previously verified as 70/20/10:
+  70% ValidatorFeeVault
+  20% DevTreasury
+  10% burn.
+- StakingManager is not deployed.
+- Do not attempt to re-run state-changing protocol tests.
+
+9. BLOCKCHAIN ID LIMITATION
+
+Previously, info.GetBlockchains was unavailable through the RPC interface.
+
+Test whether the same limitation remains.
+
+If Blockchain ID cannot be independently verified through a supported read-only RPC method, explicitly classify that as a VALIDATION LIMITATION, not as a failure.
+
+Do not invent an alternative verification method.
+
+10. GIT SAFETY
+
+At the beginning and end verify:
+
+- current HEAD
+- branch
+- working tree
+
+Confirm no tracked or untracked project files were created by the audit.
+
+FINAL REPORT:
+
+PHASE 6B COMPLETE — CHAIN 77 OPERATIONAL READINESS AUDIT
+
+Include:
+
+1. RPC health table
+2. Block height/timestamp comparison
+3. Contract bytecode results
+4. Testnet configuration results
+5. Local/testnet separation
+6. PWCScan readiness
+7. Indexer readiness
+8. Keeper readiness
+9. Known protocol/deployment state
+10. Blockchain ID verification result
+11. Git integrity
+12. Any warnings/limitations
+
+Final classification must be:
+
+GREEN
+YELLOW
+or RED
+
+Clearly distinguish:
+- operationally verified
+- configuration verified
+- previously verified state
+- validation limitation
+- actual blocker
+
+No changes were authorized, so confirm that no project, blockchain, or infrastructure state was modified.
