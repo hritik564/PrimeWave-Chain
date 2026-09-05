@@ -1,0 +1,85 @@
+PRIMEWAVE TESTNET — FINAL EXPLORER HOST RESOURCE/DEPLOYMENT DECISION
+
+We have now verified externally that:
+
+- 159.195.193.209 = existing MLM server. DO NOT TOUCH.
+- 152.53.19.19 = old PrimeWave AvalancheGo node only.
+- 152.53.236.29 = old PrimeWave AvalancheGo node, currently auto-restarting.
+- 152.53.236.136 = old PrimeWave AvalancheGo node only.
+- 152.53.17.32 = old PrimeWave AvalancheGo node only.
+
+All four old PrimeWave servers have approximately:
+- 4 CPU
+- 8 GB RAM
+- 250 GB disk
+- root filesystem 100% full
+
+They do NOT currently contain the documented indexer/PostgreSQL/nginx/PWCScan stack.
+
+We therefore need to make the final hosting decision for the missing Testnet Explorer Host.
+
+DO NOT:
+- modify Chain 77
+- modify validators
+- modify contracts
+- deploy anything
+- provision anything
+- change DNS
+- change secrets
+- change production infrastructure
+- clean the old servers
+- delete files
+- install packages
+
+This is a REPOSITORY-ONLY planning task.
+
+Using the current repository and existing Testnet deployment configuration, determine:
+
+1. The minimum practical resources required for the Testnet Explorer Host running:
+   - C12 Indexer
+   - PostgreSQL
+   - nginx
+   - PWCScan static frontend
+
+2. Whether 4 CPU / 8 GB RAM / 250 GB disk is technically sufficient for a small Testnet explorer.
+
+3. Whether the documented architecture actually requires a dedicated server, or whether these components can safely coexist on one non-validator host.
+
+4. Exactly which repository deployment files must be used to deploy the stack.
+
+5. Identify every known mismatch that must be corrected before deployment, including:
+   - indexer systemd path
+   - keeper systemd mismatch if relevant
+   - PWCScan build/output path
+   - nginx document root
+   - indexer database configuration
+   - Testnet Chain ID
+   - Testnet RPC
+   - /indexer-api proxy
+
+6. Produce a single ordered deployment procedure that can later be executed on one approved external host.
+
+7. Explicitly distinguish:
+   A. repository changes required
+   B. server provisioning requirements
+   C. runtime configuration/secrets
+   D. DNS/TLS requirements
+   E. post-deployment verification
+
+8. State whether one of the existing 4 old 8GB/250GB servers could be reused AFTER being intentionally wiped/rebuilt, versus requiring a new server.
+
+9. Do not assume any undocumented server identity or existing infrastructure.
+
+10. Do not make any changes now.
+
+FINAL OUTPUT:
+Give me a concise decision:
+
+OPTION A — reuse an old server after deliberate rebuild
+OPTION B — provision a fresh Explorer Host
+
+Recommend one based strictly on the repository architecture and the actual resource facts above.
+
+Then give the minimum specification for that host and the exact deployment sequence we should execute next.
+
+The goal is to finish Testnet as quickly as safely possible, not to redesign anything.
