@@ -1,0 +1,64 @@
+Remove Devnet entirely from the published PWCScan production experience.
+
+Context:
+PrimeWave production Explorer only needs:
+1. Testnet — Chain ID 77, fully live
+2. Mainnet — registered/selectable but currently unconfigured and unavailable
+
+Devnet is no longer needed by the production Explorer.
+
+Requirements:
+
+1. Remove Devnet from the production network selector/UI entirely.
+   - Users should not see a Devnet option in the published Explorer.
+   - Do not show an unavailable Devnet card/message in production.
+
+2. Keep Testnet completely unchanged:
+   - Chain ID 77
+   - Existing published RPC
+   - Existing /indexer-api route
+   - Existing production indexer
+   - Existing network mismatch validation
+   - Existing synced Explorer behavior
+
+3. Keep Mainnet explicitly unconfigured:
+   - No fake data
+   - No Testnet fallback
+   - No Devnet fallback
+   - No production RPC/indexer unless explicitly configured later
+
+4. Devnet may remain in the repository for local development/testing if the existing architecture benefits from it, but it must not be exposed by the published production PWCScan UI.
+
+5. Remove any production-only Devnet configuration, fallback logic, or environment requirements that are no longer necessary.
+   Do not weaken network isolation or mismatch validation.
+
+6. Do NOT modify:
+   - Chain 77
+   - validators
+   - RPC infrastructure
+   - deployed contracts
+   - blockchain/subnet IDs
+   - indexer architecture
+   - database schema
+   - private keys/secrets
+   - Testnet deployment configuration
+
+7. Preserve network-specific cache isolation.
+
+8. Validate:
+   - PWCScan TypeScript typecheck
+   - production build
+   - Testnet still resolves to Chain 77
+   - Mainnet remains unconfigured
+   - Devnet is absent from the production network selector
+   - no production Testnet route can be used by Devnet
+   - no Devnet configuration is required for production
+
+Do not publish automatically.
+
+After making the changes, give me:
+- exact files changed
+- what was removed
+- validation results
+- confirmation that Testnet Chain 77 was not changed
+- confirmation that no publish was performed.
