@@ -1,0 +1,314 @@
+PRIMEWAVE TESTNET — COMPLETE THE EXISTING TESTNET EXPLORER STACK
+
+We are now finishing PrimeWave Testnet BEFORE doing any Mainnet work.
+
+IMPORTANT CONTEXT:
+- PrimeWave Testnet Chain ID = 77.
+- The Testnet blockchain/validators/RPC infrastructure is already established and must NOT be rebuilt.
+- Testnet was previously working through MetaMask.
+- Four validator RPC endpoints are confirmed healthy and serving Chain 77.
+- The deployed Testnet protocol contracts are already present and previously verified.
+- PWCScan frontend and the multi-network switcher are already implemented.
+- The current problem is specifically that PWCScan Testnet data is unavailable because the Indexer/API/Explorer Host path is not currently connected.
+- Repository canonical source is GitHub/main.
+- Migration is CLOSED. Do not revisit migration work.
+
+OBJECTIVE:
+Make the EXISTING PrimeWave Testnet operational end-to-end:
+
+Chain 77
+→ RPC
+→ existing C12 Indexer
+→ PostgreSQL
+→ nginx/API proxy
+→ PWCScan
+→ real Testnet blocks/transactions/address/contract data
+
+We want the minimum number of changes necessary to achieve this.
+
+==================================================
+ABSOLUTE SAFETY RULES
+==================================================
+
+1. DO NOT modify Chain 77 blockchain state.
+2. DO NOT reset/reinitialize any validator.
+3. DO NOT redeploy Testnet contracts.
+4. DO NOT change genesis.
+5. DO NOT change validator configuration.
+6. DO NOT change validator staking keys.
+7. DO NOT change the existing Testnet RPC topology.
+8. DO NOT create a new blockchain.
+9. DO NOT switch Testnet to another Chain ID.
+10. DO NOT invent contract addresses.
+11. DO NOT expose private keys.
+12. DO NOT print private keys or secrets in output.
+13. DO NOT commit secrets.
+14. DO NOT provision/buy a new server unless you can first prove that the intended existing Explorer Host cannot be used.
+15. DO NOT put the indexer on a validator merely because it is convenient.
+16. DO NOT expose PostgreSQL publicly.
+17. DO NOT expose the indexer port 4000 publicly.
+18. Do not silently fall back from Testnet to Devnet/local data.
+19. Do not use the old Chain ID 73571 for Testnet.
+20. Mainnet is completely out of scope for this task.
+
+REPLIT IS DEVELOPMENT/BUILD/CONTROL PLANE ONLY.
+The production Testnet Explorer/Indexer runtime is external infrastructure.
+
+==================================================
+KNOWN TESTNET RPC ENDPOINTS
+==================================================
+
+Primary:
+http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Backups:
+http://152.53.66.201/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+http://159.195.44.104/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+http://152.53.66.93/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc
+
+Chain ID:
+77
+
+Blockchain ID:
+22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni
+
+Subnet ID:
+ovXTQNjfug8bipjnqnSKieZFdtHid2amTQnrbibg4kYQtrLbv
+
+==================================================
+KNOWN TESTNET INDEXER ARCHITECTURE
+==================================================
+
+The intended production topology is:
+
+PWCScan
+  ↓
+nginx /indexer-api
+  ↓
+127.0.0.1:4000
+  ↓
+C12 Indexer
+  ↓
+private PostgreSQL
+  ↓
+Chain 77 RPC
+
+Expected indexer runtime:
+- /opt/primewave/indexer/dist/main.js
+- INDEXER_API_PORT=4000
+- INDEXER_CHAIN_ID=77
+- INDEXER_RPC_URL=<Chain 77 RPC>
+- INDEXER_DB_URL=<private PostgreSQL connection>
+
+Expected keeper is NOT part of this repair unless the existing Testnet explorer stack proves it is required for basic explorer synchronization.
+
+PWCScan should consume:
+VITE_TESTNET_INDEXER_API_URL=/indexer-api
+
+Do not create a public indexer endpoint if nginx same-host proxying is the intended architecture.
+
+==================================================
+PHASE 1 — DISCOVER BEFORE CHANGING ANYTHING
+==================================================
+
+First inspect the repository and all available deployment documentation/configuration to determine:
+
+A. What exact host/path was intended for:
+- Testnet Indexer
+- PostgreSQL
+- PWCScan
+- nginx
+- TLS/DNS
+
+B. Whether the repository contains an existing deployment/systemd configuration for:
+- primewave-testnet-indexer
+- PWCScan
+- nginx
+- PostgreSQL
+
+C. Determine whether the known Explorer Host infrastructure already exists.
+
+D. Determine whether there is an existing Testnet indexer deployment that is:
+- running
+- stopped
+- broken
+- partially configured
+- inaccessible
+- or genuinely absent
+
+E. Search repository history/documentation for actual hostnames, IPs, service names, deployment paths, and previously established infrastructure.
+
+Do NOT assume that api.testnet.primewave.xyz is live merely because it appears in documentation.
+
+Do NOT make infrastructure changes during discovery.
+
+==================================================
+PHASE 2 — USE EXISTING INFRASTRUCTURE
+==================================================
+
+If the existing Explorer Host is identifiable and accessible through the available project/infrastructure controls:
+
+1. Inspect it read-only first.
+2. Check:
+   - OS
+   - disk
+   - memory
+   - PostgreSQL status
+   - indexer service status
+   - indexer files
+   - indexer build
+   - environment configuration presence
+   - nginx configuration
+   - PWCScan deployment
+   - TLS/DNS state
+3. Preserve existing working infrastructure.
+4. Repair only missing/broken components.
+
+If the Explorer Host cannot be identified from the repository/project context, STOP BEFORE PROVISIONING.
+
+Instead report exactly:
+- what infrastructure identity is missing
+- what evidence was found
+- what is required to connect to the existing intended host
+
+Do not invent a host.
+
+==================================================
+PHASE 3 — REPAIR THE INDEXER STACK
+==================================================
+
+Once the correct existing Explorer Host is identified:
+
+A. PostgreSQL
+- Verify PostgreSQL is installed/running.
+- Verify a dedicated indexer database exists or create only the required database/user if missing.
+- Keep PostgreSQL private.
+- Do not use the Replit DATABASE_URL as the production indexer database.
+- Do not expose port 5432 publicly.
+
+B. Indexer
+- Build the existing repository indexer using the repository's authoritative build process.
+- Deploy it to the intended /opt/primewave/indexer location if necessary.
+- Configure:
+  INDEXER_RPC_URL = Chain 77 RPC
+  INDEXER_CHAIN_ID = 77
+  INDEXER_DB_URL = private PostgreSQL
+  INDEXER_API_PORT = 4000
+- Use the existing repository service definition where correct.
+- Correct only known repository/service mismatches necessary for startup.
+- Do NOT add StakingManager because it is not deployed.
+- Do NOT invent ADDR_STAKING_MANAGER.
+- Run migrations as required by the existing indexer.
+- Start the indexer.
+- Verify the indexer is actually processing Chain 77 blocks.
+- Verify the REST API responds locally.
+
+C. nginx
+- Configure nginx so:
+  /indexer-api/*
+  proxies internally to:
+  127.0.0.1:4000
+- Do not expose 4000 publicly.
+- Preserve existing TLS configuration where valid.
+- Fix only the missing proxy/routing configuration.
+
+D. PWCScan
+- Serve the already-built PWCScan static application.
+- Ensure Testnet configuration uses:
+  VITE_TESTNET_INDEXER_API_URL=/indexer-api
+- Do not hardcode api.testnet.primewave.xyz.
+- Do not fallback to Devnet.
+- Do not fallback to Chain 73571.
+- Keep Mainnet selectable but unconfigured.
+- Preserve the existing network switcher.
+
+==================================================
+PHASE 4 — END-TO-END VERIFICATION
+==================================================
+
+Do not declare success merely because services start.
+
+Verify all of the following:
+
+1. Chain 77 RPC responds.
+2. Indexer connects to Chain 77.
+3. Indexer verifies Chain ID 77.
+4. PostgreSQL accepts the indexer's connection.
+5. Indexer migrations succeed.
+6. Indexer API responds locally on port 4000.
+7. nginx /indexer-api reaches the indexer.
+8. PWCScan Testnet calls the indexer successfully.
+9. PWCScan displays real Testnet data.
+10. No Devnet/local data appears while Testnet is selected.
+11. No Chain 73571 fallback exists.
+12. Generate or observe new Testnet blockchain activity where safely possible.
+13. Confirm the new block/activity reaches:
+    Chain 77 → Indexer → PostgreSQL → API → PWCScan.
+14. Confirm Testnet remains selectable through the network switcher.
+15. Confirm switching Testnet → Devnet → Testnet does not leak cached Devnet data into Testnet.
+16. Confirm Mainnet selection does not make requests to Testnet or Devnet.
+
+For API verification, test actual endpoints exposed by the existing indexer implementation rather than inventing endpoints.
+
+==================================================
+PHASE 5 — FIX ONLY WHAT IS NECESSARY
+==================================================
+
+You have permission to make the minimum required changes to complete the Testnet Explorer stack.
+
+Prioritize:
+- existing infrastructure
+- existing deployment files
+- existing systemd units
+- existing nginx configuration
+- existing PWCScan configuration
+
+Do not redesign architecture.
+
+Do not perform unrelated cleanup.
+
+Do not modify Mainnet architecture.
+
+Do not modify Chain 77.
+
+==================================================
+PHASE 6 — FINAL ACCEPTANCE TEST
+==================================================
+
+At the end provide a concise completion report with:
+
+TESTNET STATUS:
+- Chain 77:
+- Validators:
+- RPC:
+- Indexer:
+- PostgreSQL:
+- nginx:
+- PWCScan:
+- Network switcher:
+- End-to-end synchronization:
+
+For every component mark:
+GREEN / YELLOW / RED
+
+Also provide:
+
+1. Exact files changed.
+2. Exact external services changed.
+3. Any service restarts performed.
+4. Any database migrations performed.
+5. Any DNS/TLS changes performed.
+6. Any remaining blockers.
+7. Exact URL that should be used to access Testnet PWCScan.
+8. Exact testnet network information that MetaMask should use.
+9. A final statement answering:
+
+"Is PrimeWave Testnet operational end-to-end, or what single remaining blocker prevents it?"
+
+IMPORTANT:
+Do not stop after diagnosis if the existing infrastructure is identifiable and repairable.
+Proceed through discovery → repair → verification in this same task.
+Do not ask for confirmation for routine, low-risk repairs within the rules above.
+Only stop and report when a missing external infrastructure identity/access credential makes further work genuinely impossible.
+
+The goal is to FINISH TESTNET, not produce another audit.
