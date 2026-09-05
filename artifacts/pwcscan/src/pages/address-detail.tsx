@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { useParams, Link } from "wouter"
+import { useParams } from "wouter"
 import { FileCode, Activity, ArrowRightLeft, ArrowUpRight, ArrowDownRight, Award } from "lucide-react"
 import { useAddress, useAddressTransactions, useStakingByAddress, useRewardsByAddress } from "@/lib/api"
+import { NetworkLink } from "@/lib/network"
 import { formatPW, formatAge, formatHash, formatNumber } from "@/lib/format"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -45,9 +46,9 @@ export default function AddressDetail() {
           ) : (
             <StatusBadge status="failed" label="" className="w-2 h-2 p-0 rounded-full" />
           )}
-          <Link href={`/tx/${tx.hash}`} className="font-mono text-primary hover:underline">
+          <NetworkLink href={`/tx/${tx.hash}`} className="font-mono text-primary hover:underline">
             {formatHash(tx.hash)}
-          </Link>
+          </NetworkLink>
         </div>
       )
     },
@@ -55,9 +56,9 @@ export default function AddressDetail() {
       key: "block",
       header: "Block",
       render: (tx: Transaction) => (
-        <Link href={`/blocks/${tx.block_number}`} className="text-primary hover:underline">
+        <NetworkLink href={`/blocks/${tx.block_number}`} className="text-primary hover:underline">
           {tx.block_number}
-        </Link>
+        </NetworkLink>
       )
     },
     {
@@ -99,18 +100,18 @@ export default function AddressDetail() {
       key: "tx",
       header: "Tx Hash",
       render: (evt: RewardEvent) => (
-        <Link href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
+        <NetworkLink href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
           {formatHash(evt.tx_hash)}
-        </Link>
+        </NetworkLink>
       )
     },
     {
       key: "block",
       header: "Block",
       render: (evt: RewardEvent) => (
-        <Link href={`/blocks/${evt.block_number}`} className="text-primary hover:underline">
+        <NetworkLink href={`/blocks/${evt.block_number}`} className="text-primary hover:underline">
           {evt.block_number}
-        </Link>
+        </NetworkLink>
       )
     },
     {
@@ -125,9 +126,9 @@ export default function AddressDetail() {
       key: "val",
       header: "Validator",
       render: (pos: StakingPosition) => (
-        <Link href={`/validator/${pos.validation_id}`} className="font-mono text-primary hover:underline">
+        <NetworkLink href={`/validator/${pos.validation_id}`} className="font-mono text-primary hover:underline">
           {formatHash(pos.validation_id)}
-        </Link>
+        </NetworkLink>
       )
     },
     {
@@ -199,10 +200,10 @@ export default function AddressDetail() {
               </div>
               <h3 className="font-medium text-muted-foreground">First Seen</h3>
             </div>
-            <div className="text-xl font-semibold mb-1">Block <Link href={`/blocks/${addr.first_seen_block}`} className="text-primary hover:underline">{addr.first_seen_block}</Link></div>
+            <div className="text-xl font-semibold mb-1">Block <NetworkLink href={`/blocks/${addr.first_seen_block}`} className="text-primary hover:underline">{addr.first_seen_block}</NetworkLink></div>
             {addr.creation_tx && (
               <div className="text-xs text-muted-foreground truncate">
-                Created in: <Link href={`/tx/${addr.creation_tx}`} className="hover:underline">{formatHash(addr.creation_tx)}</Link>
+                Created in: <NetworkLink href={`/tx/${addr.creation_tx}`} className="hover:underline">{formatHash(addr.creation_tx)}</NetworkLink>
               </div>
             )}
           </CardContent>
@@ -216,7 +217,7 @@ export default function AddressDetail() {
               </div>
               <h3 className="font-medium text-muted-foreground">Last Active</h3>
             </div>
-            <div className="text-xl font-semibold mb-1">Block <Link href={`/blocks/${addr.last_seen_block}`} className="text-primary hover:underline">{addr.last_seen_block}</Link></div>
+            <div className="text-xl font-semibold mb-1">Block <NetworkLink href={`/blocks/${addr.last_seen_block}`} className="text-primary hover:underline">{addr.last_seen_block}</NetworkLink></div>
           </CardContent>
         </Card>
       </div>

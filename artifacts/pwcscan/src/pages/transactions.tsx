@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { useTransactions } from "@/lib/api"
 import { formatAge, formatPW, formatHash } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
@@ -25,9 +25,9 @@ export default function Transactions() {
           ) : (
             <StatusBadge status="failed" label="" className="w-2 h-2 p-0 rounded-full" />
           )}
-          <Link href={`/tx/${tx.hash}`} className="font-mono font-medium text-primary hover:underline">
+          <NetworkLink href={`/tx/${tx.hash}`} className="font-mono font-medium text-primary hover:underline">
             {formatHash(tx.hash)}
-          </Link>
+          </NetworkLink>
         </div>
       )
     },
@@ -35,9 +35,9 @@ export default function Transactions() {
       key: "block",
       header: "Block",
       render: (tx: Transaction) => (
-        <Link href={`/blocks/${tx.block_number}`} className="text-primary hover:underline">
+          <NetworkLink href={`/blocks/${tx.block_number}`} className="text-primary hover:underline">
           {tx.block_number}
-        </Link>
+          </NetworkLink>
       )
     },
     {

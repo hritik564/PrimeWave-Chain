@@ -1,4 +1,4 @@
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { ShieldCheck, Activity } from "lucide-react"
 import { useStats } from "@/lib/api"
 import { formatPW, formatEmissionRate } from "@/lib/format"
@@ -66,7 +66,7 @@ export default function Rewards() {
       </div>
       
       <div className="text-center text-muted-foreground mt-10">
-        Detailed reward claims view coming soon. Check individual <Link href="/validators" className="text-primary hover:underline">validators</Link> for their claims.
+        Detailed reward claims view coming soon. Check individual <NetworkLink href="/validators" className="text-primary hover:underline">validators</NetworkLink> for their claims.
       </div>
     </div>
   )

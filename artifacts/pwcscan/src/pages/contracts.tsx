@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { FileCode, Search } from "lucide-react"
 import { useContracts } from "@/lib/api"
 import { DataTable } from "@/components/pwcscan/data-table"
@@ -24,9 +24,9 @@ export default function Contracts() {
       render: (c: Contract) => (
         <div className="flex items-center gap-2">
           <FileCode className="h-4 w-4 text-muted-foreground" />
-          <Link href={`/address/${c.address}`} className="font-mono font-medium text-primary hover:underline">
+          <NetworkLink href={`/address/${c.address}`} className="font-mono font-medium text-primary hover:underline">
             <AddressDisplay address={c.address} showCopy={false} />
-          </Link>
+          </NetworkLink>
         </div>
       )
     },
@@ -51,9 +51,9 @@ export default function Contracts() {
       header: "Creation",
       render: (c: Contract) => c.creation_block ? (
         <div className="flex flex-col">
-          <Link href={`/blocks/${c.creation_block}`} className="text-primary hover:underline text-sm">
+          <NetworkLink href={`/blocks/${c.creation_block}`} className="text-primary hover:underline text-sm">
             Block {c.creation_block}
-          </Link>
+          </NetworkLink>
         </div>
       ) : <span>-</span>
     }

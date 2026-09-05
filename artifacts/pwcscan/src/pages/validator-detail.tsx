@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { useParams, Link } from "wouter"
+import { useParams } from "wouter"
 import { Server, Activity, ArrowRightLeft } from "lucide-react"
 import { useValidator, useValidatorEvents } from "@/lib/api"
+import { NetworkLink } from "@/lib/network"
 import { formatPW, formatAge, formatHash, formatNumber } from "@/lib/format"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -104,17 +105,17 @@ export default function ValidatorDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">First Seen Block:</dt>
                   <dd className="text-sm sm:col-span-3">
-                    <Link href={`/blocks/${val.first_seen_block}`} className="text-primary hover:underline">
+                    <NetworkLink href={`/blocks/${val.first_seen_block}`} className="text-primary hover:underline">
                       {val.first_seen_block}
-                    </Link>
+                    </NetworkLink>
                   </dd>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Last Updated Block:</dt>
                   <dd className="text-sm sm:col-span-3">
-                    <Link href={`/blocks/${val.last_updated_block}`} className="text-primary hover:underline">
+                    <NetworkLink href={`/blocks/${val.last_updated_block}`} className="text-primary hover:underline">
                       {val.last_updated_block}
-                    </Link>
+                    </NetworkLink>
                   </dd>
                 </div>
               </dl>
@@ -140,8 +141,8 @@ export default function ValidatorDetail() {
                       <div className="px-4 py-3 bg-muted/20 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="font-semibold text-sm">{evt.event_name}</div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <Link href={`/blocks/${evt.block_number}`} className="hover:underline">Block {evt.block_number}</Link>
-                          <Link href={`/tx/${evt.tx_hash}`} className="hover:underline font-mono">{formatHash(evt.tx_hash)}</Link>
+                          <NetworkLink href={`/blocks/${evt.block_number}`} className="hover:underline">Block {evt.block_number}</NetworkLink>
+                          <NetworkLink href={`/tx/${evt.tx_hash}`} className="hover:underline font-mono">{formatHash(evt.tx_hash)}</NetworkLink>
                         </div>
                       </div>
                       <div className="px-4 py-3 font-mono text-xs overflow-x-auto">

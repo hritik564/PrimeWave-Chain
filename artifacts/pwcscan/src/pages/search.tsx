@@ -1,11 +1,13 @@
 import { useEffect } from "react"
 import { useLocation } from "wouter"
 import { useSearch } from "@/lib/api"
+import { useNetwork } from "@/lib/network"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/pwcscan/empty-state"
 
 export default function SearchResults() {
   const [location, setLocation] = useLocation()
+  const { buildNetworkPath } = useNetwork()
   
   // Extract query from URL
   const query = typeof window !== 'undefined' 
@@ -19,12 +21,12 @@ export default function SearchResults() {
       const type = searchRes.type
       const resultData = searchRes.data as any
       
-      if (type === 'block') setLocation(`/blocks/${resultData.number}`)
-      else if (type === 'transaction') setLocation(`/tx/${resultData.hash}`)
-      else if (type === 'address') setLocation(`/address/${resultData.address}`)
-      else if (type === 'validator') setLocation(`/validator/${resultData.validation_id}`)
+      if (type === 'block') setLocation(buildNetworkPath(`/blocks/${resultData.number}`))
+      else if (type === 'transaction') setLocation(buildNetworkPath(`/tx/${resultData.hash}`))
+      else if (type === 'address') setLocation(buildNetworkPath(`/address/${resultData.address}`))
+      else if (type === 'validator') setLocation(buildNetworkPath(`/validator/${resultData.validation_id}`))
     }
-  }, [searchRes, setLocation])
+  }, [searchRes, setLocation, buildNetworkPath])
 
   if (!query) {
     return <EmptyState type="no-results" title="No Search Query" description="Please enter an address, tx hash, or block number." />

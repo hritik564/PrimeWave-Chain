@@ -1,4 +1,4 @@
-import { useStats } from "@/lib/api"
+import { NetworkDataMismatchError, useStats } from "@/lib/api"
 import { ErrorState } from "@/components/pwcscan/error-state"
 import { MetricCard } from "@/components/pwcscan/metric-card"
 import { formatPW, formatNumber } from "@/lib/format"
@@ -8,7 +8,15 @@ export default function Stats() {
   const { data: statsRes, isLoading, error, refetch } = useStats()
   const stats = statsRes
 
-  if (error) return <ErrorState onRetry={refetch} />
+  if (error) {
+    return (
+      <ErrorState
+        title={error instanceof NetworkDataMismatchError ? "Network data mismatch" : undefined}
+        message={error instanceof Error ? error.message : undefined}
+        onRetry={refetch}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">

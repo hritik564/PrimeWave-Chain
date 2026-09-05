@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { Coins, Flame, Briefcase } from "lucide-react"
 import { useFees, useStats } from "@/lib/api"
 import { formatPW, formatHash } from "@/lib/format"
@@ -23,18 +23,18 @@ export default function Fees() {
       key: "tx",
       header: "Tx Hash",
       render: (evt: FeeEvent) => (
-        <Link href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
+        <NetworkLink href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
           {formatHash(evt.tx_hash)}
-        </Link>
+        </NetworkLink>
       )
     },
     {
       key: "block",
       header: "Block",
       render: (evt: FeeEvent) => (
-        <Link href={`/blocks/${evt.block_number}`} className="text-primary hover:underline">
+        <NetworkLink href={`/blocks/${evt.block_number}`} className="text-primary hover:underline">
           {evt.block_number}
-        </Link>
+        </NetworkLink>
       )
     },
     {

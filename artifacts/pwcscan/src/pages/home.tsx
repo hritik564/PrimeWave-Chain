@@ -1,8 +1,8 @@
-import { Link } from "wouter"
 import { Blocks, ArrowRightLeft, Activity, Users, ShieldAlert, Coins } from "lucide-react"
-import { useStats, useBlocks, useTransactions } from "@/lib/api"
+import { NetworkDataMismatchError, useStats, useBlocks, useTransactions } from "@/lib/api"
 import { formatPW, formatAge, formatNumber, formatHash } from "@/lib/format"
 import { useSettings } from "@/lib/settings"
+import { NetworkLink, useNetwork } from "@/lib/network"
 import { MetricCard } from "@/components/pwcscan/metric-card"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,20 +12,16 @@ import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { StatusBadge } from "@/components/pwcscan/status-badge"
 import { ErrorState } from "@/components/pwcscan/error-state"
 
-// VITE_NETWORK_LABEL: set to "Testnet" for testnet builds, leave unset for dev.
-// This ensures the explorer NEVER displays "Mainnet" when running on a test network.
-const networkLabel = import.meta.env.VITE_NETWORK_LABEL ?? ""
-
 export default function Home() {
   const { autoRefresh } = useSettings()
-  const configuredChainId = import.meta.env.VITE_CHAIN_ID?.trim() || undefined
+  const { network } = useNetwork()
   
   const { data: statsRes, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats(autoRefresh ? 10000 : undefined)
   const { data: blocksRes, isLoading: blocksLoading } = useBlocks({ limit: 10 })
   const { data: txsRes, isLoading: txsLoading } = useTransactions({ limit: 10 })
 
   const stats = statsRes
-  const chainId = stats?.network.chainId ?? configuredChainId
+  const chainId = stats?.network.chainId ?? network.chainId
   const blocks = blocksRes?.data || []
   const txs = txsRes?.data || []
 
@@ -33,8 +29,8 @@ export default function Home() {
     return (
       <div className="space-y-6">
         <ErrorState 
-          title="Cannot connect to PrimeWave indexer" 
-          message="The API might be offline or you need to set VITE_INDEXER_API_URL."
+          title={statsError instanceof NetworkDataMismatchError ? "Network data mismatch" : "Cannot connect to PrimeWave indexer"}
+          message={statsError instanceof Error ? statsError.message : `The ${network.label} indexer might be offline.`}
           onRetry={refetchStats} 
         />
       </div>
@@ -54,11 +50,9 @@ export default function Home() {
             The premier blockchain explorer for the PrimeWave ecosystem. Search blocks, transactions, validators, and more.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            {networkLabel && (
-              <Badge variant="outline" className="bg-orange-500/10 border-orange-500/40 text-orange-600 dark:text-orange-400 font-semibold backdrop-blur">
-                🧪 {networkLabel}
-              </Badge>
-            )}
+            <Badge variant="outline" className="bg-orange-500/10 border-orange-500/40 text-orange-600 dark:text-orange-400 font-semibold backdrop-blur">
+              {network.label}
+            </Badge>
             <Badge variant="outline" className="bg-background/50 backdrop-blur">
               Chain ID: {chainId ?? "Unavailable"}
             </Badge>
@@ -122,7 +116,7 @@ export default function Home() {
               Latest Blocks
             </CardTitle>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/blocks">View All</Link>
+              <NetworkLink href="/blocks">View All</NetworkLink>
             </Button>
           </CardHeader>
           <CardContent>
@@ -142,9 +136,9 @@ export default function Home() {
                         <Blocks className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                       <div>
-                        <Link href={`/blocks/${block.number}`} className="text-primary font-medium hover:underline">
+                        <NetworkLink href={`/blocks/${block.number}`} className="text-primary font-medium hover:underline">
                           {block.number}
-                        </Link>
+                        </NetworkLink>
                         <p className="text-xs text-muted-foreground">{formatAge(block.timestamp_unix)}</p>
                       </div>
                     </div>
@@ -174,7 +168,7 @@ export default function Home() {
               Latest Transactions
             </CardTitle>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/transactions">View All</Link>
+              <NetworkLink href="/transactions">View All</NetworkLink>
             </Button>
           </CardHeader>
           <CardContent>
@@ -194,11 +188,11 @@ export default function Home() {
                         <span className="text-xs font-medium">Tx</span>
                       </div>
                       <div className="overflow-hidden">
-                        <Link href={`/tx/${tx.hash}`} className="text-primary font-medium hover:underline block truncate max-w-[150px] sm:max-w-[200px]">
+                        <NetworkLink href={`/tx/${tx.hash}`} className="text-primary font-medium hover:underline block truncate max-w-[150px] sm:max-w-[200px]">
                           {formatHash(tx.hash)}
-                        </Link>
+                        </NetworkLink>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                          <span>Block <Link href={`/blocks/${tx.block_number}`} className="hover:text-foreground">{tx.block_number}</Link></span>
+                          <span>Block <NetworkLink href={`/blocks/${tx.block_number}`} className="hover:text-foreground">{tx.block_number}</NetworkLink></span>
                         </div>
                       </div>
                     </div>

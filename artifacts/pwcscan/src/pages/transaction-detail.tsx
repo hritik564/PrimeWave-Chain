@@ -1,6 +1,7 @@
-import { useParams, Link } from "wouter"
+import { useParams } from "wouter"
 import { CheckCircle2, XCircle } from "lucide-react"
 import { useTransaction } from "@/lib/api"
+import { NetworkLink } from "@/lib/network"
 import { formatPW, formatNumber, formatGasPercent } from "@/lib/format"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -71,9 +72,9 @@ export default function TransactionDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Block:</dt>
                   <dd className="text-sm sm:col-span-3 flex items-center gap-2">
-                    <Link href={`/blocks/${tx.block_number}`} className="text-primary hover:underline font-medium">
+                    <NetworkLink href={`/blocks/${tx.block_number}`} className="text-primary hover:underline font-medium">
                       {tx.block_number}
-                    </Link>
+                    </NetworkLink>
                   </dd>
                 </div>
                 

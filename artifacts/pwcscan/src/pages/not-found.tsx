@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { NetworkLink } from "@/lib/network";
 import { FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,10 +15,10 @@ export default function NotFound() {
       </p>
       <div className="flex gap-4">
         <Button asChild>
-          <Link href="/">Back to Home</Link>
+          <NetworkLink href="/">Back to Home</NetworkLink>
         </Button>
         <Button variant="outline" asChild>
-          <Link href="/blocks">View Blocks</Link>
+          <NetworkLink href="/blocks">View Blocks</NetworkLink>
         </Button>
       </div>
     </div>

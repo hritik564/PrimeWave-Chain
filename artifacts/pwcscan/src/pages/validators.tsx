@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { Server, ShieldCheck, Zap } from "lucide-react"
 import { useValidators, useStats } from "@/lib/api"
 import { formatPW, formatHash } from "@/lib/format"
@@ -25,9 +25,9 @@ export default function Validators() {
       render: (v: Validator) => (
         <div className="flex items-center gap-2">
           <Server className="h-4 w-4 text-muted-foreground" />
-          <Link href={`/validator/${v.validation_id}`} className="font-mono font-medium text-primary hover:underline">
+          <NetworkLink href={`/validator/${v.validation_id}`} className="font-mono font-medium text-primary hover:underline">
             {formatHash(v.validation_id)}
-          </Link>
+          </NetworkLink>
         </div>
       )
     },

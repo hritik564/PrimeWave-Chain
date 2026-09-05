@@ -1,9 +1,30 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNetwork } from './network';
+import type { NetworkDefinition } from './network-config';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'ApiError';
+  }
+}
+
+export class NetworkUnavailableError extends Error {
+  constructor(public network: NetworkDefinition) {
+    super(`${network.label} configuration pending. No explorer data source is configured.`);
+    this.name = 'NetworkUnavailableError';
+  }
+}
+
+export class NetworkDataMismatchError extends Error {
+  constructor(
+    public network: NetworkDefinition,
+    public receivedChainId: number,
+  ) {
+    super(
+      `Network data mismatch for ${network.label}: expected Chain ID ${network.chainId}, received Chain ID ${receivedChainId}.`,
+    );
+    this.name = 'NetworkDataMismatchError';
   }
 }
 
@@ -13,17 +34,16 @@ export function formatApiUrl(base: string, path: string): string {
   return `${normalizedBase}${normalizedPath}`;
 }
 
-const getApiBase = () => {
-  // VITE_INDEXER_API_URL can be:
-  //   - A relative path like '/indexer-api' (default for local dev via Vite proxy)
-  //   - An absolute URL like 'https://api.example.com' (for production)
-  // In local dev the Vite proxy forwards /indexer-api/* → http://127.0.0.1:4000/*
-  // so the browser never needs to reach localhost:4000 directly.
-  return import.meta.env.VITE_INDEXER_API_URL?.trim() || '/indexer-api';
-};
+export async function apiRequest<T>(
+  network: NetworkDefinition,
+  path: string,
+  params?: Record<string, string | number | boolean>,
+): Promise<T> {
+  if (!network.indexerApiUrl || network.status !== 'configured') {
+    throw new NetworkUnavailableError(network);
+  }
 
-export async function apiRequest<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
-  const base = getApiBase();
+  const base = network.indexerApiUrl;
 
   // Handle both absolute URLs (http://...) and relative paths (/indexer-api)
   const urlStr = formatApiUrl(base, path);
@@ -149,136 +169,171 @@ export interface SearchResult { type: 'block' | 'transaction' | 'address' | 'val
 // ========================
 
 export function useStats(refetchInterval?: number) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['stats'],
-    queryFn: () => apiRequest<ApiResponse<Stats>>('/stats').then(res => res.data),
-    refetchInterval,
+    queryKey: ['network', network.id, 'stats'],
+    queryFn: async () => {
+      const response = await apiRequest<ApiResponse<Stats>>(network, '/stats');
+      const receivedChainId = response.data.network.chainId;
+      if (network.chainId === null || receivedChainId !== network.chainId) {
+        throw new NetworkDataMismatchError(network, receivedChainId);
+      }
+      return response.data;
+    },
+    enabled: isConfigured,
+    refetchInterval: refetchInterval
+      ? (query) =>
+          query.state.error instanceof NetworkDataMismatchError ? false : refetchInterval
+      : false,
   });
 }
 
 export function useBlocks(params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['blocks', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Block>>('/blocks', params),
+    queryKey: ['network', network.id, 'blocks', params],
+    queryFn: () => apiRequest<PaginatedApiResponse<Block>>(network, '/blocks', params),
+    enabled: isConfigured,
   });
 }
 
 export function useBlock(numberOrHash: string | number) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['block', numberOrHash],
+    queryKey: ['network', network.id, 'block', numberOrHash],
     queryFn: () => {
       const path = typeof numberOrHash === 'string' && numberOrHash.startsWith('0x') 
         ? `/blocks/hash/${numberOrHash}` 
         : `/blocks/${numberOrHash}`;
-      return apiRequest<ApiResponse<Block>>(path).then(res => res.data);
+      return apiRequest<ApiResponse<Block>>(network, path).then(res => res.data);
     },
-    enabled: !!numberOrHash,
+    enabled: isConfigured && !!numberOrHash,
   });
 }
 
 export function useTransactions(params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['transactions', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>('/transactions', params),
+    queryKey: ['network', network.id, 'transactions', params],
+    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>(network, '/transactions', params),
+    enabled: isConfigured,
   });
 }
 
 export function useTransaction(hash: string) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['transaction', hash],
-    queryFn: () => apiRequest<ApiResponse<Transaction>>(`/transactions/${hash}`).then(res => res.data),
-    enabled: !!hash,
+    queryKey: ['network', network.id, 'transaction', hash],
+    queryFn: () => apiRequest<ApiResponse<Transaction>>(network, `/transactions/${hash}`).then(res => res.data),
+    enabled: isConfigured && !!hash,
   });
 }
 
 export function useAddress(address: string) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['address', address],
-    queryFn: () => apiRequest<ApiResponse<Address>>(`/addresses/${address}`).then(res => res.data),
-    enabled: !!address,
+    queryKey: ['network', network.id, 'address', address],
+    queryFn: () => apiRequest<ApiResponse<Address>>(network, `/addresses/${address}`).then(res => res.data),
+    enabled: isConfigured && !!address,
   });
 }
 
 export function useAddressTransactions(address: string, params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['addressTxs', address, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>(`/addresses/${address}/transactions`, params),
-    enabled: !!address,
+    queryKey: ['network', network.id, 'addressTxs', address, params],
+    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>(network, `/addresses/${address}/transactions`, params),
+    enabled: isConfigured && !!address,
   });
 }
 
 export function useValidators(params?: { status?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['validators', params],
-    queryFn: () => apiRequest<ApiResponse<Validator[]>>('/validators', params).then(res => res.data),
+    queryKey: ['network', network.id, 'validators', params],
+    queryFn: () => apiRequest<ApiResponse<Validator[]>>(network, '/validators', params).then(res => res.data),
+    enabled: isConfigured,
   });
 }
 
 export function useValidator(id: string) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['validator', id],
-    queryFn: () => apiRequest<ApiResponse<Validator>>(`/validators/${id}`).then(res => res.data),
-    enabled: !!id,
+    queryKey: ['network', network.id, 'validator', id],
+    queryFn: () => apiRequest<ApiResponse<Validator>>(network, `/validators/${id}`).then(res => res.data),
+    enabled: isConfigured && !!id,
   });
 }
 
 export function useValidatorEvents(id: string, params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['validatorEvents', id, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<ValidatorEvent>>(`/validators/${id}/events`, params),
-    enabled: !!id,
+    queryKey: ['network', network.id, 'validatorEvents', id, params],
+    queryFn: () => apiRequest<PaginatedApiResponse<ValidatorEvent>>(network, `/validators/${id}/events`, params),
+    enabled: isConfigured && !!id,
   });
 }
 
 export function useStaking(params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['staking', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<StakingEvent>>('/staking', params),
+    queryKey: ['network', network.id, 'staking', params],
+    queryFn: () => apiRequest<PaginatedApiResponse<StakingEvent>>(network, '/staking', params),
+    enabled: isConfigured,
   });
 }
 
 export function useStakingByAddress(address: string) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['stakingAddress', address],
-    queryFn: () => apiRequest<ApiResponse<StakingPosition[]>>(`/staking/${address}`).then(res => res.data),
-    enabled: !!address,
+    queryKey: ['network', network.id, 'stakingAddress', address],
+    queryFn: () => apiRequest<ApiResponse<StakingPosition[]>>(network, `/staking/${address}`).then(res => res.data),
+    enabled: isConfigured && !!address,
   });
 }
 
 export function useRewards() {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['rewards'],
-    queryFn: () => apiRequest<ApiResponse<RewardsOverview>>('/rewards').then(res => res.data),
+    queryKey: ['network', network.id, 'rewards'],
+    queryFn: () => apiRequest<ApiResponse<RewardsOverview>>(network, '/rewards').then(res => res.data),
+    enabled: isConfigured,
   });
 }
 
 export function useRewardsByAddress(address: string, params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['rewardsAddress', address, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<RewardEvent>>(`/rewards/${address}`, params),
-    enabled: !!address,
+    queryKey: ['network', network.id, 'rewardsAddress', address, params],
+    queryFn: () => apiRequest<PaginatedApiResponse<RewardEvent>>(network, `/rewards/${address}`, params),
+    enabled: isConfigured && !!address,
   });
 }
 
 export function useFees(params?: { limit?: number; cursor?: number }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['fees', params],
-    queryFn: () => apiRequest<ApiResponse<FeesOverview>>('/fees', params).then(res => res.data),
+    queryKey: ['network', network.id, 'fees', params],
+    queryFn: () => apiRequest<ApiResponse<FeesOverview>>(network, '/fees', params).then(res => res.data),
+    enabled: isConfigured,
   });
 }
 
 export function useContracts(params?: { limit?: number; cursor?: number; known_only?: boolean }) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['contracts', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Contract>>('/contracts', params),
+    queryKey: ['network', network.id, 'contracts', params],
+    queryFn: () => apiRequest<PaginatedApiResponse<Contract>>(network, '/contracts', params),
+    enabled: isConfigured,
   });
 }
 
 export function useSearch(q: string) {
+  const { network, isConfigured } = useNetwork();
   return useQuery({
-    queryKey: ['search', q],
-    queryFn: () => apiRequest<ApiResponse<SearchResult>>('/search', { q }).then(res => res.data),
-    enabled: !!q && q.length > 2,
+    queryKey: ['network', network.id, 'search', q],
+    queryFn: () => apiRequest<ApiResponse<SearchResult>>(network, '/search', { q }).then(res => res.data),
+    enabled: isConfigured && !!q && q.length > 2,
     retry: false,
   });
 }

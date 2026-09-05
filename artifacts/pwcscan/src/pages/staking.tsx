@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { Shield, ShieldAlert, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { useStaking, useStats } from "@/lib/api"
 import { formatPW, formatHash, formatEmissionRate } from "@/lib/format"
@@ -24,9 +24,9 @@ export default function Staking() {
       key: "tx",
       header: "Tx Hash",
       render: (evt: StakingEvent) => (
-        <Link href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
+        <NetworkLink href={`/tx/${evt.tx_hash}`} className="font-mono text-primary hover:underline">
           {formatHash(evt.tx_hash)}
-        </Link>
+        </NetworkLink>
       )
     },
     {
@@ -46,9 +46,9 @@ export default function Staking() {
       key: "validator",
       header: "Validator",
       render: (evt: StakingEvent) => evt.validation_id ? (
-        <Link href={`/validator/${evt.validation_id}`} className="font-mono text-primary hover:underline">
+        <NetworkLink href={`/validator/${evt.validation_id}`} className="font-mono text-primary hover:underline">
           {formatHash(evt.validation_id)}
-        </Link>
+        </NetworkLink>
       ) : <span>-</span>
     },
     {

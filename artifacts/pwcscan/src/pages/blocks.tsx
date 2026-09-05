@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { NetworkLink } from "@/lib/network"
 import { useBlocks } from "@/lib/api"
 import { formatNumber, formatAge, formatGasPercent } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
@@ -21,9 +21,9 @@ export default function Blocks() {
       key: "number",
       header: "Block",
       render: (b: Block) => (
-        <Link href={`/blocks/${b.number}`} className="font-medium text-primary hover:underline">
+        <NetworkLink href={`/blocks/${b.number}`} className="font-medium text-primary hover:underline">
           {b.number}
-        </Link>
+        </NetworkLink>
       )
     },
     {
