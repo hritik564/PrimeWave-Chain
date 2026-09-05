@@ -22,3 +22,17 @@ mtime_ms = 1788597302757
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:e1cfedf7-0dc2-4ae8-bc7d-5fd02f5c14d1/5a2fa320-1fcd-420d-98f1-6f803d878878/a40f4f61-c08f-40da-b354-e5e5c5fc8128"
 storage_version_token = "1788597310813660"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "jF9Z7GNzwV9clp3BQqoQe"
+uri = "file://docs/MAINNET-1-ARCHITECTURE-FREEZE-PACKAGE.md"
+type = "text"
+title = "MAINNET-1 Architecture Freeze Package"
+description = "Planning-only architecture package covering responsibility boundaries, component dependencies, validators, RPC, indexer/PostgreSQL, keeper, PWCScan, governance, StakingManager, monitoring, recovery, security boundaries, and owner decision register."
+logical_id = "33911009-1e42-4a66-806d-59f3fa077f79"
+content_hash = "sha256:a829c61f27e5ddd61393643bf45a78c112bb11ac2edc0344a1c3a6977dd34b37"
+size = 60905
+mtime_ms = 1788597646829
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:e1cfedf7-0dc2-4ae8-bc7d-5fd02f5c14d1/33911009-1e42-4a66-806d-59f3fa077f79/b2701091-f57a-4592-98c6-f8828b978b91"
+storage_version_token = "1788597669856538"
+content_type = "text/markdown"
