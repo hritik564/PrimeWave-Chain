@@ -1,0 +1,558 @@
+MAINNET-1 — ARCHITECTURE FREEZE
+PRIMEWAVE CHAIN MAINNET
+
+We are now beginning MAINNET-1.
+
+The Replit migration is CLOSED.
+The Chain 77 testnet is the validated test environment.
+The project is now moving into deliberate MAINNET ARCHITECTURE DESIGN.
+
+This phase is planning and architecture only.
+
+DO NOT:
+- deploy anything
+- provision servers
+- modify Netcup
+- modify Chain 77
+- generate keys
+- access secrets
+- create wallets
+- create genesis
+- deploy contracts
+- modify production infrastructure
+- start production services
+- make blockchain transactions
+- modify existing testnet infrastructure
+
+Do not reopen migration auditing.
+
+==================================================
+OBJECTIVE
+==================================================
+
+Prepare the complete architecture package required for the PrimeWave Chain MAINNET architecture freeze.
+
+Use the existing repository and validated Chain 77 architecture as the technical reference.
+
+Do NOT automatically copy testnet values into mainnet.
+
+Do NOT invent unresolved business, economic, governance, or infrastructure decisions.
+
+Clearly label every item:
+
+[ESTABLISHED]
+[TESTNET VERIFIED]
+[MAINNET DECISION]
+[IMPLEMENTATION REQUIRED]
+[SECURITY REVIEW REQUIRED]
+
+==================================================
+1. RESPONSIBILITY BOUNDARY
+==================================================
+
+Produce the definitive responsibility matrix.
+
+REPLIT:
+
+- source code
+- development
+- testing
+- builds
+- architecture
+- deployment preparation
+- genesis tooling
+- dry-run preparation
+- documentation
+- release artifacts
+
+EXTERNAL MAINNET INFRASTRUCTURE:
+
+- validators
+- RPC
+- indexer
+- PostgreSQL
+- keeper
+- PWCScan
+- nginx/TLS
+- monitoring
+- backups
+- production key custody
+
+For every component explain:
+
+- owner/responsibility
+- inputs
+- outputs
+- dependencies
+- security boundary
+- failure boundary
+
+==================================================
+2. MAINNET COMPONENT ARCHITECTURE
+==================================================
+
+Create a logical architecture for:
+
+Users
+  ↓
+Public RPC / Explorer
+  ↓
+Mainnet RPC layer
+  ↓
+Validators
+  ↓
+PrimeWave L1
+
+And separately:
+
+Validators
+  ↓
+Indexer
+  ↓
+PostgreSQL
+  ↓
+PWCScan
+
+And:
+
+Keeper
+  ↓
+Mainnet RPC
+  ↓
+ValidatorRegistry / PoAManager / protocol contracts
+
+And:
+
+Governance
+  ↓
+Multisig
+  ↓
+Timelock
+  ↓
+Protocol administration
+
+And:
+
+Monitoring
+  ↓
+Validators / RPC / Indexer / Keeper / PostgreSQL / PWCScan
+
+Produce a dependency map.
+
+Do not select specific servers or IP addresses.
+
+==================================================
+3. VALIDATOR ARCHITECTURE
+==================================================
+
+Use the existing four-validator Chain 77 testnet architecture as the technical reference.
+
+Do not assume four validators is sufficient for mainnet.
+
+Produce:
+
+- testnet architecture
+- candidate mainnet architecture
+- decisions required
+
+Analyze:
+
+- validator count
+- geographic diversity
+- provider diversity
+- hardware
+- storage
+- networking
+- validator key custody
+- node recovery
+- validator replacement
+- upgrade coordination
+- monitoring
+
+Do not choose a final validator count unless already approved.
+
+==================================================
+4. RPC ARCHITECTURE
+==================================================
+
+Design the mainnet RPC layer.
+
+Cover:
+
+- public RPC
+- private RPC
+- indexer RPC
+- keeper RPC
+- validator administration
+- nginx / edge proxy
+- TLS
+- rate limiting
+- health checks
+- failover
+- WebSocket
+- archive requirements
+
+Explicitly state which decisions still require approval.
+
+Do not expose validator administration publicly.
+
+Do not configure anything.
+
+==================================================
+5. INDEXER / DATABASE ARCHITECTURE
+==================================================
+
+Design:
+
+Validators → RPC → Indexer → PostgreSQL → PWCScan
+
+Document:
+
+- database boundary
+- credential boundary
+- RPC read-only boundary
+- indexer write authority
+- backup strategy
+- restore strategy
+- indexer replay
+- chain-head/indexed-head monitoring
+- failover
+
+Do not create a database.
+
+==================================================
+6. KEEPER ARCHITECTURE
+==================================================
+
+Document:
+
+- keeper responsibilities
+- RPC access
+- contract access
+- state-file architecture
+- transaction authority
+- key custody
+- redundancy
+- failure recovery
+- duplicate execution protection
+- monitoring
+
+Do not generate a keeper key.
+
+Do not decide a final keeper custody model without marking it [MAINNET DECISION].
+
+==================================================
+7. PWCScan ARCHITECTURE
+==================================================
+
+Document:
+
+- public explorer
+- indexer API
+- network identity
+- contract metadata
+- RPC links
+- synchronization state
+- outage behavior
+- TLS
+- public/private boundaries
+
+Confirm that the testnet safety improvement remains part of the architectural requirement:
+
+NO SILENT LOCAL 73571 FALLBACK.
+
+Also require:
+
+NO TESTNET ADDRESS FALLBACK.
+
+==================================================
+8. GOVERNANCE / CONTROL ARCHITECTURE
+==================================================
+
+Map:
+
+EmergencyMultisig
+PrimeWaveTimelock
+Treasury
+ValidatorRegistry
+PoAManager
+RewardVault
+FeeDistributor
+StakingManager
+
+Show:
+
+- who controls what
+- which controls are emergency
+- which controls are routine governance
+- which controls are timelocked
+- which controls require multisig
+- which controls are validator-related
+
+Do not invent signer counts or thresholds.
+
+Those must remain [MAINNET DECISION].
+
+==================================================
+9. STAKINGMANAGER
+==================================================
+
+Treat StakingManager as an explicit architecture decision.
+
+Document:
+
+- why it exists
+- what components depend on it
+- ValidatorRegistry relationship
+- RewardVault relationship
+- reward claim relationship
+- validator registration relationship
+- deposits/withdrawals if applicable
+- emergency controls
+- upgrade authority
+
+Clearly state whether unresolved StakingManager functionality would block mainnet.
+
+Do not implement it in this phase.
+
+==================================================
+10. MONITORING ARCHITECTURE
+==================================================
+
+Define monitoring domains:
+
+Validator:
+- process
+- peers
+- block production
+- disk
+- CPU
+- memory
+- network
+
+RPC:
+- latency
+- availability
+- error rate
+- failover
+
+Indexer:
+- chain head
+- indexed head
+- lag
+- database health
+
+Keeper:
+- action success
+- failures
+- stale state
+- transaction errors
+
+PWCScan:
+- availability
+- API availability
+- synchronization
+
+Infrastructure:
+- certificates
+- backups
+- storage
+- service health
+
+Mark alert ownership as [MAINNET DECISION].
+
+==================================================
+11. BACKUP / RECOVERY ARCHITECTURE
+==================================================
+
+Define recovery boundaries for:
+
+- validators
+- RPC
+- indexer
+- PostgreSQL
+- keeper
+- PWCScan
+- monitoring
+
+For each identify:
+
+- what is backed up
+- where it is backed up
+- encryption requirement
+- restore procedure
+- recovery dependency
+- security owner
+
+Do not create backups.
+
+Do not access production systems.
+
+==================================================
+12. SECURITY BOUNDARIES
+==================================================
+
+Create a threat-boundary map.
+
+At minimum:
+
+Public Internet
+↓
+RPC / Explorer Edge
+↓
+Application Services
+↓
+Blockchain RPC
+↓
+Validators
+
+And:
+
+Operators
+↓
+Secure Administration
+↓
+Validators / Keeper / Infrastructure
+
+And:
+
+Governance Keys
+↓
+Multisig / Timelock
+↓
+Protocol Administration
+
+Clearly identify:
+
+- trust boundaries
+- signing boundaries
+- read-only boundaries
+- privileged boundaries
+- failure domains
+
+==================================================
+13. MAINNET DECISION REGISTER
+==================================================
+
+Create a clean decision register containing ONLY decisions required for architecture freeze.
+
+At minimum:
+
+1. Validator count
+2. Validator geographic distribution
+3. Provider diversity
+4. Public RPC topology
+5. Private RPC topology
+6. Indexer hosting model
+7. PostgreSQL hosting model
+8. Keeper redundancy
+9. Keeper custody model
+10. PWCScan hosting model
+11. Monitoring ownership
+12. Backup ownership
+13. Recovery ownership
+14. Governance/control boundary
+15. StakingManager launch requirement
+16. Launch authority
+
+For each:
+
+- Decision
+- Why it matters
+- Current evidence
+- Options
+- Recommendation, if technically justified
+- Final owner decision
+- Blocks next phase?
+
+Do not fill "Final owner decision."
+
+==================================================
+14. ARCHITECTURE FREEZE DOCUMENT
+==================================================
+
+Produce a proposed final architecture document containing:
+
+A. Executive architecture
+B. Responsibility matrix
+C. Component diagram
+D. Dependency map
+E. Validator architecture
+F. RPC architecture
+G. Indexer/database architecture
+H. Keeper architecture
+I. Explorer architecture
+J. Governance architecture
+K. Monitoring
+L. Backup/recovery
+M. Security boundaries
+N. Decision register
+O. Open decisions
+P. Architecture freeze acceptance criteria
+
+==================================================
+15. ARCHITECTURE FREEZE EXIT CRITERIA
+==================================================
+
+Define exactly what must be approved before MAINNET-1 is complete.
+
+At minimum:
+
+- responsibility boundaries approved
+- validator architecture approved
+- RPC architecture approved
+- indexer/database architecture approved
+- keeper architecture approved
+- explorer architecture approved
+- governance architecture approved
+- monitoring ownership defined
+- recovery ownership defined
+- StakingManager launch dependency explicitly decided
+- unresolved architecture decisions explicitly recorded
+- no production infrastructure provisioned
+
+==================================================
+FINAL OUTPUT
+==================================================
+
+Return:
+
+# MAINNET-1 — ARCHITECTURE FREEZE PACKAGE
+
+Include:
+
+1. Executive summary
+2. Responsibility matrix
+3. Architecture diagram in text/ASCII
+4. Component dependency map
+5. Validator design
+6. RPC design
+7. Indexer/PostgreSQL design
+8. Keeper design
+9. PWCScan design
+10. Governance/control design
+11. StakingManager decision
+12. Monitoring design
+13. Backup/recovery design
+14. Security boundaries
+15. Mainnet decision register
+16. Architecture freeze exit criteria
+17. Exact decisions that require my approval
+
+Do not make any changes.
+
+No deployment.
+No infrastructure.
+No keys.
+No secrets.
+No blockchain transactions.
+
+This is the architecture package that will be used to make the actual MAINNET-1 decisions.
+
+END WITH:
+
+MIGRATION CLOSED.
+
+MAINNET-1 ARCHITECTURE PACKAGE PREPARED.
+
+NO MAINNET INFRASTRUCTURE OR BLOCKCHAIN STATE WAS MODIFIED.
