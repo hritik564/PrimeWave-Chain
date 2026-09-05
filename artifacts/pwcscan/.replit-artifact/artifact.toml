@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "PWCScan"
-description = "PrimeWave Blockchain Explorer for Devnet, Testnet Chain 77, and an explicitly unconfigured Mainnet."
+description = "PrimeWave Blockchain Explorer for live Testnet Chain 77 and an explicitly unconfigured Mainnet."
 version = "1.0.0"
 id = "artifacts/pwcscan"
 router = "path"
@@ -10,6 +10,9 @@ router = "path"
 name = "web"
 paths = [ "/" ]
 localPort = 19951
+
+[services.env]
+BASE_PATH = "/"
 
 [services.development]
 run = "pnpm --filter @workspace/pwcscan run dev"

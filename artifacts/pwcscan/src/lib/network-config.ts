@@ -73,11 +73,11 @@ const testnetIndexerApiUrl =
 
 // Devnet is intentionally local-development-only. Never let a production
 // build inherit the same-origin Testnet proxy as its indexer endpoint.
-const devnetIsProductionBuild = import.meta.env.PROD;
-const devnetRpcUrl = devnetIsProductionBuild
+export const IS_PRODUCTION_BUILD = import.meta.env.PROD;
+const devnetRpcUrl = IS_PRODUCTION_BUILD
   ? null
   : envValue('VITE_DEVNET_RPC_URL') ?? 'http://127.0.0.1:9650';
-const devnetIndexerApiUrl = devnetIsProductionBuild
+const devnetIndexerApiUrl = IS_PRODUCTION_BUILD
   ? null
   : envValue('VITE_DEVNET_INDEXER_API_URL') ??
     legacyValueForNetwork('devnet') ??
@@ -161,6 +161,10 @@ export function isNetworkId(value: string | null | undefined): value is NetworkI
   return Boolean(value && NETWORK_IDS.includes(value as NetworkId));
 }
 
+export function isNetworkAvailable(id: NetworkId): boolean {
+  return !IS_PRODUCTION_BUILD || id !== 'devnet';
+}
+
 export function getNetwork(id: string): NetworkDefinition {
   if (!isNetworkId(id)) {
     throw new Error(`Unknown network "${id}"`);
@@ -170,9 +174,10 @@ export function getNetwork(id: string): NetworkDefinition {
 
 export function getDefaultNetwork(): NetworkId {
   const configuredDefault = envValue('VITE_DEFAULT_NETWORK');
-  return isNetworkId(configuredDefault) && configuredDefault !== 'mainnet'
+  const candidate = isNetworkId(configuredDefault) && configuredDefault !== 'mainnet'
     ? configuredDefault
     : SAFE_DEFAULT_NETWORK;
+  return isNetworkAvailable(candidate) ? candidate : 'testnet';
 }
 
 export function validateNetwork(network: NetworkDefinition): void {

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/settings"
 import { useStats } from "@/lib/api"
 import { NETWORKS, NetworkLink, useNetwork } from "@/lib/network"
-import type { NetworkId } from "@/lib/network-config"
+import { isNetworkAvailable, type NetworkId } from "@/lib/network-config"
 import { ExplorerSearch } from "@/components/pwcscan/explorer-search"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,7 +34,9 @@ const NAV_LINKS = [
 
 function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
   const { networkId: selectedNetwork, network: currentNetwork, setNetwork } = useNetwork()
-  const networkOptions = (Object.keys(NETWORKS) as NetworkId[]).map((id) => NETWORKS[id])
+  const networkOptions = (Object.keys(NETWORKS) as NetworkId[])
+    .filter(isNetworkAvailable)
+    .map((id) => NETWORKS[id])
 
   return (
     <DropdownMenu>

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter';
 import {
   getDefaultNetwork,
   getNetwork,
+  isNetworkAvailable,
   isNetworkId,
   NETWORKS,
   type NetworkDefinition,
@@ -59,14 +60,19 @@ function removeNetworkPrefix(path: string): string {
 export function NetworkProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
   const segment = firstPathSegment(location);
-  const isNetworkScoped = isNetworkId(segment);
+  const isNetworkScoped = isNetworkId(segment) && isNetworkAvailable(segment);
   const invalidNetworkId =
-    segment && !isNetworkScoped && !LEGACY_ROUTE_SEGMENTS.has(segment) ? segment : null;
+    segment && !isNetworkScoped && !isNetworkId(segment) && !LEGACY_ROUTE_SEGMENTS.has(segment)
+      ? segment
+      : null;
 
   const storedNetwork =
     typeof window !== 'undefined' ? window.localStorage.getItem(NETWORK_STORAGE_KEY) : null;
+  const storedNetworkId = isNetworkId(storedNetwork) ? storedNetwork : null;
   const fallbackNetworkId =
-    isNetworkId(storedNetwork) ? storedNetwork : getDefaultNetwork();
+    storedNetworkId && isNetworkAvailable(storedNetworkId)
+      ? storedNetworkId
+      : getDefaultNetwork();
   const networkId = isNetworkScoped ? segment : fallbackNetworkId;
   const network = getNetwork(networkId);
 
@@ -81,6 +87,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
   }, [networkId]);
 
   const setNetwork = useCallback((targetId: NetworkId) => {
+    if (!isNetworkAvailable(targetId)) return;
     const target = getNetwork(targetId);
     setLocation(buildNetworkPath(location, target.id));
     window.localStorage.setItem(NETWORK_STORAGE_KEY, target.id);

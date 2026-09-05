@@ -76,11 +76,11 @@ function InvalidNetworkState() {
         Invalid network
       </h1>
       <p className="text-muted-foreground max-w-md mb-6">
-        “{invalidNetworkId}” is not a supported PrimeWave network. Use Devnet,
-        Testnet, or Mainnet in the URL.
+        “{invalidNetworkId}” is not a supported PrimeWave network. Use Testnet
+        or Mainnet in the URL.
       </p>
       <Button asChild>
-        <NetworkLink href="/devnet">Go to Devnet</NetworkLink>
+        <NetworkLink href="/testnet">Go to Testnet</NetworkLink>
       </Button>
     </div>
   );
