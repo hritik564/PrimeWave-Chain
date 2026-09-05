@@ -1,0 +1,92 @@
+PHASE 6C — POST-AUDIT GIT DELTA VERIFICATION
+
+Objective:
+Verify exactly what changed in Git between the Phase 5 baseline and the current Phase 6B HEAD.
+
+STRICT READ-ONLY RULES:
+- Do not modify files.
+- Do not install dependencies.
+- Do not access secrets.
+- Do not access private keys.
+- Do not access databases.
+- Do not contact Chain 77.
+- Do not start or restart services.
+- Do not create commits.
+- Do not create tags.
+- Do not push.
+- Do not change Netcup infrastructure.
+
+KNOWN PHASE 5 HEAD:
+0c2570f6f19770f30dc268e91615012c8fbe55cc
+
+CURRENT PHASE 6B HEAD:
+90a3f267349acd0d7cdd7c3ac0d9f07652b36d72
+
+Determine:
+
+1. Show the commit subject, author, timestamp, and parent(s) of:
+   - 0c2570f6f19770f30dc268e91615012c8fbe55cc
+   - 90a3f267349acd0d7cdd7c3ac0d9f07652b36d72
+
+2. Show the complete commit list between those two commits.
+
+3. Show the exact file-level diff between the Phase 5 HEAD and current HEAD.
+
+4. For every changed file, classify it as:
+   - documentation only
+   - migration metadata
+   - source code
+   - configuration
+   - test
+   - generated/build artifact
+   - attachment/handoff metadata
+   - other
+
+5. Specifically determine whether the current HEAD contains:
+   - any Solidity changes
+   - any deployment-script changes
+   - any testnet environment-template changes
+   - any keeper changes
+   - any indexer changes
+   - any PWCScan source changes
+   - any infrastructure changes
+   - any lockfile changes
+   - any secret/configuration changes
+
+6. Confirm whether the new commit(s) correspond only to the Phase 6A/Phase 6B handoff documentation mentioned in the audit.
+
+7. Check whether the working tree is clean.
+
+8. Confirm whether current HEAD still descends from:
+   90e8f194a01496862e780916e134b672f588d438
+
+Do not make any changes.
+
+FINAL REPORT:
+
+PHASE 6C COMPLETE — POST-AUDIT GIT DELTA VERIFIED
+
+Include:
+
+- Phase 5 HEAD
+- Current HEAD
+- commits between them
+- exact changed files
+- classification of each changed file
+- whether any runtime/migration-critical files changed
+- working-tree status
+- migration checkpoint ancestry
+
+Final classification:
+
+GREEN — DOCUMENTATION/METADATA ONLY
+
+or
+
+YELLOW — REVIEW REQUIRED
+
+or
+
+RED — UNEXPECTED PROJECT CHANGE
+
+Do not claim documentation-only unless the actual diff confirms it.
