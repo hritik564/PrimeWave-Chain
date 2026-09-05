@@ -1,0 +1,142 @@
+We need to stop the investigation phase and move toward a working solution.
+
+Based on the completed read-only production architecture audit, implement the safest supported Replit-based production architecture for the PrimeWave Testnet Explorer.
+
+TARGET:
+- Existing PrimeWave Chain Testnet / Chain ID 77
+- Existing four Netcup validators remain completely unchanged
+- Existing Chain 77 RPC remains unchanged
+- No new external server
+- No validator repurposing
+- No contract deployment
+- No blockchain transactions
+- No private keys
+
+RECOMMENDED TARGET ARCHITECTURE:
+- PWCScan = production static frontend
+- C12 Indexer = always-running Replit VM deployment
+- PostgreSQL = Replit managed production PostgreSQL
+- Indexer connects read-only to the existing Chain 77 RPC
+- PWCScan accesses the indexer through a same-origin `/indexer-api/*` production route whenever Replit supports that topology
+- Keep the indexer's internal API port private
+
+IMPORTANT:
+Do NOT use:
+- `scripts/start-chain.sh`
+- `scripts/start-indexer.sh`
+- Chain ID 73571
+- local-data
+- DevDeploy
+- any local-development workflow
+
+The production indexer MUST explicitly use:
+INDEXER_CHAIN_ID=77
+INDEXER_RPC_URL=<existing approved Chain 77 RPC>
+INDEXER_DB_URL=<Replit production PostgreSQL connection>
+INDEXER_API_PORT=<correct Replit VM exposed/internal port mapping>
+
+IMPLEMENTATION REQUIREMENTS:
+
+1. First reconcile the production deployment architecture with Replit's actual supported VM/static deployment model.
+   Do not invent unsupported Replit configuration.
+
+2. Create the minimum required production service/build/run configuration for the C12 Indexer:
+   build:
+   pnpm --filter @primewave/indexer run build
+
+   run:
+   node indexer/dist/main.js
+
+3. Ensure the Replit VM deployment keeps the C12 Indexer continuously running.
+
+4. Resolve the `PORT` versus `INDEXER_API_PORT` mismatch correctly.
+
+5. Resolve production PostgreSQL initialization/migration safely.
+   The indexer currently runs its migration runner during startup.
+   Do not blindly execute destructive migrations.
+   Determine the safe initial-production migration approach and implement it in the least invasive way.
+   Preserve existing indexer migration behavior unless a change is genuinely required.
+
+6. Make the C12 Indexer API available to PWCScan in production.
+   Preferred:
+   `/indexer-api/* -> internal C12 Indexer API`
+   with the indexer port not publicly exposed.
+
+7. Ensure PWCScan production uses:
+   VITE_DEFAULT_NETWORK=testnet
+   VITE_TESTNET_INDEXER_API_URL=/indexer-api
+   VITE_TESTNET_RPC_URL=<existing Chain 77 RPC>
+
+8. Preserve the existing Devnet/Testnet/Mainnet network switcher.
+   Mainnet must remain unconfigured and must never fall back to Testnet or Devnet.
+
+9. Remove/avoid all production paths that could silently use Chain ID 73571.
+
+10. Do not use the old invalid:
+    deploy/testnet/systemd/primewave-testnet-pwcscan.service
+    as the Replit production mechanism.
+
+11. Keep all public Chain 77 contract addresses network-scoped and do not invent a StakingManager address.
+
+12. Do not expose:
+    - PostgreSQL
+    - indexer internal port
+    - private keys
+    - validator credentials
+
+13. Do not modify the four Netcup validators.
+
+14. Do not modify Chain 77 state.
+
+15. Do not publish/deploy until the implementation is internally validated.
+
+VALIDATION REQUIRED BEFORE REPORTING COMPLETE:
+
+- Typecheck passes.
+- PWCScan production build passes.
+- C12 Indexer production build passes.
+- Production run command is verified.
+- Indexer explicitly reports Chain ID 77.
+- Indexer connects to the existing Chain 77 RPC.
+- PostgreSQL connection works.
+- Required migrations complete safely.
+- `/health` works.
+- `/stats` works.
+- `/blocks` works.
+- Returned chain data is Chain 77 data.
+- PWCScan Testnet mode loads real indexer data.
+- Network switching still isolates Devnet/Testnet/Mainnet data and cache.
+- No Chain 73571 production fallback exists.
+- No private keys are present in the production configuration.
+- No Netcup or blockchain changes occurred.
+
+IMPORTANT DEPLOYMENT BOUNDARY:
+
+This is now an implementation task, but keep the scope strictly limited to the Testnet Explorer application.
+
+You may modify repository files necessary to implement the Replit production deployment.
+
+You may configure the Replit production deployment and managed PostgreSQL required for this Explorer.
+
+Do NOT:
+- change validators
+- change Chain 77
+- deploy contracts
+- send blockchain transactions
+- modify tokenomics
+- modify governance
+- modify Keeper
+- modify Mainnet
+- provision external infrastructure
+
+At the end, provide:
+1. What was changed.
+2. Exact production architecture now implemented.
+3. Exact environment variables required.
+4. How the indexer is kept continuously running.
+5. How `/indexer-api` reaches the indexer.
+6. How PostgreSQL migrations are handled.
+7. Validation results.
+8. Any remaining blocker that genuinely prevents Testnet Explorer from going live.
+
+Do not stop at another architecture proposal. Implement the solution within the boundaries above and report the concrete result.
