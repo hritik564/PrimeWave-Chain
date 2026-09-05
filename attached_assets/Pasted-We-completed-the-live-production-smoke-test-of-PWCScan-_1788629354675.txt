@@ -1,0 +1,139 @@
+We completed the live production smoke test of PWCScan and found one specific frontend defect.
+
+DO NOT publish automatically.
+
+The production backend/search API is working correctly, but the user-facing search results page is not interpreting valid API responses correctly.
+
+LIVE TEST RESULTS:
+
+1. Valid block:
+   Query: 5
+   API:
+   /indexer-api/search?q=5
+   returned:
+   {
+     "success": true,
+     "type": "block",
+     "data": {
+       "number": "5"
+     }
+   }
+
+   But the production UI route:
+   /testnet/search?q=5
+   displays:
+   "No Results Found"
+
+2. Valid transaction:
+   Query:
+   0xd41117d82d2978912b0f3123e866a3de123ffe71dcec31380c07e324d44544f3
+
+   API returns the valid indexed transaction in block 5.
+
+   But:
+   /testnet/search?q=<transaction-hash>
+   displays:
+   "No Results Found"
+
+3. Valid address:
+   Query:
+   0xb518397e3d65a0e7475635f01c225e9426a76f11
+
+   API returns the valid address with 11 transactions.
+
+   But:
+   /testnet/search?q=<address>
+   displays:
+   "No Results Found"
+
+4. Invalid query:
+   definitely-not-a-real-value-xyz
+   correctly displays:
+   "No Results Found"
+
+5. Direct destination pages work:
+   - /testnet/blocks/5 loads Block #5
+   - /testnet/tx/<valid-hash> loads the transaction
+   - /testnet/address/<valid-address> loads the address
+
+Therefore the defect appears to be specifically in the frontend search-result interpretation/rendering/routing layer.
+
+TASK:
+
+Investigate the production PWCScan search implementation, especially:
+
+- artifacts/pwcscan/src/components/pwcscan/explorer-search.tsx
+- artifacts/pwcscan/src/pages/home.tsx
+- search API client/types
+- /testnet/search route/page
+- response normalization/parsing
+- search result type detection
+- navigation logic for block/transaction/address results
+
+Determine why valid API responses are being treated as "No Results Found".
+
+Fix ONLY the frontend search-result handling required to make valid search results work correctly.
+
+EXPECTED BEHAVIOR:
+
+For a valid block search:
+- API response with success=true and type=block must produce a visible search result.
+- Selecting/submitting the result should navigate to:
+  /testnet/blocks/<block-number>
+
+For a valid transaction search:
+- API response with success=true and type=transaction must produce a visible search result.
+- Selecting/submitting the result should navigate to:
+  /testnet/tx/<transaction-hash>
+
+For a valid address search:
+- API response with success=true and type=address must produce a visible search result.
+- Selecting/submitting the result should navigate to:
+  /testnet/address/<address>
+
+For an invalid query:
+- Continue showing the existing "No Results Found" state.
+
+IMPORTANT NETWORK REQUIREMENTS:
+
+- Preserve Testnet Chain ID 77.
+- Preserve the existing /indexer-api production endpoint.
+- Do not modify the Testnet indexer.
+- Do not modify RPC infrastructure.
+- Do not modify contracts or validators.
+- Do not reintroduce Devnet into production.
+- Do not add any cross-network fallback.
+- Preserve Mainnet as explicitly unconfigured.
+- Preserve Chain ID mismatch validation.
+- Preserve network-scoped React Query cache keys.
+- Do not introduce any private keys or secrets.
+
+IMPORTANT:
+Do not simply hardcode the three tested values.
+The fix must correctly handle the general search API response types.
+
+Also inspect the actual API response schema/types before changing the frontend. Do not assume the response shape beyond the observed example.
+
+After implementing the fix:
+
+1. Run PWCScan TypeScript typecheck.
+2. Run PWCScan production build.
+3. Test the search flow locally using the actual search API response shape.
+4. Verify block, transaction, address, and invalid-query handling.
+5. Verify Testnet remains Chain 77.
+6. Verify Devnet remains absent from production.
+7. Verify Mainnet remains unconfigured.
+8. Review git diff and ensure the change is limited to the search-result defect.
+
+DO NOT PUBLISH.
+
+Final report must include:
+- Root cause
+- Exact files changed
+- Exact frontend behavior fixed
+- API response shape used
+- Validation results
+- Confirmation that Testnet Chain 77 was untouched
+- Confirmation that Devnet was not reintroduced
+- Confirmation that Mainnet remains unconfigured
+- Confirmation that no publish was performed.
