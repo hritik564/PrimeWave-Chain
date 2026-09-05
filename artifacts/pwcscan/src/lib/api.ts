@@ -19,7 +19,7 @@ const getApiBase = () => {
   //   - An absolute URL like 'https://api.example.com' (for production)
   // In local dev the Vite proxy forwards /indexer-api/* → http://127.0.0.1:4000/*
   // so the browser never needs to reach localhost:4000 directly.
-  return import.meta.env.VITE_INDEXER_API_URL ?? '/indexer-api';
+  return import.meta.env.VITE_INDEXER_API_URL?.trim() || '/indexer-api';
 };
 
 export async function apiRequest<T>(path: string, params?: Record<string, string | number | boolean>): Promise<T> {
