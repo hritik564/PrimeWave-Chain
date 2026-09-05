@@ -1,0 +1,40 @@
+Before we deploy the Testnet Explorer, perform a READ-ONLY production deployment architecture audit for the current PrimeWave Chain project.
+
+We are considering using Replit for the Testnet Explorer instead of buying or provisioning another external server.
+
+Evaluate whether the following architecture can be safely implemented using the current repository and Replit capabilities:
+
+PWCScan → static publication
+C12 Indexer → always-running Replit VM deployment
+PostgreSQL → Replit managed production PostgreSQL
+C12 Indexer → existing PrimeWave Chain Testnet Chain ID 77 RPC
+No private key required by PWCScan or C12 Indexer
+
+Specifically inspect and report:
+
+The exact production command and configuration required to run indexer/dist/main.js for Chain 77.
+All required indexer environment variables and which can safely be public vs secret.
+How the indexer's startup migrations interact with Replit managed production PostgreSQL.
+How the C12 Indexer REST API can be exposed to PWCScan in production.
+Whether /indexer-api/* can be routed correctly in production without relying on the Vite development proxy.
+Whether PWCScan's current static deployment can consume that API without code changes, or exactly what code/configuration changes would be required.
+Whether Replit VM can provide the always-running behavior required by the indexer.
+Whether any existing .replit, deployment, workflow, or package configuration would accidentally start the local Chain 73571 or scripts/start-indexer.sh.
+Identify every repository mismatch/blocker that must be fixed before deployment.
+Provide the recommended final Replit deployment topology and exact implementation sequence.
+
+STRICT SAFETY BOUNDARY:
+
+READ-ONLY investigation only.
+Do NOT publish/deploy anything.
+Do NOT create or modify Replit infrastructure.
+Do NOT modify Chain 77.
+Do NOT modify validators or Netcup servers.
+Do NOT deploy contracts or send transactions.
+Do NOT generate, request, expose, or modify private keys.
+Do NOT change repository files.
+Do NOT run scripts/start-indexer.sh.
+Do NOT start Chain 73571.
+Do NOT provision a new external server.
+
+Return the findings, blockers, and recommended architecture only. Do not implement anything yet.
