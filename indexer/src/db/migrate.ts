@@ -21,6 +21,26 @@ export interface Migration {
   sql:      string;
 }
 
+const REQUIRED_INDEXER_TABLES = [
+  'schema_migrations',
+  'sync_state',
+  'blocks',
+  'transactions',
+  'transaction_receipts',
+  'transaction_logs',
+  'decoded_events',
+  'addresses',
+  'contracts',
+  'validators',
+  'validator_events',
+  'staking_positions',
+  'staking_events',
+  'reward_vault_state',
+  'reward_events',
+  'fee_distribution',
+  'governance_events',
+] as const;
+
 export function loadMigrations(dir: string = MIGRATIONS_DIR): Migration[] {
   if (!fs.existsSync(dir)) {
     throw new Error(`Migrations directory not found: ${dir}`);
@@ -82,6 +102,32 @@ export async function runMigrations(pool: Pool, dir?: string): Promise<number> {
   }
 
   return count;
+}
+
+/**
+ * Production-safe schema check.
+ *
+ * Replit applies managed PostgreSQL schema changes during Publish. Production
+ * startup must therefore not issue DDL; it only verifies that the published
+ * C12 schema is present before the indexer begins serving traffic.
+ */
+export async function assertSchemaReady(pool: Pool): Promise<void> {
+  const result = await pool.query<{ table_name: string }>(
+    `SELECT table_name
+       FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name = ANY($1::text[])`,
+    [REQUIRED_INDEXER_TABLES],
+  );
+
+  const present = new Set(result.rows.map(row => row.table_name));
+  const missing = REQUIRED_INDEXER_TABLES.filter(table => !present.has(table));
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Production indexer schema is incomplete; missing tables: ${missing.join(', ')}`,
+    );
+  }
 }
 
 // ── CLI entry ─────────────────────────────────────────────────────────────────

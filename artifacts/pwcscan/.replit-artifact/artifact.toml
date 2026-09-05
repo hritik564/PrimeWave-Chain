@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "PWCScan"
-description = "PWCScan is the PrimeWave Blockchain Explorer — a premium, production-quality block explorer for PrimeWave Chain (chain ID 73571). It consumes the C12 indexer REST API to display blocks, transactions, addresses, validators, staking activity, RewardVault state, fee distribution, governance events, and network analytics. Inspired by Solscan's information architecture, built with a distinct PrimeWave visual identity."
+description = "PrimeWave Blockchain Explorer for Devnet, Testnet Chain 77, and an explicitly unconfigured Mainnet."
 version = "1.0.0"
 id = "artifacts/pwcscan"
 router = "path"
@@ -15,14 +15,32 @@ localPort = 19951
 run = "pnpm --filter @workspace/pwcscan run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/pwcscan", "run", "build" ]
-serve = "static"
-publicDir = "artifacts/pwcscan/dist/public"
 
-[[services.production.rewrites]]
-from = "/*"
-to = "/index.html"
+[services.production.build]
+args = [ "bash", "scripts/build-testnet-explorer.sh" ]
 
-[services.env]
-PORT = "19951"
+[services.production.build.env]
+NODE_ENV = "production"
 BASE_PATH = "/"
+PORT = "19951"
+VITE_DEFAULT_NETWORK = "testnet"
+VITE_TESTNET_INDEXER_API_URL = "/indexer-api"
+VITE_TESTNET_RPC_URL = "http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc"
+
+[services.production.run]
+args = [ "node", "scripts/serve-testnet-explorer.mjs" ]
+
+[services.production.run.env]
+NODE_ENV = "production"
+PORT = "19951"
+INDEXER_API_PORT = "4000"
+INDEXER_CHAIN_ID = "77"
+INDEXER_RPC_URL = "http://159.195.47.126/ext/bc/22iFuL8GqPYbtnPKNFrq7AzoDfv3FYwq8T93GubRi12LQVjLni/rpc"
+INDEXER_CONFIRMATIONS = "1"
+INDEXER_BATCH_SIZE = "50"
+INDEXER_POLL_MS = "2000"
+INDEXER_RETRY_DELAY_MS = "3000"
+INDEXER_MAX_RETRIES = "5"
+INDEXER_API_MAX_LIMIT = "500"
+INDEXER_API_DEFAULT_LIMIT = "25"
+LOG_LEVEL = "info"

@@ -15,7 +15,7 @@
 
 import { loadConfig } from './config';
 import { createPool } from './db/client';
-import { runMigrations } from './db/migrate';
+import { assertSchemaReady, runMigrations } from './db/migrate';
 import { RpcClient } from './rpc';
 import { IndexerEngine } from './indexer/engine';
 import { startApiServer } from './api/server';
@@ -29,10 +29,18 @@ async function main(): Promise<void> {
   // Initialise DB
   const pool = createPool(config.dbUrl, config.dbPoolMin, config.dbPoolMax);
 
-  // Run migrations
-  console.log('[main] Running database migrations...');
-  const migrated = await runMigrations(pool);
-  console.log(`[main] Migrations complete (${migrated} applied)`);
+  // Development owns the existing idempotent migration runner. Replit
+  // production PostgreSQL schema changes are applied during Publish, so
+  // production startup performs a read-only preflight instead of issuing DDL.
+  if (process.env.NODE_ENV === 'production') {
+    console.log('[main] Verifying published production database schema...');
+    await assertSchemaReady(pool);
+    console.log('[main] Production database schema verified');
+  } else {
+    console.log('[main] Running database migrations...');
+    const migrated = await runMigrations(pool);
+    console.log(`[main] Migrations complete (${migrated} applied)`);
+  }
 
   // Verify chain ID
   const rpc       = new RpcClient({ url: config.rpcUrl, maxRetries: config.maxRetries, retryDelayMs: config.retryDelayMs });

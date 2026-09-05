@@ -27,3 +27,4 @@
 - [PrimeWave Chain PW-C20](primewave-pw-c20.md) — C20 COMPLETE; E2E functional test GREEN; distribute() proven; 70/20/10 split live; all 4 validators consistent
 - [PWCScan build validation](pwcscan-build-validation.md) — Vite validation requires explicit PORT and BASE_PATH values without starting the app
 - [Local PWCScan preview startup](local-pwcscan-preview.md) — Fresh previews need package-local Indexer dependencies; CLI deployment IDs may be table-formatted
+- [Replit Testnet Explorer migrations](primewave-replit-production-migrations.md) — Production C12 schema must arrive through Publish; indexer startup performs read-only preflight only
