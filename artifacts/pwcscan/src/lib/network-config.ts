@@ -71,19 +71,28 @@ const testnetIndexerApiUrl =
   legacyValueForNetwork('testnet') ??
   null;
 
+// Devnet is intentionally local-development-only. Never let a production
+// build inherit the same-origin Testnet proxy as its indexer endpoint.
+const devnetIsProductionBuild = import.meta.env.PROD;
+const devnetRpcUrl = devnetIsProductionBuild
+  ? null
+  : envValue('VITE_DEVNET_RPC_URL') ?? 'http://127.0.0.1:9650';
+const devnetIndexerApiUrl = devnetIsProductionBuild
+  ? null
+  : envValue('VITE_DEVNET_INDEXER_API_URL') ??
+    legacyValueForNetwork('devnet') ??
+    '/indexer-api';
+
 const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinition> = {
   devnet: {
     id: 'devnet',
     label: 'Devnet',
     shortLabel: 'Devnet',
     description: 'Local development',
-    status: 'configured',
+    status: devnetIndexerApiUrl && devnetRpcUrl ? 'configured' : 'unconfigured',
     chainId: 73571,
-    rpcUrl: envValue('VITE_DEVNET_RPC_URL') ?? 'http://127.0.0.1:9650',
-    indexerApiUrl:
-      envValue('VITE_DEVNET_INDEXER_API_URL') ??
-      legacyValueForNetwork('devnet') ??
-      '/indexer-api',
+    rpcUrl: devnetRpcUrl,
+    indexerApiUrl: devnetIndexerApiUrl,
     contractAddresses: devnetAddresses,
     visual: {
       color: 'devnet',
