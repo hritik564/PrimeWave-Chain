@@ -36,3 +36,17 @@ mtime_ms = 1788597646829
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:e1cfedf7-0dc2-4ae8-bc7d-5fd02f5c14d1/33911009-1e42-4a66-806d-59f3fa077f79/b2701091-f57a-4592-98c6-f8828b978b91"
 storage_version_token = "1788597669856538"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "ua4YpUH1a5SBoGa63p0cq"
+uri = "file://docs/PWCSCAN-MULTI-NETWORK-SWITCHER-DESIGN.md"
+type = "text"
+title = "PWCScan Multi-Network Switcher Design"
+description = "Design-only implementation package for a persistent Devnet/Testnet/Mainnet switcher with network-scoped URLs, endpoint isolation, Chain ID validation, React Query cache isolation, and an explicit unconfigured Mainnet placeholder."
+logical_id = "df467b89-aa66-44ff-b857-031f5ce2654a"
+content_hash = "sha256:66433e24a79967fcd3724a691b05a9fcfbb65588a99421aeae2199dcfe3557bc"
+size = 24219
+mtime_ms = 1788598050837
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:e1cfedf7-0dc2-4ae8-bc7d-5fd02f5c14d1/df467b89-aa66-44ff-b857-031f5ce2654a/79c86621-6b66-4346-86ef-a697ab0b62e2"
+storage_version_token = "1788598058246752"
+content_type = "text/markdown"
