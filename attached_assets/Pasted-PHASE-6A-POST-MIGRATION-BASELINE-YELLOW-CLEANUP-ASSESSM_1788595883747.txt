@@ -1,0 +1,84 @@
+PHASE 6A — POST-MIGRATION BASELINE & YELLOW CLEANUP ASSESSMENT
+
+Objective:
+Assess the three remaining Phase 5 YELLOW items and establish the post-migration baseline.
+
+STRICT SAFETY RULES:
+- READ-ONLY ONLY.
+- Do NOT modify source files.
+- Do NOT modify configuration.
+- Do NOT install dependencies.
+- Do NOT access Replit Secret values.
+- Do NOT access private keys.
+- Do NOT access any database.
+- Do NOT connect to Chain 77 for transactions.
+- Do NOT start or restart any service.
+- Do NOT modify Netcup infrastructure.
+- Do NOT create or provision servers.
+- Do NOT push commits.
+- Do NOT create or modify Git tags.
+- Do NOT change the working tree.
+
+Review these three Phase 5 YELLOW items:
+
+1. Missing Jest executables
+   - Determine exactly which workspace/package declares Jest for:
+     a) indexer
+     b) keeper
+   - Determine whether Jest is actually required by the repository's normal development/test workflow.
+   - Determine whether the missing executable is caused by dependency installation state rather than a repository problem.
+   - Do not install anything.
+
+2. Public local-development key in scripts/start-indexer.sh
+   - Inspect how the key is used.
+   - Confirm whether it is strictly local-development-only.
+   - Confirm whether the script can operate without embedding a development private key.
+   - Do not modify the script.
+   - Do not print any private-key value.
+
+3. Missing migration tag
+   - Confirm that:
+       90e8f194a01496862e780916e134b672f588d438
+     is an ancestor of current HEAD.
+   - Confirm current HEAD.
+   - Confirm branch and remotes.
+   - Determine whether absence of the old tag creates any functional or migration-integrity problem.
+   - Do not create a tag.
+
+Then establish a POST-MIGRATION BASELINE containing:
+
+- Current HEAD
+- Branch
+- Working-tree status
+- Migration checkpoint
+- Whether checkpoint is an ancestor
+- Number of commits after checkpoint
+- GitHub origin
+- Presence/absence of migration tag
+- Current Phase 5 YELLOW items
+- Whether each item is:
+  GREEN / CLEANUP ONLY / REQUIRES ACTION / BLOCKER
+
+Also verify that no new tracked or untracked project files appeared since Phase 5.
+
+Do not make any changes.
+
+FINAL REPORT FORMAT:
+
+PHASE 6A COMPLETE — POST-MIGRATION BASELINE ASSESSMENT
+
+1. Git baseline
+2. Jest assessment
+3. Local development key assessment
+4. Migration tag assessment
+5. New file/change assessment
+6. Final classification:
+   GREEN / YELLOW / RED
+
+For every finding, distinguish clearly between:
+- migration integrity
+- development hygiene
+- validation-environment limitation
+- actual operational blocker
+
+No changes were authorized, so the final report must confirm whether the working tree remains unchanged.
