@@ -28,3 +28,4 @@
 - [PWCScan build validation](pwcscan-build-validation.md) — Vite validation requires explicit PORT and BASE_PATH values without starting the app
 - [Local PWCScan preview startup](local-pwcscan-preview.md) — Fresh previews need package-local Indexer dependencies; CLI deployment IDs may be table-formatted
 - [Replit Testnet Explorer migrations](primewave-replit-production-migrations.md) — Production C12 schema must arrive through Publish; indexer startup performs read-only preflight only
+- [PWCScan network isolation](pwcscan-network-isolation.md) — Local-only networks must be unavailable in production, never inherit another network’s same-origin indexer route
