@@ -171,6 +171,11 @@ export interface Contract {
 }
 
 export interface SearchResult { type: 'block' | 'transaction' | 'address' | 'validator' | 'not_found' | 'invalid_format'; data: unknown; }
+export interface SearchApiResponse {
+  success: boolean;
+  type: SearchResult['type'];
+  data: unknown;
+}
 
 // ========================
 // React Query Hooks
@@ -344,8 +349,8 @@ export function useSearch(q: string) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'search', q],
-    queryFn: () => apiRequest<ApiResponse<SearchResult>>(network, '/search', { q }).then(res => res.data),
-    enabled: isConfigured && !!q && q.length > 2,
+    queryFn: () => apiRequest<SearchApiResponse>(network, '/search', { q }),
+    enabled: isConfigured && q.trim().length > 0,
     retry: false,
   });
 }
