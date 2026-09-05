@@ -7,3 +7,18 @@ uri = "file://PW-C00-Documents.zip"
 type = "unspecified"
 title = "PW-C00 Design Documents"
 description = "All 12 PrimeWave Chain Sprint PW-C00 architecture and specification documents as a ZIP archive."
+logical_id = "3f072cac-d87c-4f15-95fd-2f45b4de5901"
+
+[[outputs]]
+id = "Zo99sTG9S0cKDtM5VBdjQ"
+uri = "file://docs/PRIMEWAVE-MAINNET-PREPARATION-ROADMAP.md"
+type = "text"
+title = "PrimeWave Chain Mainnet Preparation Roadmap"
+description = "Planning-only mainnet preparation roadmap covering architecture, decisions, tokenomics, validators, genesis, protocol deployment, governance, security, testnet exit criteria, dry run, and phased launch readiness."
+logical_id = "5a2fa320-1fcd-420d-98f1-6f803d878878"
+content_hash = "sha256:748732726ccc2149f08ac642ba4ec8f97490d0f323c39fe9b04e484ca09ed1af"
+size = 46019
+mtime_ms = 1788597302757
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:e1cfedf7-0dc2-4ae8-bc7d-5fd02f5c14d1/5a2fa320-1fcd-420d-98f1-6f803d878878/a40f4f61-c08f-40da-b354-e5e5c5fc8128"
+storage_version_token = "1788597310813660"
+content_type = "text/markdown"

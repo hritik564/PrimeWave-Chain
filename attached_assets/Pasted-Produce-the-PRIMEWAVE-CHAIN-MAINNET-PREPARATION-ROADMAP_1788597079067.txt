@@ -1,0 +1,272 @@
+Produce the PRIMEWAVE CHAIN — MAINNET PREPARATION ROADMAP now.
+
+Use the transition directive already provided as the governing scope.
+
+IMPORTANT:
+This is PLANNING ONLY.
+
+Do not:
+- modify files
+- create commits
+- push
+- install dependencies
+- generate keys
+- access secrets
+- deploy contracts
+- create a mainnet genesis
+- provision servers
+- modify Netcup
+- modify Chain 77
+- start/restart services
+- perform blockchain transactions
+
+The migration is CLOSED. Do not perform another migration audit.
+
+Your job now is to study the existing PrimeWave Chain repository and produce the first serious mainnet planning document.
+
+Structure the document exactly as follows:
+
+# PRIMEWAVE CHAIN — MAINNET PREPARATION ROADMAP
+
+## 1. Migration Closure
+State the final migration status and the current repository/testnet baseline.
+
+## 2. What Is Already Established
+Separate clearly what is already proven/implemented from what is still a mainnet decision.
+
+Include the existing Chain 77 architecture and protocol components.
+
+Do NOT treat testnet values as automatically approved mainnet values.
+
+## 3. Mainnet Architecture
+Propose the target architecture based on the existing PrimeWave design.
+
+Cover:
+
+- validators
+- RPC
+- indexer
+- PostgreSQL
+- keeper
+- PWCScan
+- nginx/TLS
+- monitoring
+- treasury
+- governance/control layer
+
+Clearly identify which components should run externally and which responsibilities remain in Replit.
+
+Do not provision anything.
+
+## 4. Mainnet Decisions Required
+Create a decision table.
+
+For each decision include:
+
+| Decision | Current Status | Existing Evidence | Decision Required From Project Owner | Blocks Implementation? |
+
+Cover at minimum:
+
+- mainnet network name
+- Chain ID
+- Blockchain ID
+- Subnet ID
+- Conversion ID
+- token symbol/name
+- total supply
+- token allocation
+- validator count
+- validator selection/governance
+- block timing
+- gas configuration
+- reward economics
+- fee distribution
+- treasury
+- multisig
+- timelock
+- emergency controls
+- StakingManager
+- keeper architecture
+- indexer/explorer
+- monitoring
+- backup/recovery
+
+Do not invent values for unresolved decisions.
+
+## 5. Tokenomics
+Use the existing testnet implementation only as a reference.
+
+Explicitly distinguish:
+
+TESTNET VERIFIED
+from
+MAINNET PENDING DECISION.
+
+Analyze which economic parameters must be finalized before mainnet implementation.
+
+Do not recommend arbitrary numbers without evidence.
+
+## 6. Validator Architecture
+Use the existing four-validator testnet architecture as the starting reference.
+
+Identify:
+
+- what can remain the same conceptually
+- what must be reconsidered for mainnet
+- validator count
+- geographic distribution
+- hardware
+- networking
+- key custody
+- monitoring
+- replacement/recovery
+
+Do not provision or configure validators.
+
+## 7. Genesis Design
+Create a mainnet genesis checklist.
+
+Separate:
+
+- parameters known from current architecture
+- parameters requiring mainnet decisions
+- parameters requiring implementation
+- parameters requiring security review
+
+Do not generate a genesis file.
+
+## 8. Protocol Deployment Plan
+Map the existing protocol contracts into a proposed mainnet deployment order.
+
+Include:
+
+- EmergencyMultisig
+- PrimeWaveTimelock
+- ValidatorFeeVault
+- DevTreasury
+- FeeDistributor
+- ValidatorRegistry
+- RewardVault
+- PoAManager integration
+- StakingManager
+
+For each identify dependencies and ownership/control considerations.
+
+Do not deploy anything.
+
+## 9. Governance & Key Management
+Design the operational model without generating keys.
+
+Cover:
+
+- deployer
+- multisig
+- timelock
+- treasury
+- validator keys
+- keeper key
+- emergency authority
+- rotation
+- backup
+- recovery
+
+Clearly distinguish technical capability from governance policy that still needs owner approval.
+
+## 10. Indexer / Keeper / PWCScan
+Map the existing testnet architecture to mainnet requirements.
+
+Identify configuration values that will need to change for mainnet and values that should remain structurally the same.
+
+Do not create mainnet configuration files yet.
+
+## 11. Security & Recovery
+Create the mainnet security checklist.
+
+Cover:
+
+- key custody
+- multisig
+- timelock
+- contract ownership
+- validator compromise
+- keeper compromise
+- RPC compromise
+- database failure
+- server failure
+- backup/recovery
+- emergency shutdown/control
+- upgrade procedures
+- incident response
+
+## 12. Testnet Exit Criteria
+Define what must be demonstrated on Chain 77 before mainnet implementation is approved.
+
+Use existing architecture and previously verified protocol behavior as the baseline.
+
+Do not perform the tests.
+
+## 13. Mainnet Dry Run
+Design the future dry-run sequence from clean infrastructure through genesis, validator formation, protocol deployment, keeper, indexer, explorer and monitoring.
+
+Do not execute it.
+
+## 14. Mainnet Roadmap
+Produce this sequence:
+
+MAINNET-1 — Architecture Freeze
+MAINNET-2 — Economic / Tokenomics Freeze
+MAINNET-3 — Chain Identity
+MAINNET-4 — Validator & Infrastructure Design
+MAINNET-5 — Genesis Design
+MAINNET-6 — Protocol Deployment Design
+MAINNET-7 — Governance & Key Management
+MAINNET-8 — Indexer / Keeper / Explorer
+MAINNET-9 — Security & Recovery
+MAINNET-10 — Testnet Exit Criteria
+MAINNET-11 — Mainnet Dry Run
+MAINNET-12 — Genesis Ceremony
+MAINNET-13 — Validator Bring-up
+MAINNET-14 — Final Launch Readiness
+MAINNET-15 — Mainnet Launch
+
+For every phase give:
+
+- objective
+- decisions required
+- implementation required
+- dependencies
+- exit criteria
+
+## 15. Immediate Next Step
+
+At the end, identify ONE immediate next phase.
+
+Do not give me a vague list of possibilities.
+
+Choose the correct first mainnet phase based on the repository:
+
+MAINNET-1 — ARCHITECTURE FREEZE
+
+Explain exactly what we need to decide in MAINNET-1 before touching implementation.
+
+## IMPORTANT DISTINCTION
+
+Throughout the document use these labels:
+
+[ESTABLISHED]
+[TESTNET VERIFIED]
+[MAINNET DECISION]
+[IMPLEMENTATION REQUIRED]
+[SECURITY REVIEW REQUIRED]
+
+Do not silently convert an existing testnet value into a mainnet requirement.
+
+Do not fill unknown values with assumptions.
+
+FINAL STATEMENT:
+
+MIGRATION CLOSED.
+
+PRIMEWAVE CHAIN IS NOW IN MAINNET PREPARATION.
+
+NO MAINNET DEPLOYMENT HAS BEEN PERFORMED.
