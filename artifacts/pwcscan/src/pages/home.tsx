@@ -11,6 +11,7 @@ import { HashDisplay } from "@/components/pwcscan/hash-display"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { StatusBadge } from "@/components/pwcscan/status-badge"
 import { ErrorState } from "@/components/pwcscan/error-state"
+import { ExplorerSearch } from "@/components/pwcscan/explorer-search"
 
 export default function Home() {
   const { autoRefresh } = useSettings()
@@ -57,6 +58,12 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      <section className="mx-auto w-full max-w-3xl" aria-label="Search PrimeWave Chain">
+        <ExplorerSearch
+          inputClassName="h-12 bg-card text-base shadow-sm"
+        />
+      </section>
+
       {/* Hero Section */}
       <section className="bg-primary/5 rounded-3xl p-8 md:p-12 border border-primary/10 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />

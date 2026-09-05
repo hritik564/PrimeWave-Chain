@@ -1,13 +1,13 @@
 import * as React from "react"
 import { useState } from "react"
 import { useLocation } from "wouter"
-import { Search, Menu, Sun, Moon, Settings, Database, Activity, RefreshCw, ChevronDown, Check, Globe2 } from "lucide-react"
+import { Menu, Sun, Moon, Settings, Database, RefreshCw, ChevronDown, Check, Globe2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/settings"
 import { useStats } from "@/lib/api"
 import { NETWORKS, NetworkLink, useNetwork } from "@/lib/network"
 import type { NetworkId } from "@/lib/network-config"
-import { Input } from "@/components/ui/input"
+import { ExplorerSearch } from "@/components/pwcscan/explorer-search"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -98,23 +98,13 @@ function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
 }
 
 export function NavBar() {
-  const [location, setLocation] = useLocation()
-  const [searchQuery, setSearchQuery] = useState("")
+  const [location] = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, setTheme, autoRefresh, setAutoRefresh } = useSettings()
   const { buildNetworkPath } = useNetwork()
 
   // Use a longer refetch interval for the navbar to avoid excessive calls
   const { data: stats } = useStats(autoRefresh ? 30000 : undefined)
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim().length > 0) {
-      setLocation(buildNetworkPath(`/search?q=${encodeURIComponent(searchQuery.trim())}`))
-      setSearchQuery("")
-      setMobileMenuOpen(false)
-    }
-  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -162,15 +152,7 @@ export function NavBar() {
         </div>
 
         <div className="flex-1 max-w-xl hidden sm:block">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Address / Tx Hash / Block / Validator ID"
-              className="w-full pl-9 pr-4 bg-muted/50 border-transparent focus:bg-background h-10"
-            />
-          </form>
+          <ExplorerSearch inputClassName="bg-muted/50 border-transparent focus:bg-background h-10" />
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -249,15 +231,10 @@ export function NavBar() {
                 <NetworkSwitcher compact />
               </div>
               <div className="p-4 border-b bg-muted/20">
-                <form onSubmit={handleSearch} className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
-                    className="w-full pl-9"
-                  />
-                </form>
+                <ExplorerSearch
+                  placeholder="Search..."
+                  onSearchSubmitted={() => setMobileMenuOpen(false)}
+                />
               </div>
               <div className="flex-1 overflow-y-auto p-2">
                 <div className="flex flex-col space-y-1">
