@@ -1,0 +1,461 @@
+PRIMEWAVE CHAIN — MIGRATION CLOSED / MAINNET PREPARATION TRANSITION
+
+This is the formal transition point from Replit migration work into PrimeWave Chain MAINNET PREPARATION.
+
+IMPORTANT:
+The Replit migration is now CLOSED.
+
+Final migration status:
+- Phase 5: completed.
+- Phase 6A: completed.
+- Phase 6B: GREEN.
+- Phase 6C: GREEN — documentation/metadata only.
+- Migration checkpoint:
+  90e8f194a01496862e780916e134b672f588d438
+- Current repository HEAD:
+  90a3f267349acd0d7cdd7c3ac0d9f07652b36d72
+- Migration checkpoint is confirmed as an ancestor of current HEAD.
+- No migration-critical source, configuration, dependency, or infrastructure files were changed after the Phase 5 baseline.
+- Existing Chain 77 testnet infrastructure remains external and was not modified.
+
+DO NOT reopen migration auditing.
+
+DO NOT provision new servers.
+
+DO NOT rebuild the existing Netcup validator infrastructure.
+
+DO NOT migrate the existing Chain 77 testnet again.
+
+DO NOT modify the existing Chain 77 blockchain.
+
+DO NOT deploy anything to mainnet.
+
+DO NOT generate or expose production private keys.
+
+DO NOT create mainnet wallets or secrets yet.
+
+DO NOT make blockchain transactions.
+
+DO NOT modify Netcup infrastructure.
+
+DO NOT modify DNS, firewall, nginx, systemd, PostgreSQL, validators, keeper, indexer, or PWCScan runtime.
+
+This phase is PLANNING / ARCHITECTURE ONLY.
+
+==================================================
+OBJECTIVE
+==================================================
+
+Establish the controlled MAINNET PREPARATION roadmap for PrimeWave Chain.
+
+The existing Chain 77 testnet is the validated development/test environment.
+
+Mainnet must be treated as a separate network with its own:
+
+- chain identity
+- genesis
+- validator configuration
+- validator keys
+- network parameters
+- deployment addresses
+- treasury controls
+- multisig
+- timelock
+- token allocation
+- reward configuration
+- operational procedures
+- monitoring
+- recovery procedures
+
+Do NOT copy Chain 77 state directly into mainnet.
+
+==================================================
+1. MAINNET ARCHITECTURE
+==================================================
+
+Review the existing repository architecture and documentation.
+
+Prepare a proposed mainnet architecture covering:
+
+- validator layer
+- RPC layer
+- indexer
+- PostgreSQL
+- keeper
+- PWCScan
+- nginx/TLS
+- monitoring
+- treasury
+- governance/control contracts
+- operational administration
+
+Clearly distinguish:
+
+REPLIT:
+- development
+- source control
+- builds
+- local testing
+- deployment preparation
+- documentation
+
+EXTERNAL INFRASTRUCTURE:
+- mainnet validators
+- public RPC
+- indexer runtime
+- PostgreSQL
+- keeper
+- explorer
+- nginx/TLS
+- monitoring
+
+Do not assign production runtime responsibilities to Replit unless explicitly approved later.
+
+==================================================
+2. MAINNET CHAIN IDENTITY
+==================================================
+
+Do NOT choose or invent final mainnet identifiers yet.
+
+Prepare a checklist of identifiers that must be finalized:
+
+- Mainnet Chain ID
+- Blockchain ID
+- Subnet ID
+- Conversion ID
+- network name
+- native token symbol
+- genesis parameters
+
+Explicitly mark these as PENDING decisions unless already formally specified in the repository.
+
+Do not reuse Chain ID 77 as mainnet merely because it is the testnet.
+
+==================================================
+3. VALIDATOR ARCHITECTURE
+==================================================
+
+Review the current four-validator testnet architecture.
+
+Prepare a mainnet validator planning section covering:
+
+- number of validators
+- geographic/topological distribution
+- validator hardware requirements
+- validator storage
+- network connectivity
+- validator key management
+- node recovery
+- validator replacement
+- upgrade procedure
+- monitoring
+- backup strategy
+
+Do not provision or configure any validator.
+
+==================================================
+4. GENESIS
+==================================================
+
+Prepare a mainnet genesis planning checklist.
+
+Cover:
+
+- chain configuration
+- genesis timestamp
+- gas configuration
+- block timing
+- validator set
+- native token supply
+- initial allocations
+- treasury allocations
+- ecosystem allocations
+- reward allocations
+- initial contract deployment strategy
+
+Clearly distinguish testnet values from values that must be independently approved for mainnet.
+
+Do not generate a final mainnet genesis file.
+
+==================================================
+5. TOKENOMICS
+==================================================
+
+Prepare a mainnet tokenomics decision checklist.
+
+The testnet currently records:
+
+- Total supply: 100,000,000 PW
+- RewardVault funding previously verified: 15,000,000 PW
+- FeeDistributor routing previously verified:
+  70% ValidatorFeeVault
+  20% DevTreasury
+  10% burn
+
+Treat these as TESTNET / previously verified values.
+
+Do not assume these automatically become mainnet economics.
+
+Identify which mainnet tokenomics decisions require explicit approval.
+
+==================================================
+6. PROTOCOL CONTRACTS
+==================================================
+
+Review the existing protocol deployment architecture.
+
+Prepare the mainnet deployment plan for:
+
+- EmergencyMultisig
+- PrimeWaveTimelock
+- ValidatorFeeVault
+- DevTreasury
+- FeeDistributor
+- ValidatorRegistry
+- RewardVault
+- PoAManager integration
+- future StakingManager
+
+For each component identify:
+
+- deployment order
+- initialization dependencies
+- ownership/control dependencies
+- required multisig/timelock controls
+- post-deployment verification
+
+Do not deploy anything.
+
+Do not invent mainnet contract addresses.
+
+==================================================
+7. GOVERNANCE / KEY MANAGEMENT
+==================================================
+
+Prepare a mainnet key-management plan.
+
+Cover:
+
+- deployer
+- multisig signers
+- timelock administration
+- validator keys
+- keeper key
+- treasury controls
+- emergency controls
+- key rotation
+- key backup
+- recovery procedures
+
+Do not generate keys.
+
+Do not request private keys.
+
+Do not print secrets.
+
+==================================================
+8. REWARDS / VALIDATORS
+==================================================
+
+Review the current ValidatorRegistry, RewardVault, ValidatorFeeVault and keeper architecture.
+
+Prepare a mainnet readiness checklist covering:
+
+- validator registration
+- validator identity
+- reward accounting
+- fee distribution
+- keeper responsibilities
+- failure handling
+- validator removal/replacement
+- emergency procedures
+
+Explicitly identify the current StakingManager absence as a design item that must be resolved before any mainnet staking-dependent functionality is finalized.
+
+Do not deploy StakingManager.
+
+==================================================
+9. INDEXER / EXPLORER
+==================================================
+
+Prepare mainnet deployment requirements for:
+
+INDEXER:
+- Chain ID
+- RPC
+- PostgreSQL
+- contract addresses
+- migrations
+- start block
+- confirmations
+- monitoring
+
+PWCScan:
+- mainnet network label
+- mainnet Chain ID
+- indexer API
+- explorer configuration
+- no local Chain ID fallback
+
+Keeper:
+- mainnet RPC
+- Chain ID
+- ValidatorRegistry
+- PoAManager
+- keeper key
+- state file
+- monitoring
+
+Do not start any external service.
+
+==================================================
+10. SECURITY
+==================================================
+
+Prepare a mainnet security checklist covering:
+
+- private-key custody
+- multisig policy
+- timelock policy
+- contract ownership
+- deployment verification
+- validator key isolation
+- RPC security
+- database security
+- keeper security
+- firewall policy
+- backups
+- monitoring
+- incident response
+- rollback/recovery
+
+Do not perform security changes yet.
+
+==================================================
+11. TESTNET EXIT CRITERIA
+==================================================
+
+Define what must be completed on Chain 77 before mainnet launch.
+
+Examples to evaluate:
+
+- protocol integration testing
+- validator behavior
+- reward flows
+- fee routing
+- keeper operation
+- indexer synchronization
+- explorer behavior
+- failure/recovery testing
+- upgrade testing
+- emergency controls
+- long-running stability
+
+Do not perform destructive tests.
+
+==================================================
+12. MAINNET DRY RUN
+==================================================
+
+Design a future mainnet dry-run process.
+
+The dry run should eventually cover:
+
+1. clean genesis
+2. validator initialization
+3. network formation
+4. protocol deployment
+5. contract verification
+6. treasury setup
+7. validator registration
+8. keeper activation
+9. indexer synchronization
+10. PWCScan verification
+11. monitoring
+12. backup/recovery
+13. emergency procedures
+
+Do not execute the dry run yet.
+
+==================================================
+13. MAINNET PHASE ROADMAP
+==================================================
+
+Produce a proposed sequence:
+
+MAINNET-1 — Architecture Freeze
+MAINNET-2 — Economic/Tokenomics Freeze
+MAINNET-3 — Chain Identity
+MAINNET-4 — Validator & Infrastructure Design
+MAINNET-5 — Genesis Design
+MAINNET-6 — Contract Deployment Design
+MAINNET-7 — Governance & Key Management
+MAINNET-8 — Indexer/Keeper/Explorer Design
+MAINNET-9 — Security & Recovery
+MAINNET-10 — Testnet Exit Criteria
+MAINNET-11 — Mainnet Dry Run
+MAINNET-12 — Genesis Ceremony
+MAINNET-13 — Validator Bring-up
+MAINNET-14 — Final Launch Readiness
+MAINNET-15 — MAINNET LAUNCH
+
+For each phase provide:
+- objective
+- inputs
+- decisions required
+- outputs
+- whether it is planning, implementation, or execution
+
+==================================================
+14. CURRENT BLOCKERS / DECISIONS
+==================================================
+
+Identify decisions that must be made before implementation begins.
+
+Do not invent decisions.
+
+Clearly distinguish:
+
+ALREADY ESTABLISHED
+vs.
+PENDING MAINNET DECISION
+vs.
+REQUIRES IMPLEMENTATION
+vs.
+REQUIRES SECURITY REVIEW
+
+==================================================
+FINAL OUTPUT
+==================================================
+
+Produce:
+
+# PRIMEWAVE CHAIN — MAINNET PREPARATION ROADMAP
+
+Include:
+
+1. Migration closure statement
+2. Current validated architecture
+3. Mainnet architecture proposal
+4. Mainnet decisions required
+5. Mainnet roadmap
+6. Testnet exit criteria
+7. Mainnet dry-run plan
+8. Security/key-management checklist
+9. Current blockers
+10. Recommended immediate next mainnet phase
+
+This is a planning transition only.
+
+No files should be modified.
+No commits should be created.
+No infrastructure should be changed.
+No blockchain state should be changed.
+
+END WITH:
+
+MIGRATION CLOSED.
+
+PRIMEWAVE CHAIN IS NOW IN MAINNET PREPARATION.
+
+NO MAINNET DEPLOYMENT HAS BEEN PERFORMED.

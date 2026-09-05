@@ -115,7 +115,7 @@ echo "  Timelock          : ${ADDR_TIMELOCK:-<not set>}"
 
 # ── 4. Build indexer if needed ────────────────────────────────────────────────
 cd "$REPO_ROOT/indexer"
-if [[ ! -f "dist/main.js" ]] || [[ src/main.ts -nt dist/main.js ]]; then
+if [[ ! -f "dist/main.js" ]] || [[ src/main.ts -nt dist/main.js ]] || [[ ! -d "dist/db/migrations" ]]; then
     echo -e "${YELLOW}[indexer] Building C12 indexer...${NC}"
     npm run build
     echo -e "${GREEN}[indexer] Build complete.${NC}"

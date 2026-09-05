@@ -174,8 +174,20 @@ if [[ -z "$NODE_DIR" ]]; then
     # ── Parse and persist new IDs from the deploy log ──────────────────────────
     # The CLI prints "RPC URL: http://.../<blockchain_id>/rpc" in the deploy log.
     # Extract Blockchain ID and Subnet ID from the output.
-    NEW_BLOCKCHAIN_ID=$(grep -oP "(?<=Blockchain ID: )\S+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
-    NEW_SUBNET_ID=$(grep -oP "(?<=Subnet ID: )\S+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
+    # Newer Avalanche CLI versions render deployment IDs in a table:
+    #   | Blockchain ID | <id> |
+    #   | Subnet ID     | <id> |
+    # Parse that format first, then retain the text/URL fallbacks below for
+    # older CLI output.
+    NEW_BLOCKCHAIN_ID=$(awk -F'|' '$2 ~ /Blockchain ID/ {gsub(/[[:space:]]/, "", $3); if ($3 != "") print $3}' "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
+    NEW_SUBNET_ID=$(awk -F'|' '$2 ~ /Subnet ID/ {gsub(/[[:space:]]/, "", $3); if ($3 != "") print $3}' "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
+
+    if [[ -z "$NEW_BLOCKCHAIN_ID" ]]; then
+        NEW_BLOCKCHAIN_ID=$(grep -oP "(?<=Blockchain ID: )\S+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
+    fi
+    if [[ -z "$NEW_SUBNET_ID" ]]; then
+        NEW_SUBNET_ID=$(grep -oP "(?<=Subnet ID: )\S+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
+    fi
 
     # Also try URL-based extraction as fallback
     if [[ -z "$NEW_BLOCKCHAIN_ID" ]]; then
