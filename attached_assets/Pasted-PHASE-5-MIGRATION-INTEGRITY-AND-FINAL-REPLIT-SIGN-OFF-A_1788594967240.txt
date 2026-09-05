@@ -1,0 +1,411 @@
+PHASE 5 — MIGRATION INTEGRITY AND FINAL REPLIT SIGN-OFF AUDIT
+
+The PrimeWave Chain project has now been migrated from the old Replit account into this new Replit account.
+
+Completed phases:
+
+- Phase 1 — GitHub import: COMPLETE
+- Phase 2 — Toolchain/dependencies/build: COMPLETE
+- Phase 3 — Environment inventory: COMPLETE
+- Phase 4A — Configuration reconciliation: COMPLETE
+- Phase 4B-1 — Testnet non-secret configuration: COMPLETE
+- Phase 4B-2 — Dedicated DB investigation: BLOCKED/DEFERRED because runtime belongs externally
+- Phase 4B-2A — Netcup architecture audit: COMPLETE
+- Phase 4B-2B — infra-01 specification: COMPLETE
+- Phase 4B-2C — Existing Netcup reconciliation: COMPLETE
+- Phase 4B-3 — Existing Chain 77 reconnection validation: COMPLETE
+- Phase 4B-3A — PWCScan local-chain fallback hardening: COMPLETE
+- Phase 4B-4 — Runtime responsibility audit: COMPLETE
+- Phase 4B-5 — Replit local/testnet workflow boundary hardening: COMPLETE
+
+The established architecture is:
+
+REPLIT
+- source development
+- builds
+- typechecking
+- tests
+- controlled validation
+- local Chain 73571 development
+
+EXTERNAL NETCUP
+- existing Chain 77 validators
+- existing Chain 77 RPC
+- testnet indexer
+- dedicated PostgreSQL
+- testnet keeper
+- PWCScan serving
+- nginx/TLS
+
+The existing Chain 77 blockchain MUST NOT be rebuilt or modified.
+
+==================================================
+OBJECTIVE
+==================================================
+
+Perform a final READ-ONLY migration integrity audit.
+
+Determine whether the new Replit project is a faithful and safe continuation of the migrated project.
+
+==================================================
+ABSOLUTE SAFETY RULES
+==================================================
+
+DO NOT:
+
+- access or print secrets
+- access private keys
+- connect to PostgreSQL
+- run migrations
+- start the indexer
+- start the keeper
+- start PWCScan
+- start AvalancheGo
+- start Subnet-EVM
+- start Anvil
+- send blockchain transactions
+- deploy contracts
+- modify Netcup
+- modify DNS
+- modify firewall
+- modify systemd
+- modify files
+- modify dependencies
+- modify lockfiles
+- modify .replit
+- commit
+- push
+
+This phase must be read-only.
+
+==================================================
+STEP 1 — GIT MIGRATION CHECKPOINT
+==================================================
+
+Determine:
+
+- current branch
+- current HEAD commit
+- remote repository
+- working tree status
+- uncommitted changes
+- untracked files
+- whether the current project descends from migration checkpoint:
+
+90e8f194a01496862e780916e134b672f588d438
+
+Also identify the migration tag if available:
+
+pre-replit-migration-20260904-162720
+
+Do not modify Git history.
+
+Report any commits that occurred after the migration checkpoint.
+
+==================================================
+STEP 2 — REPOSITORY INTEGRITY
+==================================================
+
+Verify the presence of the major repository areas:
+
+- contracts/
+- deploy/
+- scripts/
+- indexer/
+- keeper/
+- infrastructure/
+- config/
+- tests/
+- artifacts/
+- lib/
+- docs/
+- foundry.toml
+- package.json
+- pnpm-workspace.yaml
+
+Do not modify anything.
+
+Report missing expected components.
+
+==================================================
+STEP 3 — SECRET SAFETY AUDIT
+==================================================
+
+Perform a read-only scan for accidental committed secrets.
+
+Look for:
+
+- PEM private-key markers
+- mnemonic/seed phrases
+- obvious private-key literals
+- accidentally committed database credentials
+- API keys
+- bearer tokens
+- production passwords
+
+Do NOT read Replit Secret values.
+
+Do NOT print secret-like values.
+
+If a suspicious match is found, report only:
+
+- file path
+- line number if safely available
+- type/category of suspected secret
+
+Do not print the value.
+
+Remember that known Foundry test fixtures and intentional placeholder strings may exist. Distinguish known test fixtures from actual PrimeWave secrets.
+
+==================================================
+STEP 4 — TESTNET CONFIGURATION INTEGRITY
+==================================================
+
+Verify the dedicated testnet templates still contain:
+
+INDEXER_CHAIN_ID=77
+KEEPER_CHAIN_ID=77
+VITE_CHAIN_ID=77
+VITE_NETWORK_LABEL=Testnet
+
+Verify the known Chain 77 RPC configuration remains correct.
+
+Verify the known deployed contract addresses remain unchanged.
+
+Verify:
+
+INDEXER_DB_URL
+
+and:
+
+KEEPER_PRIVATE_KEY
+
+remain unset from tracked templates.
+
+Verify no testnet private key has been introduced.
+
+==================================================
+STEP 5 — LOCAL/TESTNET SEPARATION
+==================================================
+
+Verify:
+
+Local development:
+- Chain ID 73571
+- localhost/127.0.0.1
+- local-data
+- start-chain.sh
+- start-indexer.sh
+- DevDeploy
+
+Testnet:
+- Chain ID 77
+- external Chain 77 RPC
+- dedicated testnet templates
+
+Confirm these remain intentionally separated.
+
+Check that the PWCScan 73571 runtime fallback removed in Phase 4B-3A remains removed.
+
+==================================================
+STEP 6 — BUILD AND TYPECHECK
+==================================================
+
+Run existing validation only:
+
+- root typecheck
+- root build
+
+Use the known required build environment where necessary:
+
+PORT=5000
+BASE_PATH=/
+
+Do not start runtime services.
+
+Report:
+
+- typecheck result
+- build result
+- warnings
+- errors
+
+Do not modify source to fix failures.
+
+==================================================
+STEP 7 — TEST SUITE
+==================================================
+
+Determine the repository's normal unit/integration test commands.
+
+Run only tests that are safe and do not require:
+
+- production secrets
+- Chain 77 transactions
+- PostgreSQL mutation
+- Netcup access
+
+Do not run deployment scripts.
+
+Do not run broadcast tests.
+
+Report what was run and the results.
+
+==================================================
+STEP 8 — WORKFLOW SAFETY
+==================================================
+
+Verify `.replit` still contains:
+
+LOCAL DEVELOPMENT ONLY
+
+and that the local workflow commands remain:
+
+scripts/start-chain.sh
+scripts/start-indexer.sh
+
+Confirm no Chain 77 runtime workflow was introduced.
+
+Do not modify `.replit`.
+
+==================================================
+STEP 9 — MIGRATION-SPECIFIC FILES
+==================================================
+
+Verify the migration did not lose:
+
+- contracts
+- deployment scripts
+- testnet environment templates
+- indexer source
+- keeper source
+- PWCScan source
+- infrastructure definitions
+- tests
+- documentation
+
+Pay particular attention to:
+
+deploy/testnet/
+deploy/testnet/env/
+deploy/testnet/systemd/
+
+Report missing files if any.
+
+==================================================
+STEP 10 — PROJECT MEMORY
+==================================================
+
+Review recent `.agents/memory/` changes.
+
+Determine whether any newly added memory files contain:
+
+- secrets
+- private keys
+- credentials
+- stale production assumptions
+- instructions that contradict the current architecture
+
+Do not modify memory files.
+
+Report concerns only.
+
+==================================================
+STEP 11 — UNTRACKED FILES
+==================================================
+
+Identify all untracked files.
+
+In particular inspect the known user-provided handoff attachment:
+
+attached_assets/Pasted-Continue-PHASE-2-of-the-controlled-PrimeWave-Chain-migr_1788545642567.txt
+
+Determine whether it is:
+
+- required project content
+- migration metadata
+- harmless attachment
+- unnecessary artifact
+
+Do not delete it.
+
+==================================================
+STEP 12 — FINAL MIGRATION ASSESSMENT
+==================================================
+
+Classify:
+
+GREEN — MIGRATION INTEGRITY VERIFIED
+
+YELLOW — MIGRATION USABLE BUT CLEANUP REQUIRED
+
+RED — MIGRATION INTEGRITY COMPROMISED
+
+Use evidence.
+
+Do not "fix" anything automatically.
+
+==================================================
+FINAL REPORT
+==================================================
+
+Return:
+
+### Git checkpoint
+- current HEAD
+- branch
+- remote
+- working tree
+- post-checkpoint commits
+
+### Repository integrity
+
+### Secret safety
+
+### Testnet configuration
+
+### Local/testnet separation
+
+### Build/typecheck
+
+### Safe tests
+
+### Workflow safety
+
+### Migration-critical files
+
+### Project memory review
+
+### Untracked files
+
+### Issues requiring cleanup
+
+### Final migration status
+
+### Files modified
+
+Expected:
+
+"No tracked files modified."
+
+Confirm:
+
+- no secrets accessed
+- no private keys accessed
+- no database accessed
+- no blockchain transactions
+- no services started
+- no Netcup changes
+- no DNS changes
+- no firewall changes
+- no systemd changes
+- no files modified
+- no lockfiles modified
+- no commits
+- no pushes
+
+STOP after the report.
+
+End exactly with:
+
+"PHASE 5 COMPLETE — MIGRATION INTEGRITY AUDIT FINISHED, NO RUNTIME OR INFRASTRUCTURE CHANGED."
