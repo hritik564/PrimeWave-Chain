@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useState } from "react"
 import { Link, useLocation } from "wouter"
-import { Search, Menu, X, Sun, Moon, Settings, Database, Activity, RefreshCw } from "lucide-react"
+import { Search, Menu, Sun, Moon, Settings, Database, Activity, RefreshCw, ChevronDown, Check, Globe2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/settings"
 import { useStats } from "@/lib/api"
@@ -29,6 +29,114 @@ const NAV_LINKS = [
   { href: "/governance", label: "Governance" },
   { href: "/stats", label: "Stats" },
 ]
+
+const NETWORK_OPTIONS = [
+  {
+    id: "devnet",
+    label: "Devnet",
+    description: "Local development",
+    chainId: "73571",
+    tone: "blue",
+    configured: !import.meta.env.VITE_NETWORK_LABEL || import.meta.env.VITE_NETWORK_LABEL === "Devnet",
+  },
+  {
+    id: "testnet",
+    label: "Testnet",
+    description: "Chain 77 test environment",
+    chainId: "77",
+    tone: "orange",
+    configured: import.meta.env.VITE_NETWORK_LABEL === "Testnet" || Boolean(import.meta.env.VITE_TESTNET_INDEXER_API_URL),
+  },
+  {
+    id: "mainnet",
+    label: "Mainnet",
+    description: "Production network",
+    chainId: null,
+    tone: "green",
+    configured: Boolean(import.meta.env.VITE_MAINNET_INDEXER_API_URL),
+  },
+] as const
+
+type NetworkId = (typeof NETWORK_OPTIONS)[number]["id"]
+
+function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
+  const configuredLabel = import.meta.env.VITE_NETWORK_LABEL
+  const savedNetwork = typeof window !== "undefined" ? window.localStorage.getItem("pwcscan-network") : null
+  const initialNetwork = NETWORK_OPTIONS.some((network) => network.id === savedNetwork)
+    ? savedNetwork as NetworkId
+    : configuredLabel === "Testnet"
+      ? "testnet"
+      : "devnet"
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkId>(initialNetwork)
+  const currentNetwork = NETWORK_OPTIONS.find((network) => network.id === selectedNetwork) ?? NETWORK_OPTIONS[0]
+
+  const selectNetwork = (network: typeof NETWORK_OPTIONS[number]) => {
+    if (!network.configured) return
+    setSelectedNetwork(network.id)
+    window.localStorage.setItem("pwcscan-network", network.id)
+  }
+
+  const toneClasses = {
+    blue: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+    orange: "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300",
+    green: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  } as const
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size={compact ? "sm" : "default"}
+          className={cn(
+            "gap-2 border-dashed bg-background/80 font-semibold shadow-sm",
+            compact ? "h-9 w-full justify-between px-3" : "h-10 rounded-full px-3 sm:px-4"
+          )}
+          aria-label={`Switch network, currently ${currentNetwork.label}`}
+        >
+          <span className={cn("flex items-center gap-2 rounded-full border px-2 py-0.5", toneClasses[currentNetwork.tone])}>
+            <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+            <span>{currentNetwork.label}</span>
+          </span>
+          {!compact && currentNetwork.chainId && (
+            <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
+              Chain {currentNetwork.chainId}
+            </span>
+          )}
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Globe2 className="h-4 w-4 text-muted-foreground" />
+          Select network
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {NETWORK_OPTIONS.map((network) => (
+          <DropdownMenuItem
+            key={network.id}
+            disabled={!network.configured}
+            onSelect={() => selectNetwork(network)}
+            className="flex items-start gap-3 py-3"
+          >
+            <span className={cn("mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full", network.configured ? `bg-${network.tone}-500` : "bg-muted-foreground/40")} />
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="flex items-center justify-between gap-2 font-medium">
+                <span>{network.label}</span>
+                {selectedNetwork === network.id && <Check className="h-4 w-4 text-primary" />}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {network.configured
+                  ? network.chainId ? `${network.description} · Chain ${network.chainId}` : network.description
+                  : "Not configured in this preview"}
+              </span>
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 export function NavBar() {
   const [location, setLocation] = useLocation()
@@ -59,11 +167,6 @@ export function NavBar() {
             <span className="font-display font-bold text-xl hidden sm:inline-block tracking-tight text-foreground">
               PWCScan
             </span>
-            {import.meta.env.VITE_NETWORK_LABEL && (
-              <span className="hidden sm:inline-flex items-center rounded-full border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                {import.meta.env.VITE_NETWORK_LABEL}
-              </span>
-            )}
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -165,7 +268,61 @@ export function NavBar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="hidden sm:block">
+            <NetworkSwitcher />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hidden md:inline-flex h-9 w-9" aria-label="Open settings">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+              <div className="flex items-center justify-between px-2 py-1.5">
+                <span className="text-sm">Theme</span>
+                <div className="flex gap-1 bg-muted p-0.5 rounded-md">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("h-7 w-7 rounded-sm", theme === "light" && "bg-background shadow-sm")} 
+                    onClick={() => setTheme("light")}
+                  >
+                    <Sun className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("h-7 w-7 rounded-sm", theme === "dark" && "bg-background shadow-sm")}
+                    onClick={() => setTheme("dark")}
+                  >
+                    <Moon className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn("h-7 w-7 rounded-sm", theme === "system" && "bg-background shadow-sm")}
+                    onClick={() => setTheme("system")}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Preferences</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setAutoRefresh(!autoRefresh)} className="justify-between">
+                <span>Auto-refresh Data</span>
+                <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded", autoRefresh ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
+                  {autoRefresh ? "ON" : "OFF"}
+                </span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="sm:hidden">
+            <NetworkSwitcher compact />
+          </div>
           <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden h-9 w-9">
@@ -175,6 +332,9 @@ export function NavBar() {
             <DialogContent className="fixed inset-y-0 right-0 z-50 h-full w-3/4 max-w-sm rounded-none border-l sm:max-w-sm p-0 m-0 translate-x-0 translate-y-0 shadow-2xl flex flex-col slide-in-from-right data-[state=closed]:slide-out-to-right">
               <div className="p-4 border-b flex items-center justify-between bg-card">
                 <span className="font-display font-bold text-lg">PWCScan Menu</span>
+              </div>
+              <div className="p-4 border-b bg-muted/20">
+                <NetworkSwitcher compact />
               </div>
               <div className="p-4 border-b bg-muted/20">
                 <form onSubmit={handleSearch} className="relative">
