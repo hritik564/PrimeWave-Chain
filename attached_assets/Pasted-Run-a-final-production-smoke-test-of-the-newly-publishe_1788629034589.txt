@@ -1,0 +1,204 @@
+Run a final production smoke test of the newly published PrimeWave PWCScan Explorer.
+
+IMPORTANT:
+This is a VERIFICATION-ONLY task.
+
+Do NOT modify code, configuration, infrastructure, contracts, validators, RPCs, database schema, secrets, or deployment settings.
+Do NOT publish anything.
+Do NOT fix failures.
+Test the LIVE published production application and report what you observe.
+
+==================================================
+1. NETWORK SELECTOR
+==================================================
+
+Confirm the production network selector contains exactly:
+
+- Testnet
+- Mainnet
+
+Confirm Devnet is completely absent.
+
+==================================================
+2. TESTNET
+==================================================
+
+Select Testnet.
+
+Verify:
+
+- Chain ID is exactly 77.
+- Explorer connects to the existing Testnet backend.
+- `/indexer-api` is serving the Testnet indexer.
+- Live indexed data loads successfully.
+- No Chain ID mismatch occurs.
+- No Devnet/73571 endpoint is being used.
+- Latest/current block information loads correctly.
+
+==================================================
+3. MAINNET
+==================================================
+
+Select Mainnet.
+
+Verify:
+
+- Mainnet is explicitly unconfigured/unavailable.
+- No fake or placeholder blockchain data is displayed.
+- Mainnet does NOT fall back to Testnet.
+- Mainnet does NOT fall back to Devnet.
+- No production Mainnet RPC or indexer is contacted.
+
+==================================================
+4. DEVNET
+==================================================
+
+Verify:
+
+- Devnet is NOT exposed through the production network selector.
+- A direct production `/devnet` route does not expose Devnet.
+- It safely redirects/falls back to Testnet as designed.
+- No production Devnet RPC is configured.
+- No production Devnet indexer endpoint is configured.
+
+==================================================
+5. NETWORK ISOLATION
+==================================================
+
+Verify:
+
+- Testnet requests resolve only to Chain 77.
+- Mainnet has no fallback.
+- Devnet cannot inherit `/indexer-api`.
+- Chain ID mismatch protection remains enabled.
+- No cross-network data is displayed.
+
+==================================================
+6. SEARCH BAR — FULL USER-FACING TEST
+==================================================
+
+Test the actual PWCScan search bar on the LIVE published Testnet Explorer.
+
+Do not merely inspect the source code. Interact with the production UI.
+
+Verify:
+
+A. Search UI
+- Search bar is visible and usable.
+- Search input accepts text.
+- Search button/icon works if present.
+- Pressing Enter submits the search if that behavior is implemented.
+- No console/runtime error prevents submission.
+
+B. Valid block search
+- Search for a known valid Testnet block number from the currently indexed chain.
+- Confirm the search resolves to the correct block page/details.
+- Confirm the displayed block belongs to Chain 77/Testnet.
+
+C. Valid transaction search
+- Search for a known valid Testnet transaction hash from indexed Testnet data.
+- Confirm it resolves to the correct transaction page/details.
+- Confirm the transaction belongs to Chain 77/Testnet.
+
+D. Valid address search
+- Search for a known valid Testnet address.
+- Confirm it resolves to the correct address page/details if address lookup is supported by the current implementation.
+
+E. Invalid search
+- Enter a clearly invalid/random search value.
+- Confirm the UI handles it gracefully.
+- It must NOT crash, hang indefinitely, display unrelated data, or silently redirect to another network.
+- Confirm an appropriate "not found"/invalid-result state is shown if that is the implemented behavior.
+
+F. Search result routing
+- Confirm search results navigate to the correct PWCScan pages.
+- Confirm URLs/routes are correct.
+- Confirm browser navigation/back behavior does not switch networks unexpectedly.
+
+G. Network isolation during search
+- Perform the above searches while Testnet is selected.
+- Confirm search requests use the Testnet indexer/backend.
+- Confirm no search request falls back to Devnet Chain 73571.
+- Confirm no search request returns Mainnet data.
+- Confirm Chain ID validation remains effective.
+
+IMPORTANT:
+Use REAL indexed Testnet values discovered from the live Explorer/indexer for the valid block, transaction, and address tests. Do not invent hashes, block numbers, or addresses.
+
+If a particular search type is not supported by the current implementation, mark that specific test as NOT APPLICABLE rather than treating it as a failure, and explain why.
+
+==================================================
+7. BASIC EXPLORER FUNCTIONALITY
+==================================================
+
+On Testnet, verify the main Explorer loads normally, including:
+
+- Homepage
+- Current/latest block data
+- Transaction lookup
+- Address lookup
+- Block lookup
+- Search functionality
+- Network switching
+
+Also verify that navigating between Explorer pages does not unexpectedly change the selected network.
+
+==================================================
+8. DEPLOYMENT HEALTH
+==================================================
+
+Confirm:
+
+- Published application is serving successfully.
+- PWCScan production server is healthy.
+- Testnet indexer is responding.
+- `/indexer-api` responds correctly.
+- No obvious production runtime failure is present.
+
+Prefer read-only checks only.
+Do not restart, redeploy, rebuild, or modify anything.
+
+==================================================
+9. FINAL REPORT
+==================================================
+
+Provide a PASS/FAIL/NOT APPLICABLE table covering every section above.
+
+For every check include:
+
+- Test
+- Expected result
+- Observed result
+- PASS / FAIL / NOT APPLICABLE
+- Relevant route/endpoint where applicable
+- Chain ID observed where applicable
+
+For the Search Bar section specifically, report:
+
+- UI visibility/usability
+- Enter/button submission
+- Valid block search
+- Valid transaction search
+- Valid address search
+- Invalid search handling
+- Correct routing
+- Network isolation
+- Any console/runtime errors observed
+
+Use real Testnet values for the search tests and report which types of values were tested, but do not expose any private keys or secrets.
+
+Finish with exactly one of:
+
+OVERALL: PASS — Production Explorer smoke test passed.
+
+or
+
+OVERALL: FAIL — Production Explorer smoke test has failures requiring investigation.
+
+or, if only optional/unsupported checks are N/A but all applicable checks pass:
+
+OVERALL: PASS — All applicable production Explorer smoke tests passed.
+
+Do not publish.
+Do not modify anything.
+Do not fix failures.
