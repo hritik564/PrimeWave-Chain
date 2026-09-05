@@ -75,3 +75,6 @@ V8 (159.195.44.104) SSH resets frequently after heavy build (RAM/CPU load). Wait
 - Configure PWCScan block explorer to point to one of the public RPC endpoints
 - Set up TLS/HTTPS on RPC endpoints (currently bare HTTP)
 - Automate "kick" transaction in case validators restart and chain stalls (or configure subnet-evm to build empty blocks)
+
+## PWCScan Testnet endpoint finding
+- The Chain 77 RPC responds on the documented validator HTTP endpoints, but `api.testnet.primewave.xyz` currently resolves to an external landing/TLS endpoint rather than a live indexer API. PWCScan must not treat this as a syncing indexer.

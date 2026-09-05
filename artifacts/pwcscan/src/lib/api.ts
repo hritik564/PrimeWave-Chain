@@ -70,7 +70,10 @@ export async function apiRequest<T>(
     return data;
   } catch (err) {
     if (err instanceof ApiError) throw err;
-    throw new ApiError(500, err instanceof Error ? err.message : 'Network error');
+    throw new ApiError(
+      503,
+      `Unable to reach the ${network.label} indexer at ${base}. Check that the indexer endpoint and TLS configuration are available.`,
+    );
   }
 }
 
@@ -185,6 +188,10 @@ export function useStats(refetchInterval?: number) {
       ? (query) =>
           query.state.error instanceof NetworkDataMismatchError ? false : refetchInterval
       : false,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status === 503) return false;
+      return failureCount < 2;
+    },
   });
 }
 

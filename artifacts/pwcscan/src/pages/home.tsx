@@ -24,6 +24,11 @@ export default function Home() {
   const chainId = stats?.network.chainId ?? network.chainId
   const blocks = blocksRes?.data || []
   const txs = txsRes?.data || []
+  const syncLabel = statsLoading
+    ? '🔵 Loading...'
+    : stats?.network.isSynced
+      ? '🟢 Synced'
+      : '🟡 Syncing...'
 
   if (statsError) {
     return (
@@ -57,7 +62,7 @@ export default function Home() {
               Chain ID: {chainId ?? "Unavailable"}
             </Badge>
             <Badge variant="outline" className="bg-background/50 backdrop-blur text-primary border-primary/20">
-              {stats?.network.isSynced ? '🟢 Synced' : '🟡 Syncing...'}
+              {syncLabel}
             </Badge>
           </div>
         </div>
