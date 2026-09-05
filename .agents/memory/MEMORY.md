@@ -29,3 +29,4 @@
 - [Local PWCScan preview startup](local-pwcscan-preview.md) — Fresh previews need package-local Indexer dependencies; CLI deployment IDs may be table-formatted
 - [Replit Testnet Explorer migrations](primewave-replit-production-migrations.md) — Production C12 schema must arrive through Publish; indexer startup performs read-only preflight only
 - [PWCScan network isolation](pwcscan-network-isolation.md) — Local-only networks must be unavailable in production, never inherit another network’s same-origin indexer route
+- [PWCScan search tests](pwcscan-search-tests.md) — Search client tests must avoid importing Vite-bound network config under Node
