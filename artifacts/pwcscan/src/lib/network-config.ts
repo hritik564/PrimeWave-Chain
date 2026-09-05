@@ -162,7 +162,8 @@ export function isNetworkId(value: string | null | undefined): value is NetworkI
 }
 
 export function isNetworkAvailable(id: NetworkId): boolean {
-  return !IS_PRODUCTION_BUILD || id !== 'devnet';
+  if (!IS_PRODUCTION_BUILD) return true;
+  return id === 'testnet' || id === 'mainnet';
 }
 
 export function getNetwork(id: string): NetworkDefinition {

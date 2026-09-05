@@ -1,0 +1,96 @@
+Fix the final PWCScan production smoke-test failure.
+
+The LIVE production smoke test found exactly one issue:
+
+The Mainnet route works correctly and is explicitly unconfigured, but Mainnet is NOT exposed in the production network selector.
+
+Current production selector:
+- Testnet / Chain 77
+- Testnet
+
+Expected production selector:
+- Testnet / Chain 77
+- Mainnet
+
+IMPORTANT:
+Make ONLY the minimum frontend/network-selector change required to expose the already-configured Mainnet placeholder in the production selector.
+
+DO NOT publish automatically.
+
+DO NOT modify:
+- Testnet Chain ID 77
+- Testnet RPC
+- Testnet /indexer-api
+- Testnet indexer
+- PostgreSQL
+- RPC infrastructure
+- validators
+- contracts
+- blockchain/subnet IDs
+- Devnet production removal
+- Mainnet RPC configuration
+- Mainnet indexer configuration
+- search functionality
+- search API
+- network mismatch validation
+- network-scoped React Query cache keys
+- secrets/private keys
+- deployment infrastructure
+
+IMPORTANT MAINNET BEHAVIOR:
+
+Mainnet must be selectable in production, but it must remain explicitly unconfigured.
+
+When the user selects Mainnet:
+- Show the existing "Not configured" state.
+- Show the existing "No Mainnet data source is configured" message.
+- Do not show fake/placeholder blockchain data.
+- Do not contact a Testnet RPC.
+- Do not contact a Devnet endpoint.
+- Do not add any Mainnet RPC or indexer endpoint.
+- Do not create any fallback.
+
+DEVNET:
+
+Devnet must remain completely absent from the production selector.
+
+Do not reintroduce Devnet.
+
+TESTNET:
+
+Testnet must remain the default production network and must continue using Chain 77.
+
+Please inspect the existing network registry/configuration and selector filtering logic and identify why Mainnet is being filtered out while its route/state already exists.
+
+Make the smallest safe change necessary.
+
+Then validate:
+
+1. PWCScan TypeScript typecheck.
+2. PWCScan production build.
+3. Production selector configuration contains:
+   - Testnet
+   - Mainnet
+   - NOT Devnet
+4. Testnet remains Chain 77.
+5. Mainnet remains unconfigured.
+6. No Mainnet RPC/indexer is introduced.
+7. Devnet remains absent from production.
+8. Network isolation remains intact.
+9. Existing search functionality is untouched.
+10. `git diff --check`.
+
+Do NOT publish.
+
+At the end report:
+
+- Root cause of Mainnet being hidden.
+- Exact files changed.
+- Exact change made.
+- Validation results.
+- Confirmation Testnet Chain 77 was untouched.
+- Confirmation Devnet was not reintroduced.
+- Confirmation Mainnet remains unconfigured.
+- Confirmation no RPC/indexer was added for Mainnet.
+- Confirmation search functionality was untouched.
+- Confirmation no publish was performed.
