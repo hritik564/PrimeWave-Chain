@@ -34,8 +34,10 @@ import Governance from '@/pages/governance';
 import Stats from '@/pages/stats';
 import SearchResults from '@/pages/search';
 import NotFound from '@/pages/not-found';
+import SiteSuspended from '@/pages/site-suspended';
 
 const queryClient = new QueryClient();
+const PUBLIC_EXPLORER_SUSPENDED = true;
 
 function NetworkUnavailableState() {
   const { network } = useNetwork();
@@ -149,6 +151,10 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 }
 
 function App() {
+  if (PUBLIC_EXPLORER_SUSPENDED) {
+    return <SiteSuspended />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <SettingsProvider>
