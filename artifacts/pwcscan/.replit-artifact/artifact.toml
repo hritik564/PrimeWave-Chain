@@ -15,7 +15,7 @@ localPort = 19951
 BASE_PATH = "/"
 
 [services.development]
-run = "cd ../.. && bash scripts/start-local.sh && bash scripts/start-indexer-background.sh && pnpm --filter @workspace/pwcscan run dev"
+run = "cd ../.. && pnpm --filter @workspace/pwcscan run dev"
 
 [services.production]
 
