@@ -12,6 +12,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Pool } from 'pg';
+import { assertDevelopmentDatabaseSafety } from '../startup-safety';
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
@@ -135,6 +136,16 @@ if (require.main === module) {
   const dbUrl = process.env['INDEXER_DB_URL'];
   if (!dbUrl) {
     console.error('INDEXER_DB_URL env var required');
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Direct migrations are disabled in production; apply schema changes through Publish.');
+    process.exit(1);
+  }
+  try {
+    assertDevelopmentDatabaseSafety(process.env);
+  } catch (error) {
+    console.error(`[migrate] ${(error as Error).message}`);
     process.exit(1);
   }
   const pool = new Pool({ connectionString: dbUrl });

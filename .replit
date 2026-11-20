@@ -9,36 +9,7 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "LOCAL DEVELOPMENT ONLY"
-
-[[workflows.workflow]]
-name = "LOCAL DEVELOPMENT ONLY"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "PrimeWave Chain (LOCAL DEVELOPMENT ONLY)"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "PrimeWave Indexer (LOCAL DEVELOPMENT ONLY)"
-
-[[workflows.workflow]]
-name = "PrimeWave Chain (LOCAL DEVELOPMENT ONLY)"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "bash scripts/start-chain.sh"
-
-[[workflows.workflow]]
-name = "PrimeWave Indexer (LOCAL DEVELOPMENT ONLY)"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "bash scripts/start-indexer.sh"
+runButton = "artifacts/pwcscan: web"
 
 [agent]
 stack = "PNPM_WORKSPACE"

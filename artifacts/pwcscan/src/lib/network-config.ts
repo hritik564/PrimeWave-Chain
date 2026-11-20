@@ -76,7 +76,7 @@ const testnetIndexerApiUrl =
 export const IS_PRODUCTION_BUILD = import.meta.env.PROD;
 const devnetRpcUrl = IS_PRODUCTION_BUILD
   ? null
-  : envValue('VITE_DEVNET_RPC_URL') ?? 'http://127.0.0.1:9650';
+  : envValue('VITE_DEVNET_RPC_URL') ?? 'http://127.0.0.1:9656';
 const devnetIndexerApiUrl = IS_PRODUCTION_BUILD
   ? null
   : envValue('VITE_DEVNET_INDEXER_API_URL') ??

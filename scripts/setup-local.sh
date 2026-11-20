@@ -205,6 +205,12 @@ if [[ -d "$CLI_SUBNET_DIR" ]] && [[ -f "$CLI_SUBNET_DIR/sidecar.json" ]]; then
     log_ok "Blockchain configuration already exists: $CLI_SUBNET_DIR"
     log_info "Run 'bash scripts/reset-local.sh' to recreate from scratch."
 else
+    if [[ -e "$CLI_SUBNET_DIR/genesis.json" || -e "$CLI_SUBNET_DIR/sidecar.json" ]]; then
+        log_error "A partial local blockchain configuration already exists at $CLI_SUBNET_DIR."
+        log_error "Refusing to overwrite its genesis or identity metadata. Inspect it before proceeding."
+        exit 1
+    fi
+
     log_info "Creating blockchain config: $PRIMEWAVE_CHAIN_NAME"
     log_info "  Chain ID: $PRIMEWAVE_DEV_CHAIN_ID (DEV ONLY)"
     log_info "  Token:    $PRIMEWAVE_TOKEN_SYMBOL ($PRIMEWAVE_TOKEN_NAME)"
@@ -272,15 +278,8 @@ SIDECAR_EOF
     log_ok "Blockchain configuration created and verified."
 fi
 
-# ── Record setup state ────────────────────────────────────────────────────────
-cat > "$LOCAL_DATA_DIR/setup-complete.env" <<EOF
-SETUP_TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-AVALANCHEGO_VERSION_INSTALLED="$("$AVALANCHEGO_BIN" --version 2>&1 | head -1 | tr -d '\n')"
-AVALANCHE_CLI_VERSION_INSTALLED="$("$AVALANCHE_CLI_BIN" --version 2>&1 | head -1 | tr -d '\n')"
-PLATFORM="${OS_SUFFIX}/${ARCH_SUFFIX}"
-CHAIN_NAME="$PRIMEWAVE_CHAIN_NAME"
-CHAIN_ID="$PRIMEWAVE_DEV_CHAIN_ID"
-EOF
+# Setup completion metadata is written by start-local.sh only after the local
+# RPC has been verified to report the expected development Chain ID.
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 log_section "Setup Complete"

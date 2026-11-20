@@ -19,6 +19,11 @@ import { assertSchemaReady, runMigrations } from './db/migrate';
 import { RpcClient } from './rpc';
 import { IndexerEngine } from './indexer/engine';
 import { startApiServer } from './api/server';
+import {
+  assertDevelopmentDatabaseSafety,
+  assertRpcEndpointAllowed,
+  verifyRpcChainId,
+} from './startup-safety';
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -26,13 +31,29 @@ async function main(): Promise<void> {
   console.log('[main] PrimeWave Indexer starting');
   console.log(`[main] Chain: ${config.chainId}  RPC: ${config.rpcUrl}`);
 
-  // Initialise DB
+  const isProduction = process.env.NODE_ENV === 'production';
+  assertDevelopmentDatabaseSafety(process.env);
+  assertRpcEndpointAllowed(config.rpcUrl, process.env.NODE_ENV);
+
+  // Verify RPC identity before opening any database connection.
+  const rpc = new RpcClient({
+    url: config.rpcUrl,
+    maxRetries: config.maxRetries,
+    retryDelayMs: config.retryDelayMs,
+  });
+  await verifyRpcChainId(
+    () => rpc.chainId(),
+    config.chainId,
+    process.env.NODE_ENV,
+  );
+  console.log(`[main] Chain ID confirmed: ${config.chainId}`);
+
   const pool = createPool(config.dbUrl, config.dbPoolMin, config.dbPoolMax);
 
   // Development owns the existing idempotent migration runner. Replit
   // production PostgreSQL schema changes are applied during Publish, so
   // production startup performs a read-only preflight instead of issuing DDL.
-  if (process.env.NODE_ENV === 'production') {
+  if (isProduction) {
     console.log('[main] Verifying published production database schema...');
     await assertSchemaReady(pool);
     console.log('[main] Production database schema verified');
@@ -41,14 +62,6 @@ async function main(): Promise<void> {
     const migrated = await runMigrations(pool);
     console.log(`[main] Migrations complete (${migrated} applied)`);
   }
-
-  // Verify chain ID
-  const rpc       = new RpcClient({ url: config.rpcUrl, maxRetries: config.maxRetries, retryDelayMs: config.retryDelayMs });
-  const chainId   = await rpc.chainId();
-  if (chainId !== config.chainId) {
-    throw new Error(`Chain ID mismatch: config says ${config.chainId}, RPC says ${chainId}`);
-  }
-  console.log(`[main] Chain ID confirmed: ${chainId}`);
 
   // Start indexer + API
   const engine = new IndexerEngine(rpc, config);

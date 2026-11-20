@@ -30,6 +30,7 @@ import { handleValidatorEvent } from './validators';
 import { handleStakingEvent } from './staking';
 import { handleRewardEvent } from './rewards';
 import { handleFeeEvent, handleGovernanceEvent } from './fees';
+import { assertIndexedBlockMatchesRpc } from './chain-reset-safety';
 
 // ── Event routing ─────────────────────────────────────────────────────────────
 
@@ -287,10 +288,9 @@ export class IndexerEngine {
    *   • If the block no longer exists on-chain → definitive reset.
    *   • If the block exists but with a different hash → fork/reset at that height.
    *
-   * When a reset is detected, ALL chain-derived tables are truncated and
-   * sync_state is cleared so the engine re-indexes from genesis on the next
-   * poll cycle. This is safe for the dev chain (single-node, deterministic
-   * genesis) and produces a trustworthy isSynced flag.
+   * When the indexed block is missing or has a different hash, startup fails
+   * with an explicit maintenance-required error. No database rows are deleted
+   * automatically; RPC transport failures also fail closed without a purge.
    *
    * Intended invariant (C12):
    *   isSynced = (latestIndexed >= chainHead - confirmations)
@@ -316,70 +316,11 @@ export class IndexerEngine {
 
     if (lastIndexed < 0) return; // Never indexed anything — nothing to validate
 
-    // Compare the stored block hash against the RPC.
-    // AvalancheGo returns a JSON-RPC error ("cannot query unfinalized data") when
-    // eth_getBlockByNumber is called for a block that does not exist on the current
-    // chain. The RpcClient surfaces this as a thrown Error (non-retryable). We
-    // treat ANY error here as "block not present on current chain" — a definitive
-    // chain-reset indicator — because a genuine RPC transport failure would be
-    // transient and would have already retried maxRetries times before throwing.
-    let rpcBlock: { hash: string } | null = null;
-    let resetReason: string | null = null;
-
-    try {
-      rpcBlock = await this.rpc.getBlockByNumber(lastIndexed, false);
-    } catch (err) {
-      resetReason = `block ${lastIndexed} not found on RPC (${(err as Error).message})`;
-    }
-
-    if (!resetReason) {
-      const rpcHash = rpcBlock ? rpcBlock.hash.toLowerCase() : null;
-      if (rpcBlock === null) {
-        resetReason = `block ${lastIndexed} no longer exists on-chain (chain head is lower)`;
-      } else if (lastHash !== null && rpcHash !== null && lastHash !== rpcHash) {
-        resetReason = `block ${lastIndexed} hash mismatch — DB: ${lastHash} | RPC: ${rpcHash}`;
-      }
-    }
-
-    if (!resetReason) return; // Chain is consistent — nothing to do
-
-    console.warn(`[engine] CHAIN RESET DETECTED: ${resetReason}`);
-    console.warn('[engine] Purging stale chain data — will re-index from genesis.');
-
-    const purgeClient = await pool.connect();
-    try {
-      await purgeClient.query('BEGIN');
-      // Truncate all chain-derived tables. CASCADE handles FK dependencies
-      // (e.g. decoded_events → transaction_logs, receipts → transactions → blocks).
-      // schema_migrations is deliberately excluded.
-      await purgeClient.query(`
-        TRUNCATE TABLE
-          governance_events,
-          fee_distribution,
-          reward_events,
-          reward_vault_state,
-          staking_events,
-          staking_positions,
-          validator_events,
-          validators,
-          contracts,
-          addresses,
-          decoded_events,
-          transaction_logs,
-          transaction_receipts,
-          transactions,
-          blocks,
-          sync_state
-        RESTART IDENTITY CASCADE
-      `);
-      await purgeClient.query('COMMIT');
-      console.warn('[engine] Purge complete. Indexer will re-index from genesis.');
-    } catch (err) {
-      await purgeClient.query('ROLLBACK');
-      throw err;
-    } finally {
-      purgeClient.release();
-    }
+    await assertIndexedBlockMatchesRpc(
+      lastIndexed,
+      lastHash,
+      (number) => this.rpc.getBlockByNumber(number, false),
+    );
   }
 
   stop(): void {
