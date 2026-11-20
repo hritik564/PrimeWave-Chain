@@ -70,3 +70,6 @@ broadcast/
 .env.production
 *.pem
 *.key
+
+# Private recovery archives
+/recovery-backups/

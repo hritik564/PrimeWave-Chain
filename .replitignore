@@ -3,3 +3,6 @@
 
 # No need to store the pnpm store twice.
 .local
+
+# Private recovery archives are never part of a deployment.
+recovery-backups/

@@ -71,6 +71,13 @@ export default defineConfig({
     allowedHosts: true,
     fs: {
       strict: true,
+      deny: [
+        '.env',
+        '.env.*',
+        '*.{crt,pem}',
+        '**/.git/**',
+        '**/recovery-backups/**',
+      ],
     },
     proxy: {
       // Proxy /indexer-api/* → C12 indexer REST API at localhost:4000
