@@ -142,7 +142,9 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  treasury:=fixture.PublicManifest.AllocationAddresses["treasury"]
  var treasuryBeforeHex string;json.Unmarshal(call("eth_getBalance",[]interface{}{treasury,"latest"}),&treasuryBeforeHex)
  treasuryBefore,_:=new(big.Int).SetString(treasuryBeforeHex[2:],16)
- distribution,err:=types.SignTx(types.NewTransaction(1,feeAddress,big.NewInt(0),200000,big.NewInt(25000000000),crypto.Keccak256([]byte("distribute()"))[:4]),types.NewEIP155Signer(chainID),key);if err!=nil{t.Fatal(err)}
+ distributionData:=crypto.Keccak256([]byte("distribute()"))[:4]
+ call("eth_estimateGas",[]interface{}{map[string]interface{}{"from":sender.Hex(),"to":feeAddress.Hex(),"data":"0x"+hex.EncodeToString(distributionData),"gas":"0xf4240"}})
+ distribution,err:=types.SignTx(types.NewTransaction(1,feeAddress,big.NewInt(0),1000000,big.NewInt(25000000000),distributionData),types.NewEIP155Signer(chainID),key);if err!=nil{t.Fatal(err)}
  distributionRaw,_:=distribution.MarshalBinary();call("eth_sendRawTransaction",[]interface{}{"0x"+hex.EncodeToString(distributionRaw)})
  acceptNext()
  distributionReceipt:=call("eth_getTransactionReceipt",[]interface{}{distribution.Hash().Hex()});json.Unmarshal(distributionReceipt,&decoded)
