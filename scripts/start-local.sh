@@ -6,8 +6,7 @@
 #
 # What this script does:
 #   1. Verifies binaries are installed (AvalancheGo, Avalanche CLI, subnet-evm)
-#   2. On first run: deploys PrimeWave L1 via Avalanche CLI to populate P-Chain state
-#      (Known limitation: CLI v1.9.5 fails at "setup VM binary" — expected and handled)
+#   2. On first run: uses Avalanche CLI to create fresh local P-Chain/L1 state
 #   3. Configures the local cluster node for standalone operation with tracking
 #   4. Starts avalanchego as a background daemon
 #   5. Waits for node to become healthy (all chains + our L1)
@@ -17,15 +16,9 @@
 # Usage: bash scripts/start-local.sh
 # Stop:  bash scripts/stop-local.sh
 #
-# ARCHITECTURE NOTE (PW-C01):
-#   Avalanche CLI v1.9.5 (maintenance mode, Dec 2025) predates AvalancheGo v1.14.2
-#   (Mar 2026, rpcchainvm=45). The CLI's "setup VM binary" registry lookup is broken
-#   for "subnet-evm" in this combination. The workaround:
-#   - Run blockchain deploy to create ANR primary network + P-Chain records + local cluster
-#   - CLI fails at "setup VM binary" (expected; this is after all P-Chain work is done)
-#   - We then patch the local cluster node flags and start avalanchego directly
-#   - The subnet-evm plugin binary (shipped in AvalancheGo v1.14.2 release) handles the EVM
-#   See docs/PW-C01-LOCAL-DEVELOPMENT.md for full details.
+# The isolated demo uses a fresh CLI home mounted inside a user/mount namespace.
+# Any nonzero deploy result is treated as a failed bootstrap and preserved for
+# inspection; no "expected failure" is accepted as evidence of a complete L1.
 
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
@@ -138,8 +131,7 @@ if [[ -z "$NODE_DIR" ]]; then
 
     log_section "Phase 1: Initial Deploy (Creating L1)"
     log_info "This is the first run. Deploying blockchain to create P-Chain state..."
-    log_info "The Avalanche CLI will fail at 'setup VM binary' — this is EXPECTED."
-    log_info "All P-Chain work (subnet, blockchain, L1 conversion) completes before that step."
+    log_info "The CLI must complete all local P-Chain and L1 registration steps."
     echo ""
 
     # Ensure sidecar config exists
@@ -185,23 +177,13 @@ if [[ -z "$NODE_DIR" ]]; then
 
     kill $WATCHER_PID 2>/dev/null || true
 
-    # Check for expected failure vs unexpected failure
+    # Fail closed on every nonzero deployment result. A partial P-Chain
+    # transaction sequence is not an initialized EVM blockchain.
     if [[ $DEPLOY_EXIT -ne 0 ]]; then
-        if grep -q "setup VM binary" "$DEPLOY_LOG" 2>/dev/null; then
-            log_warn "Deploy exited at 'setup VM binary' (expected for CLI v1.9.5 + AvalancheGo v1.14.2)."
-            log_info "P-Chain state was created. Proceeding with manual node startup."
-        else
-            # Unexpected failure — check if it's the "already exists" interactive prompt failure
-            if grep -q "already exists" "$DEPLOY_LOG" 2>/dev/null; then
-                log_warn "Deploy encountered 'already exists' prompt. This may indicate stale state."
-                log_warn "Do not reset automatically. Preserve the network directory and inspect its state before recovery."
-                exit 1
-            else
-                log_error "Unexpected deploy failure (exit $DEPLOY_EXIT)."
-                log_error "Check: $DEPLOY_LOG"
-                exit 1
-            fi
-        fi
+        log_error "Local P-Chain/L1 deployment failed (exit $DEPLOY_EXIT)."
+        log_error "Partial runtime data is preserved; no retry or reset was attempted."
+        log_error "Inspect: $DEPLOY_LOG"
+        exit 1
     fi
 
     NODE_DIR=$(ls -d "$LOCAL_CLUSTER_DIR"/NodeID-* 2>/dev/null | head -1 || echo "")
@@ -293,6 +275,7 @@ import json, os, base64
 SUBNET_ID   = "$PRIMEWAVE_SUBNET_ID"
 BLOCKCHAIN_ID = "$PRIMEWAVE_BLOCKCHAIN_ID"
 flags_path  = "$FLAGS_JSON_PENDING"
+runtime_root = os.environ.get("PRIMEWAVE_ISOLATION_ROOT", "")
 
 with open(flags_path) as f:
     flags = json.load(f)
@@ -314,6 +297,40 @@ our_chain_config = {
         "debug", "debug-tracer", "debug-file-tracer", "debug-handler"
     ]
 }
+flags["http-host"] = "127.0.0.1"
+flags["staking-host"] = "127.0.0.1"
+flags["public-ip"] = "127.0.0.1"
+
+# In the isolated demo, reject any node data, key, plugin, config, or log path
+# that resolves outside the runtime or the sandboxed CLI-home mount aliases.
+if runtime_root:
+    allowed_roots = [
+        os.path.realpath(runtime_root),
+        os.path.realpath("/root"),
+        os.path.realpath("/home/runner/.avalanche-cli"),
+        os.path.realpath("/tmp"),
+    ]
+    path_flags = {
+        "data-dir", "db-dir", "log-dir", "plugin-dir", "chain-config-dir",
+        "staking-tls-cert-file", "staking-tls-key-file",
+        "staking-signer-key-file", "genesis-file", "config-file",
+    }
+    for key in ("staking-tls-key-file-content", "staking-signer-key-file-content"):
+        if flags.get(key):
+            raise SystemExit(f"refusing to expose key material through node argument {key}")
+    for key in path_flags:
+        value = flags.get(key)
+        if not value:
+            continue
+        if not isinstance(value, str) or not os.path.isabs(value):
+            raise SystemExit(f"isolated node path is not absolute: {key}")
+        resolved = os.path.realpath(value)
+        if not any(
+            os.path.commonpath((resolved, allowed)) == allowed
+            for allowed in allowed_roots
+        ):
+            raise SystemExit(f"isolated node path escapes runtime: {key}")
+
 chain_cfg_b64 = flags.get("chain-config-content", "")
 chain_cfg = json.loads(base64.b64decode(chain_cfg_b64).decode()) if chain_cfg_b64 else {}
 chain_cfg[BLOCKCHAIN_ID] = {
@@ -324,8 +341,10 @@ flags["chain-config-content"] = base64.b64encode(json.dumps(chain_cfg).encode())
 
 with open(flags_path, "w") as f:
     json.dump(flags, f, indent=2)
+os.chmod(flags_path, 0o600)
 print(f"Flags updated: track-subnets={SUBNET_ID}")
 print(f"  sybil-protection-enabled=False, partial-sync-primary-network=False")
+print("  http-host, staking-host, and public-ip bound to 127.0.0.1")
 PYEOF
 
 # Ensure subnet-evm plugin binary is in plugins dir
@@ -362,6 +381,13 @@ if [[ -n "$STALE_PID" ]]; then
         sleep 1
     done
     log_ok "Stale node stopped."
+fi
+
+# Refuse to start or resume an isolated demo whose fresh identifiers collide
+# with any documented or saved project blockchain/subnet identifier.
+if [[ -n "${PRIMEWAVE_ISOLATION_ROOT:-}" ]]; then
+    python3 "$REPO_ROOT/scripts/pw-demo-02/check-identifiers.py" \
+        "$PRIMEWAVE_SUBNET_ID" "$PRIMEWAVE_BLOCKCHAIN_ID"
 fi
 
 # Build startup command from the pending standalone flags; the existing
