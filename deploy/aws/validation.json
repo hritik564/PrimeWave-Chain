@@ -1,0 +1,31 @@
+{
+  "baseCommit": "11a02965ab3b585491318879bd1fc5471650aaad",
+  "python": {
+    "command": "python3 -m unittest discover -s tests -p 'test_*.py'",
+    "passed": 105,
+    "skipped": 2,
+    "failed": 0,
+    "skipReason": "Previously completed binary checks not repeated"
+  },
+  "ansible": {
+    "core": "2.19.4",
+    "awsCollection": "amazon.aws12.0.0",
+    "awsPlaybookSyntax": "PASS with synthetic SSM inventory",
+    "netcupPlaybookSyntax": "PASS",
+    "ssmConnectionPluginDocumentationLoad": "PASS",
+    "ssmInventoryAndSystemdTemplateRender": "PASS including mount/UUID guard; starts/key creation defaultfalse",
+    "remoteConnectionsOpened": 0
+  },
+  "bashSyntax": "PASS identity builder and recovery helper",
+  "secretsReview": "No private key blocks, literal credentials or runtime/database/generated credential files in changed source",
+  "priorSolidityResult": "767 passed at11a02965; no Solidity change and no redundant rerun",
+  "notExecuted": [
+    "AWS account/host API collection",
+    "SSM session",
+    "instance/resource launch",
+    "identity/key generation",
+    "public-network transaction",
+    "mainnet or PWUSD deployment"
+  ],
+  "currentReadiness": "Placeholder manifest intentionally BLOCKED; host/runtime readiness requires real owner-supplied evidence"
+}

@@ -1,0 +1,294 @@
+{
+  "schema": "primewave-aws-deployment-v1",
+  "provider": "aws",
+  "region": "ap-south-1",
+  "accountId": null,
+  "operatorProfile": null,
+  "expectedValidators": 2,
+  "pilotRiskAccepted": true,
+  "allocationPolicy": "C00",
+  "nativeSupplyPW": 100000000,
+  "nativeMinterEnabled": false,
+  "feeSplitBps": {
+    "validators": 7000,
+    "treasury": 2000,
+    "burn": 1000
+  },
+  "pwusdDeploymentApproved": false,
+  "target": {
+    "instanceType": "m6a.xlarge",
+    "os": "Ubuntu",
+    "osVersion": "24.04",
+    "architecture": "x86_64",
+    "dataVolumeGiB": 150,
+    "volumeType": "gp3",
+    "encrypted": true,
+    "deleteOnTermination": false,
+    "publicP2pTcpPort": 9651,
+    "administration": "ssm",
+    "publicSsh": false,
+    "publicValidatorRpc": false,
+    "trafficProfile": "under-10-tps-pruned",
+    "minimumFreeGiB": 100,
+    "minimumReadIops": 2700,
+    "maximumReadLatencyMs": 10,
+    "benchmark": "read-only4KiB randread,libaio,QD32,10s;90% of3000 gp3 baseline is project acceptance floor, not an AWS guarantee"
+  },
+  "automation": {
+    "collection": "amazon.aws:12.0.0",
+    "ssmTransferBucket": null,
+    "ssmKmsKeyArn": null,
+    "transferBucketReviewed": false,
+    "identityToolBinary": null,
+    "provisionApproved": false
+  },
+  "operations": {
+    "offHostRecoveryVerified": false,
+    "recoveryEvidenceSha256": null,
+    "alertDestination": null,
+    "monitoringApproved": false,
+    "storageGrowthPlanApproved": false,
+    "sessionAuditApproved": false,
+    "rootVolumePlanApproved": false
+  },
+  "hosts": [
+    {
+      "name": "validator-1",
+      "instanceId": null,
+      "region": "ap-south-1",
+      "availabilityZone": null,
+      "privateIp": null,
+      "publicIp": null,
+      "privateEndpoint": {
+        "rpcBind": "127.0.0.1",
+        "rpcPort": 9650,
+        "ssmTargetInstanceId": null,
+        "operatorTunnelPort": null
+      },
+      "publicP2pEndpoint": null,
+      "dataVolumeId": null,
+      "filesystemUuid": null,
+      "persistentMount": null,
+      "benchmarkFile": null,
+      "rootVolumeId": null,
+      "securityGroupIds": [],
+      "instanceProfileArn": null,
+      "dataLifecycle": null
+    },
+    {
+      "name": "validator-2",
+      "instanceId": null,
+      "region": "ap-south-1",
+      "availabilityZone": null,
+      "privateIp": null,
+      "publicIp": null,
+      "privateEndpoint": {
+        "rpcBind": "127.0.0.1",
+        "rpcPort": 9650,
+        "ssmTargetInstanceId": null,
+        "operatorTunnelPort": null
+      },
+      "publicP2pEndpoint": null,
+      "dataVolumeId": null,
+      "filesystemUuid": null,
+      "persistentMount": null,
+      "benchmarkFile": null,
+      "rootVolumeId": null,
+      "securityGroupIds": [],
+      "instanceProfileArn": null,
+      "dataLifecycle": null
+    }
+  ],
+  "environments": {
+    "fuji": {
+      "avalancheNetworkId": 5,
+      "purpose": "fuji-rehearsal",
+      "evmChainId": null,
+      "chainIdCandidate": null,
+      "chainIdApproved": false,
+      "registryEvidence": null,
+      "genesisSha256": null,
+      "genesisApproved": false,
+      "genesisPublic": {
+        "publicAddressesReviewed": false,
+        "custodyProposalApproved": false,
+        "allocationAddresses": {
+          "liquidity": null,
+          "treasury": null,
+          "team": null,
+          "rewards": null,
+          "presale1": null,
+          "presale2": null,
+          "presale3": null
+        },
+        "contracts": {
+          "timelock": null,
+          "emergency": null,
+          "feeVault": null,
+          "feeDistributor": null,
+          "registry": null,
+          "rewardVault": null
+        },
+        "managerAddress": null,
+        "managerPredeploys": {},
+        "governanceProposer": null,
+        "emergencySigners": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "genesisTimestamp": null
+      },
+      "managerProxy": null,
+      "managerImplementation": null,
+      "managerLibrary": null,
+      "proxyAdmin": null,
+      "managerArtifactSha256": null,
+      "managerBootstrapReviewed": false,
+      "managerInitializationReviewed": false,
+      "genesisForksReviewed": false,
+      "signerKeystoreAlias": null,
+      "pChainFundingAddress": null,
+      "pChainBudgetAVAX": null,
+      "validatorBalanceAVAX": null,
+      "pwGasSourceRole": null,
+      "signatureAggregatorUrl": null,
+      "subnetId": null,
+      "blockchainId": null,
+      "vmId": null,
+      "identities": {
+        "validator-1": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        },
+        "validator-2": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        }
+      },
+      "approvals": {
+        "identityCreation": false,
+        "hostStart": false,
+        "funding": false,
+        "pChainTransactions": false,
+        "evmInitialization": false,
+        "nativeTransfers": false,
+        "feeAccounting": false,
+        "recoveryDrill": false,
+        "launch": false
+      },
+      "rehearsalPassed": false,
+      "rehearsalEvidenceSha256": null,
+      "nativeTransfer": {
+        "sender": null,
+        "recipient": null,
+        "amountWei": null,
+        "maximumGasCostWei": null
+      },
+      "genesisBlockHash": null
+    },
+    "mainnet": {
+      "avalancheNetworkId": 1,
+      "purpose": "mainnet-pilot",
+      "evmChainId": null,
+      "chainIdCandidate": 73571001,
+      "chainIdApproved": false,
+      "registryEvidence": null,
+      "genesisSha256": null,
+      "genesisApproved": false,
+      "genesisPublic": {
+        "publicAddressesReviewed": false,
+        "custodyProposalApproved": false,
+        "allocationAddresses": {
+          "liquidity": null,
+          "treasury": null,
+          "team": null,
+          "rewards": null,
+          "presale1": null,
+          "presale2": null,
+          "presale3": null
+        },
+        "contracts": {
+          "timelock": null,
+          "emergency": null,
+          "feeVault": null,
+          "feeDistributor": null,
+          "registry": null,
+          "rewardVault": null
+        },
+        "managerAddress": null,
+        "managerPredeploys": {},
+        "governanceProposer": null,
+        "emergencySigners": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "genesisTimestamp": null
+      },
+      "managerProxy": null,
+      "managerImplementation": null,
+      "managerLibrary": null,
+      "proxyAdmin": null,
+      "managerArtifactSha256": null,
+      "managerBootstrapReviewed": false,
+      "managerInitializationReviewed": false,
+      "genesisForksReviewed": false,
+      "signerKeystoreAlias": null,
+      "pChainFundingAddress": null,
+      "pChainBudgetAVAX": null,
+      "validatorBalanceAVAX": null,
+      "pwGasSourceRole": null,
+      "signatureAggregatorUrl": null,
+      "subnetId": null,
+      "blockchainId": null,
+      "vmId": null,
+      "identities": {
+        "validator-1": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        },
+        "validator-2": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        }
+      },
+      "approvals": {
+        "identityCreation": false,
+        "hostStart": false,
+        "funding": false,
+        "pChainTransactions": false,
+        "evmInitialization": false,
+        "nativeTransfers": false,
+        "feeAccounting": false,
+        "recoveryDrill": false,
+        "launch": false
+      },
+      "rehearsalPassed": false,
+      "rehearsalEvidenceSha256": null,
+      "nativeTransfer": {
+        "sender": null,
+        "recipient": null,
+        "amountWei": null,
+        "maximumGasCostWei": null
+      },
+      "genesisBlockHash": null
+    }
+  },
+  "serviceIdentity": {
+    "uid": null,
+    "gid": null
+  }
+}

@@ -1,3 +1,5 @@
+> AWS Mumbai is now the owner-selected initial production host. The authoritative deployment inputs and gates are `deploy/aws/deployment.review.json` and `deploy/aws/EXECUTION.md`; the Netcup host proposal below is deferred migration material. No launch or funding approval is implied.
+
 > Current status supersedes historical notes below: owner selected C00 and the two-validator pilot. See `config/mainnet/isolated-vm-evidence.json` and `offline-validation.json` for executed checks. RewardVault constructor-state genesis is proposed; legacy `DeployProduction.s.sol` now refuses before key access. Public custody addresses, final genesis/Chain IDs, Fuji identities/funding and broadcast authorization remain gated.
 
 # Production branch implementation status — 2026-11-21

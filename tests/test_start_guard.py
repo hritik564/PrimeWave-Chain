@@ -1,4 +1,5 @@
 import hashlib
+import json
 import importlib.util
 from pathlib import Path
 import tempfile
@@ -61,3 +62,33 @@ class StartGuardTests(unittest.TestCase):
     def test_public_rpc_refused(self):
         self.config['http-host']='0.0.0.0'
         with self.assertRaisesRegex(ValueError,'Private'):self.check()
+
+    def test_retained_ebs_uuid_and_serial_verified_without_key_reads(self):
+        binding={'mount':str(self.root),'filesystemUuid':'PUBLIC-UUID','volumeId':'vol-123'}
+        found={'filesystems':[{'target':str(self.root),'uuid':'PUBLIC-UUID','source':'/dev/nvme1n1','options':'rw,relatime'}]}
+        with patch.object(guard.subprocess,'check_output',side_effect=[json.dumps(found),'vol123\n']):
+            guard.storage_check(binding,self.root/'runtime')
+        found['filesystems'][0]['target']='/'
+        with patch.object(guard.subprocess,'check_output',return_value=json.dumps(found)):
+            with self.assertRaisesRegex(ValueError,'fallback'):guard.storage_check(binding,self.root/'runtime')
+
+    def test_wrong_ebs_serial_refused(self):
+        binding={'mount':str(self.root),'filesystemUuid':'PUBLIC-UUID','volumeId':'vol-123'}
+        found={'filesystems':[{'target':str(self.root),'uuid':'PUBLIC-UUID','source':'/dev/nvme1n1','options':'rw'}]}
+        with patch.object(guard.subprocess,'check_output',side_effect=[json.dumps(found),'volOTHER\n']):
+            with self.assertRaisesRegex(ValueError,'serial'):guard.storage_check(binding,self.root/'runtime')
+
+    def test_replacement_never_falls_back_to_empty_database(self):
+        runtime=self.root/'runtime';(runtime/'db').mkdir(parents=True)
+        binding={'mount':str(self.root),'filesystemUuid':'UUID','volumeId':'vol-123','requireExistingDatabase':True}
+        found={'filesystems':[{'target':str(self.root),'uuid':'UUID','source':'/dev/nvme1n1','options':'rw'}]}
+        with patch.object(guard.subprocess,'check_output',side_effect=[json.dumps(found),'vol123']):
+            with self.assertRaisesRegex(ValueError,'database missing/empty'):guard.storage_check(binding,runtime)
+        self.assertEqual(list((runtime/'db').iterdir()),[])
+
+    def test_replacement_cannot_rotate_public_identity_silently(self):
+        binding={'mount':str(self.root),'filesystemUuid':'UUID','volumeId':'vol-123','expectedPublicIdentity':dict(self.identity)}
+        found={'filesystems':[{'target':str(self.root),'uuid':'UUID','source':'/dev/nvme1n1','options':'rw'}]}
+        changed=dict(self.identity,nodeId='NodeID-WRONG')
+        with patch.object(guard.subprocess,'check_output',side_effect=[json.dumps(found),'vol123']):
+            with self.assertRaisesRegex(ValueError,'validator identity'):guard.storage_check(binding,self.root/'runtime',changed)

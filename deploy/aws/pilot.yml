@@ -1,0 +1,3 @@
+---
+# Uses amazon.aws.aws_ssm; never opens an SSH port or creates an EC2 instance.
+- import_playbook: ../common/validator.yml

@@ -5,6 +5,27 @@ import hashlib
 import json
 from pathlib import Path
 import stat
+import subprocess
+
+
+def storage_check(binding,root,identity=None):
+    """Verify the retained EBS mount, including NVMe serial; never inspect DB/key contents."""
+    mount=regular(binding['mount'],True)
+    if not root.is_relative_to(mount) or root==mount:
+        raise ValueError('Runtime must remain below the retained mount')
+    raw=subprocess.check_output(['findmnt','-J','-T',str(mount),'-o','TARGET,UUID,SOURCE,FSTYPE,OPTIONS'],text=True,timeout=10)
+    found=json.loads(raw)['filesystems'][0]
+    if found['target']!=str(mount) or found.get('uuid')!=binding['filesystemUuid'] or 'rw' not in found['options'].split(','):
+        raise ValueError('Retained filesystem UUID/mount mismatch; root-disk fallback refused')
+    serials=subprocess.check_output(['lsblk','-s','-n','-o','SERIAL',found['source']],text=True,timeout=10).split()
+    if binding['volumeId'].replace('-','') not in [v.replace('-','') for v in serials]:
+        raise ValueError('Mounted EBS volume serial mismatch')
+    if binding.get('requireExistingDatabase') is True and (not (root/'db').is_dir() or not any((root/'db').iterdir())):
+        raise ValueError('Retained database missing/empty; fresh replacement refused')
+    if 'expectedPublicIdentity' in binding:
+        expected=binding['expectedPublicIdentity']
+        if not identity or any(not expected.get(k) or identity.get(k)!=expected[k] for k in ('nodeId','blsPublicKey','proofOfPossession','stakingCertificateSha256')):
+            raise ValueError('Reviewed public validator identity missing or changed')
 
 
 def regular(path,directory=False):
@@ -52,5 +73,9 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('config','identity','lock','binary'):p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--purpose',required=True)
+    p.add_argument('--storage-binding',type=Path)
     a=p.parse_args()
-    print(json.dumps(check(json.loads(a.config.read_text()),json.loads(a.identity.read_text()),json.loads(a.lock.read_text()),a.binary,a.purpose)))
+    config=json.loads(a.config.read_text())
+    identity=json.loads(a.identity.read_text())
+    if a.storage_binding:storage_check(json.loads(a.storage_binding.read_text()),Path(config['data-dir']),identity)
+    print(json.dumps(check(config,identity,json.loads(a.lock.read_text()),a.binary,a.purpose)))

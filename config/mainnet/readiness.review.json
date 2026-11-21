@@ -24,5 +24,8 @@
   "launchMode": "PoA phase1 \u2014 preserved C00 decision",
   "validatorCount": 2,
   "pilotOnly": true,
-  "longRunningPublicTestnet": false
+  "longRunningPublicTestnet": false,
+  "initialProductionProvider": "aws",
+  "initialProductionDeploymentManifest": "../../deploy/aws/deployment.review.json",
+  "deferredMigrationProvider": "netcup"
 }

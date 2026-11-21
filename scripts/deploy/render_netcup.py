@@ -37,6 +37,7 @@ def render(settings):
         raise ValueError('Explicit non-root SSH administrator required')
     network='fuji' if settings['purpose']=='fuji-rehearsal' else 'mainnet'
     variables=dict(purpose=settings['purpose'],public_network=network,provision_approved=True,
+        admin_transport='ssh',storage_mount_required=False,disk_read_iodepth=1,disk_read_ioengine='psync',disk_min_read_iops=3000,
         admin_user=settings['adminUser'],admin_public_keys=settings['adminPublicKeys'],admin_ssh_cidrs=settings['adminSshCidrs'],
         create_identities=settings.get('identityCreationApproved') is True,
         start_node=settings.get('hostStartApproved') is True,

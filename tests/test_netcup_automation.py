@@ -58,7 +58,7 @@ class NetcupAutomationTests(unittest.TestCase):
         with self.assertRaises(ValueError):netcup.render(self.s)
 
     def test_automation_uses_private_rpc_and_persistent_identity(self):
-        source=(ROOT/'deploy/netcup/pilot.yml').read_text()
+        source=(ROOT/'deploy/common/validator.yml').read_text()
         for marker in ['"http-host": "127.0.0.1"','"staking-port": 9651','"partial-sync-primary-network": true',
                        'staking/public-identity.json','Refusing to adopt any existing unmanaged runtime','offhost_recovery_confirmed']:
             self.assertIn(marker,source)

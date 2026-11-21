@@ -113,7 +113,7 @@ def run_public(command):
     return result.stdout
 
 
-def collect(path, ssh_policy=None, read_test_file=None):
+def collect(path, ssh_policy=None, read_test_file=None, queued_reads=False):
     """Local read-only public facts; no secrets, DB reads or disk write benchmark."""
     disk = shutil.disk_usage(path)
     ram = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
@@ -153,7 +153,7 @@ def collect(path, ssh_policy=None, read_test_file=None):
         if read_test_file.suffix != '.benchmark' or read_test_file.is_symlink() or read_test_file.stat().st_size < 256*2**20:
             raise ValueError('Dedicated existing >=256MiB .benchmark file required')
         output = run_public(['fio','--name=primewave-read-only','--readonly','--allow_file_create=0',
-            '--rw=randread','--bs=4k','--iodepth=1','--ioengine=psync','--direct=1',
+            '--rw=randread','--bs=4k','--iodepth='+('32' if queued_reads else '1'),'--ioengine='+('libaio' if queued_reads else 'psync'),'--direct=1',
             '--runtime=10','--time_based','--size=256m','--output-format=json','--filename='+str(read_test_file)])
         read = json.loads(output)['jobs'][0]['read']
         facts['diskReadIops'] = read['iops']
