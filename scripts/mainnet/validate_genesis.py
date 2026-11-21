@@ -8,7 +8,7 @@ from chain_id import approved
 SUPPLY = 100_000_000*10**18
 
 
-def validate(genesis, chain_id, policy, addresses):
+def validate(genesis, chain_id, policy, addresses, predeploys=None):
     config = genesis['config']
     if config.get('chainId') != chain_id:
         raise ValueError('Genesis/approved Chain ID mismatch')
@@ -26,13 +26,28 @@ def validate(genesis, chain_id, policy, addresses):
         not re.fullmatch(r'0x[0-9a-fA-F]{40}',a) or int(a,16)==0 for a in values):
         raise ValueError('Unique nonzero production allocation addresses required')
     alloc = genesis['alloc']
-    if {a.lower().removeprefix('0x') for a in alloc} != {a.lower()[2:] for a in values}:
-        raise ValueError('Unapproved allocation entries')
+    predeploys = predeploys or {}
+    if any(not re.fullmatch(r'(?:0x)?[0-9a-fA-F]{40}',a) for a in (*alloc,*predeploys)):
+        raise ValueError('Genesis/predeploy addresses must be20-byte hex addresses')
     normalized = {a.lower().removeprefix('0x'):v for a,v in alloc.items()}
+    owners = {a.lower()[2:] for a in values}
+    approved_predeploys = {a.lower().removeprefix('0x'):digest for a,digest in predeploys.items()}
+    if len(normalized) != len(alloc) or set(normalized) != owners | set(approved_predeploys):
+        raise ValueError('Unapproved or duplicate allocation/predeploy entries')
+    import hashlib
+    for address,entry in normalized.items():
+        if address not in owners and int(entry.get('balance','0x0'),0) != 0:
+            raise ValueError('Predeploy creates an unapproved token allocation')
+        if entry.get('code') and not re.fullmatch(r'0x(?:[0-9a-fA-F]{2})+',entry['code']):
+            raise ValueError('Predeploy bytecode must be nonempty hex bytes')
+        if entry.get('code') or entry.get('storage') or address in approved_predeploys:
+            digest=hashlib.sha256(json.dumps(entry,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+            if approved_predeploys.get(address) != digest:
+                raise ValueError('Predeploy code/storage requires exact owner-approved allocation digest')
     for role,amount in policy.items():
         if int(normalized[addresses[role].lower()[2:]]['balance'],0) != amount*10**18:
             raise ValueError('Genesis allocation differs from approved policy')
-    if sum(int(v['balance'],0) for v in alloc.values()) != SUPPLY:
+    if sum(int(v.get('balance','0x0'),0) for v in alloc.values()) != SUPPLY:
         raise ValueError('Genesis total differs from locked100M PW')
     reward = config['rewardManagerConfig']['initialRewardConfig']['rewardAddress']
     if not re.fullmatch(r'0x[0-9a-fA-F]{40}',reward) or int(reward,16)==0:
@@ -55,4 +70,4 @@ if __name__ == '__main__':
     if decision.get('ownerApproved') is not True:
         raise SystemExit('Allocation decision requires owner approval')
     chain=approved(json.loads(a.chain_approval.read_text()),a.registry)
-    print(json.dumps(validate(json.loads(a.genesis.read_text()),chain,decision['allocationsPW'],decision['addresses']),indent=2))
+    print(json.dumps(validate(json.loads(a.genesis.read_text()),chain,decision['allocationsPW'],decision['addresses'],decision.get('predeploys')),indent=2))

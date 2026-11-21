@@ -16,5 +16,16 @@
     "RegisterL1ValidatorTx for subsequent additions only"
   ],
   "broadcastApproved": false,
-  "compatibilityRehearsed": false
+  "compatibilityRehearsed": false,
+  "ownerApproved": false,
+  "evmChainId": null,
+  "productionChainId": null,
+  "validatorRpcEndpoints": [],
+  "fujiKeystoreAlias": null,
+  "validatorBalanceAVAX": null,
+  "toolRepository": "https://github.com/ava-labs/avalanche-deploy",
+  "toolCommit": "5989dd8a057f0c074b7fd6a656fb401b0222951c",
+  "managerInitializationReviewed": false,
+  "genesisForksReviewed": false,
+  "fundingPlanReviewed": false
 }

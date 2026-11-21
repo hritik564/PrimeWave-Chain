@@ -5,8 +5,8 @@ pw-demo-04. No node/L1 was started, no P-Chain transaction sent and no key read.
 
 - `config/mainnet/binaries.lock.json`: official stable v1.15.1 pair, protocol46.
   Linux AMD64 archives and extracted ELF hashes verified. Native macOS binaries
-  executed only with `--version`, confirming matching commit/protocol. Linux
-  execution and a real VM handshake remain untested on this macOS host.
+  executed only with `--version`, confirming matching commit/protocol. Linux execution is now verified by the Actions run below; a real VM handshake
+  and genesis rehearsal remain untested.
   v1.15.3 uses47 and is newer/optional; no upstream LTS guarantee is asserted.
 - `chain-id.review.json`: candidate73571001, no collision in the downloaded
   ethereum-lists registry snapshot. Exact approval, snapshot digest and24h
@@ -70,3 +70,54 @@ none are funded or accessed here. Review inputs remain nondeployable.
 Official evidence: [v1.15.1](https://github.com/ava-labs/avalanchego/releases/tag/v1.15.1),
 [release API](https://api.github.com/repos/ava-labs/avalanchego/releases/tags/v1.15.1),
 [deployment flow](https://build.avax.network/docs/tooling/avalanche-deploy/deploy-l1).
+
+## Linux execution result and Fuji handoff
+
+[GitHub Actions run44917244445](https://github.com/hritik564/PrimeWave-Chain/actions/runs/44917244445)
+passed on Ubuntu24.04.5 x86_64. It checked out exact source88f3e59, verified both
+Linux archives, and executed each binary with `--version`. Both reported1.15.1,
+commitfdb2c1b9b02ef357b5867d5ababb6acc83837a01 and protocol46. This clears executable
+version compatibility only; no VM handshake or genesis execution was performed.
+Evidence is retained in `config/mainnet/binary-verification.linux-actions.json`.
+
+The public-input Fuji bundle preparer is ready for approved manifests:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/mainnet/fuji_rehearsal.py \
+  --manager /reviewed/fuji-manager.json \
+  --public-identities /reviewed/fuji-identities.json \
+  --prepare-bundle \
+  --genesis /reviewed/fuji-genesis.json \
+  --allocation-decision /reviewed/fuji-allocation.json \
+  --chain-approval /reviewed/fuji-chain-id.json \
+  --registry /reviewed/chains.json
+```
+
+These paths are operator inputs, not assumed existing files. The command does
+not read keys, contact nodes, execute create-l1 or broadcast. It validates distinct
+approved Fuji/production Chain IDs, current registry evidence, fresh public
+identities, exact100M allocations, manager predeploy code/storage digests, private
+RPC tunnels, an explicitly named Fuji keystore and explicit validator fee budget.
+Manager artifact, initialization, fork and funding reviews must be approved.
+
+The emitted argv targets official `ava-labs/avalanche-deploy` commit
+`5989dd8a057f0c074b7fd6a656fb401b0222951c`, `tools/create-l1/create-l1`, using
+`--network=fuji`, explicit genesis and the reviewed genesis proxy. This mode does
+not add `--deploy-validator-manager`, raw keys or paid signature services. Review/
+build the pinned tool before the authorized ceremony. Its upstream input
+`--validators` accepts full loopback endpoint URLs, allowing SSH tunnels such as
+127.0.0.1:19650 and127.0.0.1:29650 while each node keeps9650 private. Operators
+establish tunnels using their own approved SSH access; no credentials belong here.
+
+After an explicitly approved create/convert ceremony, collect all receipts and
+conversion data, initialize the reviewed manager implementation and validator set
+through the owner-controlled Fuji signer, then verify manager ownership,
+registration, four Ethereum methods and persistence. Tool exit success alone is
+not success of that entire rehearsal. Do not reuse the tool to retry a partial
+P-Chain ceremony; inspect transaction status and saved IDs first.
+
+Remaining explicit authorizations: allocation table and custody/gas source;
+production and distinct Fuji Chain IDs; governance/public addresses and manager
+initialization; fresh Fuji identity creation/host starts; faucet/test-AVAX funding
+and fee budget; P-Chain/EVM rehearsal transactions. Mainnet, real funds and PWUSD
+remain outside this rehearsal authorization.
