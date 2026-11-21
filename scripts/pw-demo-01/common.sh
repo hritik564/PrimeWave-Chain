@@ -15,6 +15,7 @@ LOG_DIR="$RUNTIME_ROOT/logs"
 export HOME="$CLI_HOME"
 export LOCAL_BIN_DIR="$WORKSPACE_ROOT/local-bin"
 export CHAIN_DIR="$CONFIG_DIR"
+export CONFIG_DIR
 export LOCAL_DATA_DIR
 
 source "$WORKSPACE_ROOT/scripts/_common.sh"

@@ -30,3 +30,4 @@
 - [Replit Testnet Explorer migrations](primewave-replit-production-migrations.md) — Production C12 schema must arrive through Publish; indexer startup performs read-only preflight only
 - [PWCScan network isolation](pwcscan-network-isolation.md) — Local-only networks must be unavailable in production, never inherit another network’s same-origin indexer route
 - [PWCScan search tests](pwcscan-search-tests.md) — Search client tests must avoid importing Vite-bound network config under Node
+- [Avalanche CLI home isolation](avalanche-cli-home-isolation.md) — CLI v1.9.5 ignores HOME for subnet/VM state; validate OS-home writes before isolated runs

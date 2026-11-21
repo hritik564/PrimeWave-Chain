@@ -30,6 +30,16 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+# Avalanche CLI v1.9.5 resolves subnet/VM state from the operating-system
+# account home, even when HOME is overridden. Do not let an isolated launch
+# silently write outside its requested runtime.
+CLI_ACCOUNT_HOME=$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)')
+if [[ "$(realpath -m "$HOME")" != "$(realpath -m "$CLI_ACCOUNT_HOME")" ]]; then
+    log_error "Avalanche CLI resolves state under the OS account home; this HOME override is not isolated."
+    log_error "Refusing to invoke Avalanche CLI or start a node."
+    exit 1
+fi
+
 require_bins
 require_jq
 require_curl
@@ -184,7 +194,7 @@ if [[ -z "$NODE_DIR" ]]; then
             # Unexpected failure — check if it's the "already exists" interactive prompt failure
             if grep -q "already exists" "$DEPLOY_LOG" 2>/dev/null; then
                 log_warn "Deploy encountered 'already exists' prompt. This may indicate stale state."
-                log_warn "Try: bash scripts/reset-local.sh && bash scripts/start-local.sh"
+                log_warn "Do not reset automatically. Preserve the network directory and inspect its state before recovery."
                 exit 1
             else
                 log_error "Unexpected deploy failure (exit $DEPLOY_EXIT)."
@@ -379,7 +389,7 @@ NODE_LOG_PENDING=$(mktemp "$LOCAL_DATA_DIR/.node.log.pending.XXXXXX")
 NODE_PID_PENDING=$(mktemp "$LOCAL_DATA_DIR/.node.pid.pending.XXXXXX")
 
 log_info "Starting avalanchego; its PID and log remain pending until identity is verified..."
-nohup bash /tmp/pw-node-start.sh > "$NODE_LOG_PENDING" 2>&1 &
+nohup bash "$LOCAL_DATA_DIR/node-start.sh" > "$NODE_LOG_PENDING" 2>&1 &
 NODE_PID=$!
 echo "$NODE_PID" > "$NODE_PID_PENDING"
 log_ok "Node started (PID $NODE_PID)"

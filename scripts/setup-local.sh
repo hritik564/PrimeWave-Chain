@@ -16,6 +16,16 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+# Avalanche CLI v1.9.5 writes subnet and VM data under the OS account home,
+# regardless of an overridden HOME. Refuse setup when that would escape the
+# isolated runtime requested by the caller.
+CLI_ACCOUNT_HOME=$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)')
+if [[ "$(realpath -m "$HOME")" != "$(realpath -m "$CLI_ACCOUNT_HOME")" ]]; then
+    log_error "Avalanche CLI resolves state under the OS account home; this HOME override is not isolated."
+    log_error "Refusing to create or inspect CLI configuration."
+    exit 1
+fi
+
 # ── Architecture detection ────────────────────────────────────────────────────
 ARCH="$(uname -m)"
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"

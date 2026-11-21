@@ -5,6 +5,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 umask 077
 ensure_demo_dirs
 
+system_home="$(python3 -c 'import os, pwd; print(pwd.getpwuid(os.getuid()).pw_dir)')"
+if [[ "$(realpath -m "$CLI_HOME/.avalanche-cli")" != "$(realpath -m "$system_home/.avalanche-cli")" ]]; then
+    demo_error "Avalanche CLI v1.9.5 stores chain state under the OS account home, not this isolated runtime."
+    demo_error "Refusing to touch the host CLI home or initialize a chain."
+    exit 1
+fi
+
 if [[ -f "$DEMO_READY_FILE" ]]; then
     read_demo_state
 elif [[ -e "$DEMO_ATTEMPT_FILE" ]]; then

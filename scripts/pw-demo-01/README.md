@@ -20,3 +20,8 @@ Commands:
 An incomplete initialization is intentionally not retried automatically. Keep
 the private runtime directory intact and inspect its logs before any recovery.
 Never run Avalanche CLI `network clean` for this runtime.
+
+The pinned Avalanche CLI v1.9.5 currently resolves its subnet and VM directories
+from the operating-system account home rather than the caller's `HOME`. The
+startup scripts fail closed unless that CLI home is the requested isolated
+directory; do not bypass this guard or point it at existing local state.
