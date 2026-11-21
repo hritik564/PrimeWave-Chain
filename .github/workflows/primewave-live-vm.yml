@@ -1,0 +1,41 @@
+name: PrimeWave isolated real VM compatibility
+on:
+  push:
+    branches: [codex/mainnet-blocker-resolution]
+    paths:
+      - .github/workflows/primewave-live-vm.yml
+      - tests/live/primewave_vm_test.go
+permissions:
+  contents: read
+jobs:
+  real-vm-no-pchain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.26.8'
+          cache: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ava-labs/avalanchego
+          ref: fdb2c1b9b02ef357b5867d5ababb6acc83837a01
+          path: upstream
+          persist-credentials: false
+          lfs: false
+      - name: Isolated real plugin handshake and local EVM block; no P-Chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/mainnet/verify-binaries.py --platform linux-amd64 --output "$RUNNER_TEMP/primewave-live-binaries"
+          cp tests/live/primewave_vm_test.go upstream/vms/rpcchainvm/primewave_vm_test.go
+          cd upstream
+          export PRIMEWAVE_VM_BINARY="$RUNNER_TEMP/primewave-live-binaries/subnet-evm"
+          export TMPDIR="$RUNNER_TEMP"
+          go test ./vms/rpcchainvm -run '^TestPrimeWaveReleasedVMLive$' -count=1 -v -timeout=180s | tee "$RUNNER_TEMP/primewave-live-result.log"
+          grep -q 'PASS_REAL_VM_HANDSHAKE' "$RUNNER_TEMP/primewave-live-result.log"
+          cat "$RUNNER_TEMP/primewave-live-result.log" >> "$GITHUB_STEP_SUMMARY"
