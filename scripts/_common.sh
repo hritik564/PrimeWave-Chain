@@ -34,9 +34,9 @@ FOUNDRY_BUILD_DATE="2026-05-08"
 export AVALANCHEGO_VERSION AVALANCHE_CLI_VERSION FOUNDRY_VERSION FOUNDRY_COMMIT FOUNDRY_BUILD_DATE
 
 # ── Binary locations ──────────────────────────────────────────────────────────
-LOCAL_BIN_DIR="$REPO_ROOT/local-bin"
-AVALANCHEGO_BIN="$LOCAL_BIN_DIR/avalanchego"
-AVALANCHE_CLI_BIN="$LOCAL_BIN_DIR/avalanche"
+LOCAL_BIN_DIR="${LOCAL_BIN_DIR:-$REPO_ROOT/local-bin}"
+AVALANCHEGO_BIN="${AVALANCHEGO_BIN:-$LOCAL_BIN_DIR/avalanchego}"
+AVALANCHE_CLI_BIN="${AVALANCHE_CLI_BIN:-$LOCAL_BIN_DIR/avalanche}"
 export LOCAL_BIN_DIR AVALANCHEGO_BIN AVALANCHE_CLI_BIN
 
 # ── Chain configuration ───────────────────────────────────────────────────────
@@ -53,11 +53,11 @@ RPC_PORT="9656"    # Local cluster node HTTP port (set by Avalanche CLI tmpnet)
 export NODE_COUNT LOCAL_HOST RPC_PORT
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-CHAIN_DIR="$REPO_ROOT/chain"
-CONFIG_DIR="$REPO_ROOT/config"
+CHAIN_DIR="${CHAIN_DIR:-$REPO_ROOT/chain}"
+CONFIG_DIR="${CONFIG_DIR:-$REPO_ROOT/config}"
 TESTS_DIR="$REPO_ROOT/tests"
-LOCAL_DATA_DIR="$REPO_ROOT/local-data"
-NETWORK_STATE_FILE="$LOCAL_DATA_DIR/network-state.env"
+LOCAL_DATA_DIR="${LOCAL_DATA_DIR:-$REPO_ROOT/local-data}"
+NETWORK_STATE_FILE="${NETWORK_STATE_FILE:-$LOCAL_DATA_DIR/network-state.env}"
 export CHAIN_DIR CONFIG_DIR TESTS_DIR LOCAL_DATA_DIR NETWORK_STATE_FILE
 
 # ── Colours ───────────────────────────────────────────────────────────────────

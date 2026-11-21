@@ -6,3 +6,4 @@
 
 # Private recovery archives are never part of a deployment.
 recovery-backups/
+.local-networks/

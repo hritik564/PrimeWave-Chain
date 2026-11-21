@@ -37,14 +37,15 @@ require_curl
 # ── Network IDs ───────────────────────────────────────────────────────────────
 # The VM ID is fixed (it is derived from the binary, not genesis).
 # Subnet ID and Blockchain ID depend on genesis content and may change after reset+redeploy.
-# If a saved state file exists, use those IDs; otherwise use the last-known defaults.
-# After a fresh deploy these are overwritten from the deploy log output.
+# If a saved state file exists, use only IDs recorded by this local runtime.
+# Fresh networks must take their IDs from the current CLI deployment output.
 PRIMEWAVE_VM_ID="rXJjKFtAVSmpKwhMhw7ZMV6opKcsmhk5AuVxWNAzFG221wmM8"
-PRIMEWAVE_HTTP_PORT="9656"
+PRIMEWAVE_HTTP_PORT="${PRIMEWAVE_HTTP_PORT:-9656}"
+PRIMEWAVE_P2P_PORT="${PRIMEWAVE_P2P_PORT:-}"
 
-# Load persisted IDs if available (set on first deploy or after reset)
-SAVED_BLOCKCHAIN_ID="yNRRcwqYaWqn9g4XcAiNe7DufgEHqpF2mmvcG6go1cRvtZo4S"   # fallback: PW-C02 IDs
-SAVED_SUBNET_ID="2W9boARgCWL25z6pMFNtkCfNA5v28VGg9PmBgUJfuKndEdhrvw"
+# Never fall back to identifiers from another local network.
+SAVED_BLOCKCHAIN_ID=""
+SAVED_SUBNET_ID=""
 NETWORK_IDS_FILE="$LOCAL_DATA_DIR/network-ids.env"
 if [[ -f "$NETWORK_IDS_FILE" ]]; then
     # shellcheck source=/dev/null
@@ -220,26 +221,29 @@ if [[ -z "$NODE_DIR" ]]; then
         NEW_SUBNET_ID=$(grep -oP "(?<=Subnet ID: )\S+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
     fi
 
-    # Also try URL-based extraction as fallback
-    if [[ -z "$NEW_BLOCKCHAIN_ID" ]]; then
-        NEW_BLOCKCHAIN_ID=$(grep -oP "(?<=/ext/bc/)[A-Za-z0-9]+" "$DEPLOY_LOG" 2>/dev/null | tail -1 || echo "")
-    fi
-
     if [[ -n "$NEW_BLOCKCHAIN_ID" ]]; then
         PRIMEWAVE_BLOCKCHAIN_ID="$NEW_BLOCKCHAIN_ID"
-        PRIMEWAVE_RPC_URL="http://127.0.0.1:${PRIMEWAVE_HTTP_PORT}/ext/bc/${PRIMEWAVE_BLOCKCHAIN_ID}/rpc"
-        PRIMEWAVE_WS_URL="ws://127.0.0.1:${PRIMEWAVE_HTTP_PORT}/ext/bc/${PRIMEWAVE_BLOCKCHAIN_ID}/ws"
         log_ok "Discovered Blockchain ID: $PRIMEWAVE_BLOCKCHAIN_ID"
     else
-        log_warn "Could not parse Blockchain ID from deploy log. Using saved/fallback ID."
-        log_warn "Check $DEPLOY_LOG if RPC fails."
+        log_error "Could not parse a fresh Blockchain ID from the deploy log."
+        log_error "Refusing to use a saved or historical identifier."
+        exit 1
     fi
 
     if [[ -n "$NEW_SUBNET_ID" ]]; then
         PRIMEWAVE_SUBNET_ID="$NEW_SUBNET_ID"
         log_ok "Discovered Subnet ID: $PRIMEWAVE_SUBNET_ID"
+    else
+        log_error "Could not parse a fresh Subnet ID from the deploy log."
+        log_error "Refusing to use a saved or historical identifier."
+        exit 1
     fi
 
+fi
+
+if [[ -z "$PRIMEWAVE_BLOCKCHAIN_ID" || -z "$PRIMEWAVE_SUBNET_ID" ]]; then
+    log_error "This isolated runtime has no verified network IDs; refusing startup."
+    exit 1
 fi
 
 # ── Phase 2: Configure node for standalone operation ──────────────────────────
@@ -251,6 +255,24 @@ if [[ ! -f "$FLAGS_JSON" ]]; then
     log_error "flags.json not found: $FLAGS_JSON"
     exit 1
 fi
+
+# Read the ports actually selected by Avalanche CLI for this local network.
+read -r PRIMEWAVE_HTTP_PORT PRIMEWAVE_P2P_PORT < <(
+    python3 - "$FLAGS_JSON" <<'PYPORTS'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as source:
+    flags = json.load(source)
+http = int(flags.get("http-port", 0))
+p2p = int(flags.get("staking-port", 0))
+if not (1 <= http <= 65535 and 1 <= p2p <= 65535):
+    raise SystemExit("invalid HTTP or staking port in Avalanche CLI flags")
+print(http, p2p)
+PYPORTS
+)
+PRIMEWAVE_RPC_URL="http://127.0.0.1:${PRIMEWAVE_HTTP_PORT}/ext/bc/${PRIMEWAVE_BLOCKCHAIN_ID}/rpc"
+PRIMEWAVE_WS_URL="ws://127.0.0.1:${PRIMEWAVE_HTTP_PORT}/ext/bc/${PRIMEWAVE_BLOCKCHAIN_ID}/ws"
+log_info "Discovered local ports from flags.json: HTTP $PRIMEWAVE_HTTP_PORT, P2P $PRIMEWAVE_P2P_PORT"
+
 FLAGS_JSON_PENDING=$(mktemp "$NODE_DIR/.flags.json.pending.XXXXXX")
 cp "$FLAGS_JSON" "$FLAGS_JSON_PENDING"
 
@@ -339,7 +361,7 @@ import json, os
 
 flags_path = "$FLAGS_JSON_PENDING"
 agbin      = "$AVALANCHEGO_BIN"
-start_sh   = "/tmp/pw-node-start.sh"
+    start_sh   = os.path.join("$LOCAL_DATA_DIR", "node-start.sh")
 
 with open(flags_path) as f:
     flags = json.load(f)
@@ -441,6 +463,7 @@ PRIMEWAVE_NODE_ID="$NODE_ID"
 PRIMEWAVE_RPC_URL="$PRIMEWAVE_RPC_URL"
 PRIMEWAVE_WS_URL="$PRIMEWAVE_WS_URL"
 PRIMEWAVE_HTTP_PORT="$PRIMEWAVE_HTTP_PORT"
+PRIMEWAVE_P2P_PORT="$PRIMEWAVE_P2P_PORT"
 PRIMEWAVE_CHAIN_ID="$PRIMEWAVE_DEV_CHAIN_ID"
 NODE_COUNT="1"
 LOCAL_HOST="127.0.0.1"

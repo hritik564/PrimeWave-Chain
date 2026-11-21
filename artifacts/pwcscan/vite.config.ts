@@ -77,6 +77,7 @@ export default defineConfig({
         '*.{crt,pem}',
         '**/.git/**',
         '**/recovery-backups/**',
+        '**/.local-networks/**',
       ],
     },
     proxy: {
