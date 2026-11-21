@@ -287,15 +287,10 @@ flags["sybil-protection-enabled"]    = False   # No peer quorum needed for singl
 flags["partial-sync-primary-network"] = False   # Required when sybil-protection is disabled
 flags["track-subnets"]               = SUBNET_ID
 
-# Add our blockchain's EVM chain config (debug APIs)
+# Enable the local Ethereum RPC services, including eth block/balance methods.
 our_chain_config = {
     "log-level": "debug",
-    "eth-apis": [
-        "eth", "eth-filter", "net", "admin", "web3",
-        "internal-eth", "internal-blockchain", "internal-transaction",
-        "internal-debug", "internal-account", "internal-personal",
-        "debug", "debug-tracer", "debug-file-tracer", "debug-handler"
-    ]
+    "eth-apis": ["eth", "eth-filter", "internal-blockchain", "net", "web3"]
 }
 flags["http-host"] = "127.0.0.1"
 flags["staking-host"] = "127.0.0.1"
@@ -397,7 +392,7 @@ import json, os
 
 flags_path = "$FLAGS_JSON_PENDING"
 agbin      = "$AVALANCHEGO_BIN"
-    start_sh   = os.path.join("$LOCAL_DATA_DIR", "node-start.sh")
+start_sh   = os.path.join("$LOCAL_DATA_DIR", "node-start.sh")
 
 with open(flags_path) as f:
     flags = json.load(f)

@@ -3,13 +3,9 @@
   "eth-apis": [
     "eth",
     "eth-filter",
-    "net",
-    "web3",
-    "internal-eth",
     "internal-blockchain",
-    "internal-transaction",
-    "internal-debug",
-    "debug-tracer"
+    "net",
+    "web3"
   ],
   "pruning-enabled": false,
   "log-level": "debug",
