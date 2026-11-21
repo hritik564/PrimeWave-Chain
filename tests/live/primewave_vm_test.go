@@ -40,7 +40,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  t.Setenv("HOME",t.TempDir())
  plugin:=os.Getenv("PRIMEWAVE_VM_BINARY")
  if plugin=="" {t.Fatal("explicit verified VM binary required")}
- factory:=NewFactory(plugin,primewaveProcesses{},primewaveRuntimes{},metrics.NewMultiGatherer())
+ factory:=NewFactory(plugin,primewaveProcesses{},primewaveRuntimes{},metrics.NewPrefixGatherer())
  raw,err:=factory.New(logging.NoLog{});if err!=nil {t.Fatal("HANDSHAKE FAILED",err)}
  vm:=raw.(*VMClient)
  defer func(){if err:=vm.Shutdown(context.Background());err!=nil{t.Log("shutdown",err)}}()
