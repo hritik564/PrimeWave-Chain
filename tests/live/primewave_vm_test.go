@@ -23,6 +23,8 @@ import (
  "github.com/ava-labs/avalanchego/snow/engine/common"
  "github.com/ava-labs/avalanchego/snow/engine/enginetest"
  "github.com/ava-labs/avalanchego/snow/snowtest"
+ "github.com/ava-labs/avalanchego/snow/validators"
+ "github.com/ava-labs/avalanchego/snow/validators/validatorstest"
  "github.com/ava-labs/avalanchego/utils/logging"
  "github.com/ava-labs/avalanchego/vms/rpcchainvm/runtime"
 )
@@ -64,6 +66,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  }
  genesis,_:=json.Marshal(map[string]interface{}{"config":cfg,"alloc":alloc,"difficulty":"0x0","gasLimit":"0xe4e1c0","timestamp":"0x0","nonce":"0x0","extraData":"0x"})
  chainCtx:=snowtest.Context(t,ids.GenerateTestID())
+ chainCtx.ValidatorState.(*validatorstest.State).GetCurrentValidatorSetF=func(context.Context,ids.ID)(map[ids.ID]*validators.GetCurrentValidatorOutput,uint64,error){return map[ids.ID]*validators.GetCurrentValidatorOutput{},0,nil}
  db:=memdb.New()
  senderApp:=&enginetest.Sender{T:t,SendAppGossipF:func(context.Context,common.SendConfig,[]byte)error{return nil}}
  config:=[]byte(`{"eth-apis":["eth","eth-filter","internal-blockchain","net","web3"],"pruning-enabled":true,"state-sync-enabled":false,"allow-unprotected-txs":false}`)
