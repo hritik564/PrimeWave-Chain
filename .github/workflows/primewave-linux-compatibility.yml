@@ -1,0 +1,52 @@
+name: PrimeWave Linux protocol-46 verification
+
+on:
+  push:
+    branches: [codex/mainnet-blocker-resolution]
+    paths: [.github/workflows/primewave-linux-compatibility.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-linux-amd64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      SOURCE_COMMIT: 88f3e59d99c612f891eec8c46ec8ccdc45b3199b
+    steps:
+      - name: Check out exact reviewed source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: 88f3e59d99c612f891eec8c46ec8ccdc45b3199b
+          persist-credentials: false
+          lfs: false
+          sparse-checkout: |
+            scripts/mainnet
+            config/mainnet
+      - name: Verify hashes and execute version checks only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          python3 scripts/mainnet/verify-binaries.py \
+            --platform linux-amd64 \
+            --output "$RUNNER_TEMP/primewave-protocol46-verified" \
+            --run-version
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads((Path(os.environ['RUNNER_TEMP']) / 'primewave-protocol46-verified/verification.json').read_text())
+          assert report['version'] == 'v1.15.1' and report['protocol'] == 46
+          assert {r['component'] for r in report['execution']} == {'avalanchego', 'subnet-evm'}
+          for result in report['execution']:
+              assert 'rpcchainvm=46' in result['versionOutput']
+              assert 'fdb2c1b9b02ef357b5867d5ababb6acc83837a01' in result['versionOutput']
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('Verified source: `' + os.environ['SOURCE_COMMIT'] + '`\n\n')
+              summary.write('```json\n' + json.dumps(report, indent=2) + '\n```\n')
+              summary.write('Only SHA-256 and --version checks executed. No node startup, handshake, signing or transactions.\n')
+          PY
