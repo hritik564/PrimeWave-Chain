@@ -1,0 +1,27 @@
+[Unit]
+Description=PrimeWave {{ purpose }} validator (two-node pilot)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+[Service]
+Type=simple
+User=primewave
+Group=primewave
+UMask=0077
+Environment=HOME={{ runtime_root }}
+WorkingDirectory={{ runtime_root }}
+ExecStartPre=/usr/bin/python3 /opt/primewave/start-guard.py --config /etc/primewave/{{ purpose }}.json --identity {{ runtime_root }}/staking/public-identity.json --lock {{ source_root }}/config/mainnet/binaries.lock.json --binary {{ release_root }}/avalanchego --purpose {{ purpose }}
+ExecStart={{ release_root }}/avalanchego --config-file=/etc/primewave/{{ purpose }}.json
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=120
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ runtime_root }}
+LimitNOFILE=65536
+[Install]
+WantedBy=multi-user.target

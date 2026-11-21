@@ -1,0 +1,288 @@
+---
+- name: Approved two-server persistent validator pilot only
+  hosts: primewave_pilot
+  gather_facts: false
+  become: true
+  serial: 1
+  any_errors_fatal: true
+  vars:
+    runtime_root: "{{ persistent_mount | regex_replace('/$', '') }}/primewave/{{ purpose }}"
+    source_root: /opt/primewave/source
+    release_root: /opt/primewave/releases/v1.15.1
+  pre_tasks:
+    - name: Fail before remote provisioning without explicit inputs
+      ansible.builtin.assert:
+        that:
+          - provision_approved | bool
+          - purpose in ['fuji-rehearsal', 'mainnet-pilot']
+          - groups['primewave_pilot'] | length == 2
+          - admin_public_keys | length > 0
+          - admin_ssh_cidrs | length > 0
+          - persistent_mount is defined
+    - ansible.builtin.setup:
+    - name: Enforce supported small-pilot host profile
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_version in ['22.04', '24.04']
+          - ansible_facts.architecture == 'x86_64'
+          - ansible_facts.processor_vcpus | int >= 4
+          - ansible_facts.memtotal_mb | int >= 7600
+    - name: Inspect actual persistent block mount without formatting disks
+      ansible.builtin.command: "findmnt -J -T {{ persistent_mount }} -o TARGET,SOURCE,FSTYPE,OPTIONS"
+      changed_when: false
+      register: mounted
+    - ansible.builtin.assert:
+        that:
+          - (mounted.stdout | from_json).filesystems[0].source.startswith('/dev/')
+          - (mounted.stdout | from_json).filesystems[0].fstype in ['ext4','xfs','btrfs']
+    - ansible.builtin.command: "df -B1 --output=avail {{ persistent_mount }}"
+      changed_when: false
+      register: free_disk
+    - ansible.builtin.assert:
+        that:
+          - (free_disk.stdout_lines[-1] | trim | int) >= 107374182400
+    - ansible.builtin.stat:
+        path: "{{ runtime_root }}"
+      register: existing_runtime
+    - ansible.builtin.stat:
+        path: "{{ runtime_root }}/.managed-purpose"
+      register: managed_runtime
+    - ansible.builtin.assert:
+        that:
+          - not existing_runtime.stat.exists or managed_runtime.stat.exists
+        fail_msg: Refusing to adopt any existing unmanaged runtime
+    - ansible.builtin.slurp:
+        src: "{{ runtime_root }}/.managed-purpose"
+      register: existing_purpose
+      when: managed_runtime.stat.exists
+    - ansible.builtin.assert:
+        that: [(existing_purpose.content | b64decode | trim) == purpose]
+      when: managed_runtime.stat.exists
+    - ansible.builtin.stat:
+        path: "{{ persistent_mount }}"
+      register: mount_path
+    - ansible.builtin.assert:
+        that: [mount_path.stat.isdir, not mount_path.stat.islnk]
+  tasks:
+    - ansible.builtin.apt:
+        update_cache: true
+        name: [ca-certificates, curl, python3, openssl, ufw, chrony, prometheus-node-exporter, fio, restic]
+        state: present
+    - ansible.builtin.user:
+        name: primewave
+        system: true
+        create_home: false
+        shell: /usr/sbin/nologin
+    - ansible.builtin.user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        append: true
+        create_home: true
+        shell: /bin/bash
+    - ansible.builtin.file:
+        path: "/home/{{ admin_user }}/.ssh"
+        state: directory
+        owner: "{{ admin_user }}"
+        mode: '0700'
+    - ansible.builtin.copy:
+        dest: "/home/{{ admin_user }}/.ssh/authorized_keys"
+        content: "{{ admin_public_keys | join('\n') }}\n"
+        owner: "{{ admin_user }}"
+        mode: '0600'
+    - ansible.builtin.copy:
+        dest: "/etc/sudoers.d/primewave-{{ admin_user }}"
+        content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        mode: '0440'
+        validate: /usr/sbin/visudo -cf %s
+    - ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/00-primewave.conf
+        content: "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin no\nPubkeyAuthentication yes\n"
+        mode: '0644'
+        validate: /usr/sbin/sshd -t -f %s
+    - ansible.builtin.service:
+        name: ssh
+        state: reloaded
+    - ansible.builtin.command: "ufw allow from {{ item }} to any port 22 proto tcp"
+      loop: "{{ admin_ssh_cidrs }}"
+      changed_when: false
+    - ansible.builtin.command: ufw allow 9651/tcp
+      changed_when: false
+    - ansible.builtin.command: ufw default deny incoming
+      changed_when: false
+    - ansible.builtin.command: ufw default allow outgoing
+      changed_when: false
+    - name: Inspect public firewall rules before enabling or starting anything
+      ansible.builtin.command: ufw show added
+      changed_when: false
+      register: firewall_rules
+    - ansible.builtin.assert:
+        that:
+          - "'9650' not in firewall_rules.stdout"
+          - "'9100' not in firewall_rules.stdout"
+          - "firewall_rules.stdout is not search('(?m)^ufw allow (22|ssh|OpenSSH)(/tcp)?\\s*$')"
+        fail_msg: Refusing existing public RPC/monitoring or unrestricted SSH rules; operator must review them
+    - ansible.builtin.command: ufw --force enable
+      changed_when: false
+    - ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ source_root }}/scripts/mainnet"
+        - "{{ source_root }}/config/mainnet"
+        - /etc/primewave
+        - /opt/primewave/releases
+    - ansible.builtin.copy:
+        src: ../../scripts/mainnet/verify-binaries.py
+        dest: "{{ source_root }}/scripts/mainnet/verify-binaries.py"
+        mode: '0755'
+    - ansible.builtin.copy:
+        src: ../../config/mainnet/binaries.lock.json
+        dest: "{{ source_root }}/config/mainnet/binaries.lock.json"
+        mode: '0644'
+    - ansible.builtin.copy:
+        src: ../../scripts/mainnet/preflight.py
+        dest: "{{ source_root }}/scripts/mainnet/preflight.py"
+        mode: '0755'
+    - ansible.builtin.copy:
+        src: ../../scripts/deploy/recovery.sh
+        dest: /opt/primewave/recovery.sh
+        mode: '0755'
+    - ansible.builtin.copy:
+        src: ../../scripts/deploy/start_guard.py
+        dest: /opt/primewave/start-guard.py
+        mode: '0755'
+    - ansible.builtin.command:
+        argv: [python3, "{{ source_root }}/scripts/mainnet/verify-binaries.py", --platform, linux-amd64, --output, "{{ release_root }}"]
+        creates: "{{ release_root }}/verification.json"
+    - ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: primewave
+        mode: '0700'
+      loop: ["{{ runtime_root }}", "{{ runtime_root }}/db", "{{ runtime_root }}/logs"]
+    - ansible.builtin.copy:
+        dest: "{{ runtime_root }}/.managed-purpose"
+        content: "{{ purpose }}\n"
+        owner: primewave
+        mode: '0600'
+        force: false
+    - ansible.builtin.file:
+        path: "{{ runtime_root }}/healthcheck"
+        state: directory
+        owner: primewave
+        mode: '0700'
+    - name: Prepare dedicated public benchmark fixture outside database during approved provisioning
+      ansible.builtin.command:
+        argv: [dd, if=/dev/zero, "of={{ runtime_root }}/healthcheck/read.benchmark", bs=1M, count=256, conv=fsync, status=none]
+        creates: "{{ runtime_root }}/healthcheck/read.benchmark"
+    - name: Measure read-only random disk performance without opening database files
+      ansible.builtin.command:
+        argv: [fio, --name=primewave-read-only, --readonly, --allow_file_create=0, --rw=randread, --bs=4k, --iodepth=1, --ioengine=psync, --direct=1, --runtime=10, --time_based, --size=256m, --output-format=json, "--filename={{ runtime_root }}/healthcheck/read.benchmark"]
+      changed_when: false
+      register: disk_performance
+    - name: Enforce project pilot acceptance floor rather than assuming advertised SSD performance
+      ansible.builtin.assert:
+        that:
+          - (disk_performance.stdout | from_json).jobs[0].read.iops | float >= 3000
+          - (disk_performance.stdout | from_json).jobs[0].read.clat_ns.mean | float <= 10000000
+    - name: Require explicit local identity generator before key creation
+      ansible.builtin.assert:
+        that: [identity_tool_binary is string, identity_tool_binary | length > 0]
+      when: create_identities | bool
+    - ansible.builtin.copy:
+        src: "{{ identity_tool_binary }}"
+        dest: /opt/primewave/fresh-identity
+        mode: '0755'
+      when: create_identities | bool
+    - name: Generate fresh on-host identity once; never return private contents
+      become_user: primewave
+      ansible.builtin.command:
+        argv: [/opt/primewave/fresh-identity, --out, "{{ runtime_root }}/staking", --purpose, "{{ purpose }}", --approve-identity-creation]
+        creates: "{{ runtime_root }}/staking/public-identity.json"
+      no_log: true
+      when: create_identities | bool
+    - name: Render private administrative RPC and persistent P-Chain configuration
+      ansible.builtin.copy:
+        dest: "/etc/primewave/{{ purpose }}.json"
+        mode: '0644'
+        content: |
+          {
+            "network-id": "{{ public_network }}",
+            "data-dir": "{{ runtime_root }}",
+            "db-dir": "{{ runtime_root }}/db",
+            "log-dir": "{{ runtime_root }}/logs",
+            "plugin-dir": "{{ runtime_root }}/plugins",
+            "chain-config-dir": "{{ runtime_root }}/chains",
+            "http-host": "127.0.0.1",
+            "http-port": 9650,
+            "staking-host": "0.0.0.0",
+            "staking-port": 9651,
+            "public-ip": "{{ public_ip }}",
+            "staking-tls-key-file": "{{ runtime_root }}/staking/staker.key",
+            "staking-tls-cert-file": "{{ runtime_root }}/staking/staker.crt",
+            "staking-signer-key-file": "{{ runtime_root }}/staking/signer.key",
+            "partial-sync-primary-network": true,
+            "sybil-protection-enabled": true,
+            "api-admin-enabled": false{% if subnet_id %},
+            "track-subnets": "{{ subnet_id }}"{% endif %}
+          }
+    - ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: primewave
+        mode: '0700'
+      loop: ["{{ runtime_root }}/plugins", "{{ runtime_root }}/chains"]
+    - name: Require complete registered identifiers before tracking an L1
+      ansible.builtin.assert:
+        that:
+          - subnet_id is string and subnet_id is match('^[1-9A-HJ-NP-Za-km-z]{50,52}$')
+          - blockchain_id is string and blockchain_id is match('^[1-9A-HJ-NP-Za-km-z]{50,52}$')
+          - vm_id is string and vm_id is match('^[1-9A-HJ-NP-Za-km-z]{50,52}$')
+      when: subnet_id or blockchain_id or vm_id
+    - ansible.builtin.copy:
+        remote_src: true
+        src: "{{ release_root }}/subnet-evm"
+        dest: "{{ runtime_root }}/plugins/{{ vm_id }}"
+        owner: primewave
+        mode: '0755'
+      when: subnet_id and blockchain_id and vm_id
+    - ansible.builtin.file:
+        path: "{{ runtime_root }}/chains/{{ blockchain_id }}"
+        state: directory
+        owner: primewave
+        mode: '0700'
+      when: subnet_id and blockchain_id and vm_id
+    - ansible.builtin.copy:
+        src: ../../config/mainnet/chain-config.json
+        dest: "{{ runtime_root }}/chains/{{ blockchain_id }}/config.json"
+        owner: primewave
+        mode: '0600'
+      when: subnet_id and blockchain_id and vm_id
+    - ansible.builtin.template:
+        src: primewave.service.j2
+        dest: "/etc/systemd/system/primewave-{{ purpose }}.service"
+        mode: '0644'
+    - ansible.builtin.service:
+        name: chrony
+        state: started
+        enabled: true
+    - ansible.builtin.lineinfile:
+        path: /etc/default/prometheus-node-exporter
+        regexp: '^ARGS='
+        line: 'ARGS="--web.listen-address=127.0.0.1:9100"'
+    - ansible.builtin.service:
+        name: prometheus-node-exporter
+        state: restarted
+        enabled: true
+    - name: Start only after explicit host, identity and recovery approvals
+      ansible.builtin.assert:
+        that: [create_identities | bool, offhost_recovery_confirmed | bool]
+      when: start_node | bool
+    - ansible.builtin.systemd_service:
+        name: "primewave-{{ purpose }}"
+        daemon_reload: true
+        enabled: true
+        state: started
+      when: start_node | bool

@@ -1,0 +1,20 @@
+{
+  "sourceSha256": "9bd5720242f3d5ca4e40484827337a480c34a5776162c33de90919a3ced7f6ed",
+  "compiler": "0.8.30",
+  "slots": {
+    "emissionRatePerSecond": 0,
+    "lastUpdateTime": 1,
+    "accRewardPerWeight": 2,
+    "totalEligibleWeight": 3,
+    "totalFunded": 4,
+    "totalEmitted": 5,
+    "totalClaimed": 6,
+    "recipients": 7,
+    "recipientList": 8,
+    "isRegistered": 9,
+    "_reentrancyStatus": 10,
+    "paused": 11,
+    "pauseController": 11,
+    "stakingManager": 12
+  }
+}

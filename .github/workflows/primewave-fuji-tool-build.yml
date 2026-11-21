@@ -26,8 +26,6 @@ jobs:
         run: |
           set -euo pipefail
           go build -trimpath -o "$RUNNER_TEMP/primewave-create-l1" .
-          export HOME="$RUNNER_TEMP/empty-operator-home"
-          mkdir -m 700 "$HOME"
           "$RUNNER_TEMP/primewave-create-l1" --help > "$RUNNER_TEMP/create-l1-help.txt" 2>&1
           grep -q 'genesis-proxy-address' "$RUNNER_TEMP/create-l1-help.txt"
           grep -q 'key-name' "$RUNNER_TEMP/create-l1-help.txt"

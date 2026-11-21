@@ -46,17 +46,24 @@
       "reserve": 9999999
     }
   },
-  "selectedAllocationPolicy": null,
+  "selectedAllocationPolicy": "C00_PRIMEWAVE_TOKENOMICS",
   "requiredReviews": [
-    "Resolve conflicting C00/C11 allocations without reallocating approved PW",
     "Select distinct production EVM chain ID; never 77 or 73571",
     "Confirm fee limits and fork/Warp schedule with unpatched supported VM",
     "Confirm FeeDistributor address and deterministic deployment nonce or reviewed genesis code",
-    "Resolve RewardVault genesis versus post-deployment funding and account its funds only once",
+    "Approve constructor-executed RewardVault predeploy with balance and totalFunded15M; no post-launch funding",
     "Use new production-only validator TLS/BLS identities and approved governance addresses"
   ],
   "uncontestedAllocationsPW": {
-    "rewards": 15000000
+    "liquidity": 40000000,
+    "treasury": 15000000,
+    "team": 10000000,
+    "rewards": 15000000,
+    "presale1": 5000000,
+    "presale2": 7500000,
+    "presale3": 7500000
   },
-  "approvedBaselineSource": "docs/PRIMEWAVE_TOKENOMICS.md; C00 approval retained pending reconciliation of later C11 drift"
+  "approvedBaselineSource": "Explicit owner confirmation: C00 allocation policy only; C11 supersession rejected",
+  "rejectedAllocationPolicy": "C11_GENESIS_FINALIZATION",
+  "rewardCustodyProposal": "genesis-predeploy-constructor-accounting"
 }

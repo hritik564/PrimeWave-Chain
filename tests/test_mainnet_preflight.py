@@ -20,8 +20,8 @@ class MainnetPreflightTests(unittest.TestCase):
     def test_proposed_purchase_is_blocked(self):
         reasons = module.check(self.plan, self.hosts, self.genesis)
         self.assertFalse(any('Helicon' in r for r in reasons))
-        self.assertTrue(any('Two validators' in r for r in reasons))
-        self.assertTrue(any('allocation' in r for r in reasons))
+        self.assertFalse(any('Two validators' in r for r in reasons))
+        self.assertFalse(any('C00 allocation policy required' in r for r in reasons))
 
     def test_supply_and_both_candidate_allocations_preserved(self):
         self.assertFalse(self.genesis['deployable'])

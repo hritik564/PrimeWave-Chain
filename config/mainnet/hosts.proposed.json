@@ -3,12 +3,14 @@
     "name": "validator-1",
     "cpuCores": 4,
     "ramGiB": 8,
-    "diskGiB": 128
+    "diskGiB": 128,
+    "publicRpcEnabled": false
   },
   {
     "name": "validator-2",
     "cpuCores": 4,
     "ramGiB": 8,
-    "diskGiB": 128
+    "diskGiB": 128,
+    "publicRpcEnabled": false
   }
 ]

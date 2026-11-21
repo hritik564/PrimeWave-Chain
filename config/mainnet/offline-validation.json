@@ -1,0 +1,20 @@
+{
+  "solidity": {
+    "command": "forge test --offline --summary",
+    "suites": 34,
+    "passed": 767,
+    "failed": 0
+  },
+  "python": {
+    "command": "python3 -m unittest discover -s tests -p 'test_*.py'",
+    "passed": 84,
+    "skipped": 2,
+    "failed": 0,
+    "skipReason": "Previously completed binary-version tests not repeated; no binary-test environment supplied"
+  },
+  "ansible": "ansible-core2.19.4 syntax check passed; no hosts contacted",
+  "shell": "bash -n passed for identity builder and recovery script",
+  "manager": "Exact ICM40e1c89 and OZ5.0.2 archive digests verified; offline Solidity0.8.30 compilation and explicit TEST-only library linking passed; production addresses and initialization remain gated",
+  "runtime": "Historical pw-demo-04 untouched; no public network transactions",
+  "regressionFix": "Registry recipient fuzz now restricts successful-payout property to EOAs; excludes nonpayable Foundry CREATE2 factory"
+}

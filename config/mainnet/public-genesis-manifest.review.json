@@ -1,0 +1,32 @@
+{
+  "publicAddressesReviewed": false,
+  "custodyProposalApproved": false,
+  "allocationAddresses": {
+    "liquidity": null,
+    "treasury": null,
+    "team": null,
+    "rewards": null,
+    "presale1": null,
+    "presale2": null,
+    "presale3": null
+  },
+  "contracts": {
+    "timelock": null,
+    "emergency": null,
+    "feeVault": null,
+    "feeDistributor": null,
+    "registry": null,
+    "rewardVault": null
+  },
+  "managerAddress": null,
+  "managerPredeploys": {},
+  "governanceProposer": null,
+  "emergencySigners": [
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "genesisTimestamp": null
+}

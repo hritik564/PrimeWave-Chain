@@ -33,8 +33,9 @@ class FujiBundleTests(unittest.TestCase):
                       'alloc':{self.addresses[k]:{'balance':hex(v*10**18)} for k,v in self.policy.items()}}
         self.genesis['alloc'][self.proxy]=self.entry
         self.manager={'environment':'fuji','broadcastApproved':False,'ownerApproved':True,'evmChainId':73571002,'productionChainId':73571001,
-                      'managerAddress':self.proxy,'managerArtifactSha256':'ab'*32,'managerInitializationReviewed':True,'genesisForksReviewed':True,'fundingPlanReviewed':True,
-                      'validatorRpcEndpoints':['http://127.0.0.1:19650','http://127.0.0.1:29650'],'fujiKeystoreAlias':'pw-fuji-disposable-test','validatorBalanceAVAX':'0.1'}
+                      'managerAddress':self.proxy,'managerArtifactSha256':'ab'*32,'managerInitializationReviewed':True,'managerBootstrapReviewed':True,'genesisForksReviewed':True,'fundingPlanReviewed':True,
+                      'validatorRpcEndpoints':['http://127.0.0.1:19650','http://127.0.0.1:29650'],'fujiKeystoreAlias':'pw-fuji-disposable-test','validatorBalanceAVAX':'0.1',
+                      'signatureAggregatorUrl':'http://127.0.0.1:18080'}
         self.identities=[dict(environment='fuji',freshTestIdentity=True,nodeId='NodeID-'+str(i),blsPublicKey='fixture',proofOfPossession='fixture') for i in (1,2)]
 
     def bundle(self):
@@ -49,7 +50,12 @@ class FujiBundleTests(unittest.TestCase):
         args=bundle['argvAfterSeparateBroadcastApproval']
         self.assertIn('--network=fuji',args)
         self.assertIn('--genesis-proxy-address='+self.proxy,args)
+        self.assertIn('--local-sig-agg',args)
         self.assertFalse(any('private-key' in arg or 'deploy-validator-manager' in arg for arg in args))
+
+    def test_no_signature_aggregator_fallback(self):
+        self.manager.pop('signatureAggregatorUrl')
+        with self.assertRaisesRegex(ValueError,'signature aggregator'):self.bundle()
 
     def test_missing_owner_approval_refused(self):
         self.manager['ownerApproved']=False
@@ -79,7 +85,7 @@ class FujiBundleTests(unittest.TestCase):
 
     def test_allocation_tables_retain_exact_total_and_percentages(self):
         review=json.loads((ROOT/'config/mainnet/genesis.review.json').read_text())
-        self.assertIsNone(review['selectedAllocationPolicy'])
+        self.assertEqual(review['selectedAllocationPolicy'],'C00_PRIMEWAVE_TOKENOMICS')
         for allocations in review['allocationCandidates'].values():
             self.assertEqual(sum(allocations.values()),100000000)
         c11=review['allocationCandidates']['C11_GENESIS_FINALIZATION']

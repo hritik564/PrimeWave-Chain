@@ -1,3 +1,5 @@
+> HISTORICAL RUNBOOK — do not execute its old network, address, funding or four-server commands. Current preparation uses `scripts/mainnet/fuji_rehearsal.py`, explicit public manifests and owner approvals; C00 genesis predeployment replaces post-deployment RewardVault funding. No Fuji broadcast is authorized.
+
 # PrimeWave — Fuji L1 Ceremony Runbook
 ## PW-C15 | Operator Execution Guide | Evidence-Based
 

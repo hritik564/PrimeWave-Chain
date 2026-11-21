@@ -43,7 +43,7 @@ def check(plan, hosts, genesis):
          'Locked PW supply/denomination/no-mint invariant differs')
     need(asset.get('feeSplitBps') == {'validators':7000,'treasury':2000,'burn':1000}, 'Locked 70/20/10 fee policy differs')
     selected = genesis.get('selectedAllocationPolicy')
-    need(selected in genesis.get('allocationCandidates', {}), 'Conflicting allocation documents require explicit reconciliation')
+    need(selected == 'C00_PRIMEWAVE_TOKENOMICS', 'Owner-approved C00 allocation policy required; C11 is not authorized')
     for allocations in genesis.get('allocationCandidates', {}).values():
         need(sum(allocations.values()) == 100_000_000, 'Allocation candidate does not total 100M PW')
     need(len(hosts) >= 2, 'Public facts required for both proposed servers')
@@ -81,8 +81,8 @@ def check(plan, hosts, genesis):
         seen.add(host.get('publicIp'))
         need(host.get('networkMbps',0) >= 25 and host.get('p2p9651ExternallyVerified') is True,
              prefix+'25Mbps minimum and externally verified inbound TCP 9651 required')
-        need(host.get('rpcLoopbackOnly') is True and host.get('tls443Verified') is True,
-             prefix+'private 9650 RPC and protected HTTPS edge required')
+        need(host.get('rpcLoopbackOnly') is True and (host.get('publicRpcEnabled') is False or host.get('tls443Verified') is True),
+             prefix+'private 9650 RPC required; any optional public edge requires protected HTTPS')
         need(host.get('partialSyncPrimaryNetwork') is True and host.get('sybilProtectionEnabled') is True,
              prefix+'P-Chain-only public-network settings required; never copy demo flags')
         node_id=host.get('nodeId');bls_key=host.get('blsPublicKey')

@@ -57,8 +57,8 @@ def prepare_bundle(manager, identities, genesis, allocation, decision, registry,
         raise ValueError('Approved distinct Fuji and production Chain IDs required')
     check_candidate(manager['productionChainId'],json.loads(registry.read_bytes()))
     if not re.fullmatch(r'[0-9a-fA-F]{64}',manager.get('managerArtifactSha256') or '') or any(
-            manager.get(flag) is not True for flag in ('managerInitializationReviewed','genesisForksReviewed','fundingPlanReviewed')):
-        raise ValueError('Reviewed manager artifacts, initialization, fork schedule and funding plan required')
+            manager.get(flag) is not True for flag in ('managerInitializationReviewed','managerBootstrapReviewed','genesisForksReviewed','fundingPlanReviewed')):
+        raise ValueError('Reviewed manager artifacts, protected bootstrap, initialization, fork schedule and funding plan required')
     validate(genesis,chain,allocation['allocationsPW'],allocation['addresses'],allocation.get('predeploys'))
     proxy=manager.get('managerAddress','')
     if not re.fullmatch(r'0x[0-9a-fA-F]{40}',proxy) or int(proxy,16)==0:
@@ -74,6 +74,10 @@ def prepare_bundle(manager, identities, genesis, allocation, decision, registry,
         url=urlsplit(endpoint)
         if url.scheme!='http' or url.hostname!='127.0.0.1' or not url.port or url.username or url.password or url.query or url.fragment or url.path not in ('','/'):
             raise ValueError('Use explicit loopback SSH tunnels; never expose9650 publicly')
+    aggregator=manager.get('signatureAggregatorUrl','')
+    url=urlsplit(aggregator)
+    if url.scheme!='http' or url.hostname!='127.0.0.1' or not url.port or url.username or url.password or url.query or url.fragment or url.path not in ('','/'):
+        raise ValueError('Explicit owner-operated loopback signature aggregator required; no Glacier fallback')
     alias=manager.get('fujiKeystoreAlias','')
     if not re.fullmatch(r'pw-fuji-[A-Za-z0-9_-]+',alias):
         raise ValueError('Explicit disposable Fuji-only keystore alias required')
@@ -86,7 +90,8 @@ def prepare_bundle(manager, identities, genesis, allocation, decision, registry,
         argvAfterSeparateBroadcastApproval=['./tools/create-l1/create-l1','--network=fuji','--key-name='+alias,
             '--validators='+','.join(endpoints),'--genesis='+str(genesis_path),
             '--chain-name=primewave-fuji-rehearsal','--genesis-proxy-address='+proxy,
-            '--manager-type=poa','--validator-balance='+budget,'--output=fuji-rehearsal.env','--json'],
+            '--manager-type=poa','--validator-balance='+budget,'--local-sig-agg','--sig-agg-url='+aggregator,
+            '--output=fuji-rehearsal.env','--json'],
         mandatoryPostConversion=['Retain subnet/chain/conversion IDs and receipts',
             'Initialize reviewed manager implementation/proxy and initializeValidatorSet using conversion data and authorized Fuji signer',
             'Verify manager ownership and validator set; a successful create-l1 exit alone is not rehearsal success'],

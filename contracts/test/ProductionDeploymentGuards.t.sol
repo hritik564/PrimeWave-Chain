@@ -29,7 +29,7 @@ contract ProductionDeploymentGuardsTest is Test {
 
         vm.chainId(73571001);
         vm.setEnv("POST_DEPLOY_REWARD_FUNDING_APPROVED", "false");
-        vm.expectRevert("DeployProduction: explicit post-deployment RewardVault funding approval required");
+        vm.expectRevert("DeployProduction: legacy post-deploy funding disabled; review C00 genesis predeploy");
         script.run();
 
         vm.setEnv("PRIMEWAVE_ENV", "development");

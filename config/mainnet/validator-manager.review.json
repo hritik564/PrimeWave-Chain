@@ -27,5 +27,8 @@
   "toolCommit": "5989dd8a057f0c074b7fd6a656fb401b0222951c",
   "managerInitializationReviewed": false,
   "genesisForksReviewed": false,
-  "fundingPlanReviewed": false
+  "fundingPlanReviewed": false,
+  "signatureAggregatorUrl": null,
+  "managerBootstrapRequirement": "No publicly callable uninitialized proxy: reviewed staged subnet-bound genesis OR owner-controlled atomic proxy upgrade+initialize after IDs exist; initializeValidatorSet then verifies conversion Warp message",
+  "managerBootstrapReviewed": false
 }

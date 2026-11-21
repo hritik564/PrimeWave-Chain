@@ -1,0 +1,18 @@
+{
+  "pair": "AvalancheGo v1.15.1 / Subnet-EVM v1.15.1",
+  "protocol": 46,
+  "workflow": "https://github.com/hritik564/PrimeWave-Chain/actions/runs/44921017450",
+  "commit": "9f3acc5",
+  "result": "passed",
+  "isolation": "Released plugin via pinned AvalancheGo RPCChainVM client; memdb, loopback RPC, fresh ephemeral synthetic EVM signer; no AvalancheGo daemon/P-Chain/public chain",
+  "checks": [
+    "Real plugin handshake",
+    "C00 exact100M synthetic allocation plus actual constructor-exported protocol code/storage",
+    "RewardVault.totalFunded15M via real eth_call",
+    "eth_chainId / eth_blockNumber / eth_getBlockByNumber / eth_getBalance",
+    "Accepted native EVM transfer with successful receipt and resulting balance",
+    "Actual fee-distribution successful receipt and treasury20percent balance delta"
+  ],
+  "externalBroadcasts": 0,
+  "productionGenesisAuthorized": false
+}

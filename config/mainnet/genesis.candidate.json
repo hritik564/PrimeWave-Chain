@@ -1,0 +1,79 @@
+{
+  "allocationPolicy": "C00",
+  "allocationPolicyApproved": true,
+  "allocations": [
+    {
+      "address": null,
+      "pw": 40000000,
+      "role": "liquidity",
+      "wei": "40000000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 15000000,
+      "role": "treasury",
+      "wei": "15000000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 10000000,
+      "role": "team",
+      "wei": "10000000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 15000000,
+      "role": "rewards",
+      "wei": "15000000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 5000000,
+      "role": "presale1",
+      "wei": "5000000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 7500000,
+      "role": "presale2",
+      "wei": "7500000000000000000000000"
+    },
+    {
+      "address": null,
+      "pw": 7500000,
+      "role": "presale3",
+      "wei": "7500000000000000000000000"
+    }
+  ],
+  "chainIdApproved": false,
+  "chainIdCandidate": 73571001,
+  "deployable": false,
+  "feeCustodyProposal": "Predeploy existing FeeDistributor;20% goes directly to the reviewed treasury multisig/timelock address, not the non-withdrawable DevTreasury fixture.",
+  "feeSplitBps": {
+    "burn": 1000,
+    "treasury": 2000,
+    "validators": 7000
+  },
+  "genesisApproved": false,
+  "nativeMinterEnabled": false,
+  "nativeSupplyWei": "100000000000000000000000000",
+  "productionAddressesFabricated": false,
+  "requiredOwnerInputs": [
+    "Seven allocation recipient addresses; rewards must be RewardVault contract",
+    "Six protocol contract addresses, fresh PoA manager proxy/implementation state and five emergency signer PUBLIC addresses",
+    "Governance proposer/public custody verification and approval of complete constructor-state predeploy bundle",
+    "Final Chain ID, genesis timestamp, fee/fork/Warp configuration approval",
+    "Operational gas spending authority within existing C00 allocations; no extra allocation created"
+  ],
+  "rewardCustodyProposal": {
+    "adminAddress": null,
+    "balanceWei": "15000000000000000000000000",
+    "mechanism": "Export existing RewardVault constructor + fund() state from authoring EVM; seed exactly15M once at final RewardVault address. No funding EOA allocation or post-launch funding transaction.",
+    "mode": "genesis-predeploy-constructor-accounting",
+    "ownerApproved": false,
+    "totalClaimedWei": "0",
+    "totalEmittedWei": "0",
+    "totalFundedWei": "15000000000000000000000000"
+  },
+  "schema": "primewave-c00-genesis-candidate-v1"
+}

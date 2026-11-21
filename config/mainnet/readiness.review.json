@@ -7,9 +7,9 @@
   "pluginProtocol": 46,
   "upstreamBinariesVerified": true,
   "ownerApprovals": {
-    "allocationPolicy": false,
+    "allocationPolicy": true,
     "governanceAndCustody": false,
-    "validatorTopology": false,
+    "validatorTopology": true,
     "stakingLaunchScope": true,
     "operationsAndRecovery": false,
     "launchAuthority": false
@@ -18,8 +18,11 @@
   "validatorRegistrationPrepared": false,
   "productionIdentitiesVerified": false,
   "genesisReviewed": false,
-  "twoValidatorRiskAccepted": false,
+  "twoValidatorRiskAccepted": true,
   "subnetId": null,
   "blockchainId": null,
-  "launchMode": "PoA phase1 \u2014 preserved C00 decision"
+  "launchMode": "PoA phase1 \u2014 preserved C00 decision",
+  "validatorCount": 2,
+  "pilotOnly": true,
+  "longRunningPublicTestnet": false
 }

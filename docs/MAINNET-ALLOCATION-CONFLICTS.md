@@ -1,4 +1,10 @@
-# C00 versus C11 — no allocation policy selected
+# C00 versus C11 — owner selected C00
+
+Current decision: C00 amounts and70/20/10 are explicitly approved. C11 is NOT
+authorized. The table below is historical conflict evidence, not an open vote.
+Reviewed custody addresses, constructor-state genesis and final Chain ID still
+require approval. `GenesisConstructorState.s.sol` proposes a15M balance AND15M
+`totalFunded` at the actual RewardVault address; no post-launch funding account.
 
 Sources: [C00 token distribution](PRIMEWAVE_TOKENOMICS.md#2-token-distribution)
 and [C11 genesis allocations](PW-C11-GENESIS-FINALIZATION.md#21-initial-distribution-100m-pw).
@@ -31,7 +37,5 @@ and70/20/10 fee routing. C00 identifies treasury multisig/timelock, liquidity lo
 team vesting decision and no presale vesting; C11 specifies4-year team vesting.
 All actual wallet addresses remain absent or placeholders; none are selected here.
 
-Owner must explicitly confirm C00, explicitly approve the complete C11 revision,
-or supply a fully reconciled100M table. Do not mix rows. The existing review
-manifest carries C00 as a reference with `ownerApproved:false`; genesis review
-keeps `selectedAllocationPolicy:null`. Neither is a production approval.
+The review manifest now records approval scoped to C00 allocation amounts only.
+It does not approve addresses, custody, Chain ID, genesis or any broadcast.

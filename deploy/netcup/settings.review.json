@@ -1,0 +1,27 @@
+{
+  "purpose": null,
+  "expectedValidators": 2,
+  "pilotRiskAccepted": true,
+  "provisionApproved": false,
+  "identityCreationApproved": false,
+  "hostStartApproved": false,
+  "offHostRecoveryConfirmed": false,
+  "persistentMount": null,
+  "adminUser": null,
+  "adminSshCidrs": [],
+  "adminPublicKeys": [],
+  "identityToolBinary": null,
+  "subnetId": null,
+  "blockchainId": null,
+  "vmId": null,
+  "hosts": [
+    {
+      "name": "validator-1",
+      "publicIp": null
+    },
+    {
+      "name": "validator-2",
+      "publicIp": null
+    }
+  ]
+}
