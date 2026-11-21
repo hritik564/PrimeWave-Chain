@@ -57,7 +57,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  "feeConfig":map[string]interface{}{"gasLimit":15000000,"targetBlockRate":2,"minBaseFee":1000000000,
  "targetGas":10000000,"baseFeeChangeDenominator":36,"minBlockGasCost":0,"maxBlockGasCost":1000000,"blockGasCostStep":200000}}
  fixturePath:=os.Getenv("PRIMEWAVE_PREDEPLOY_FIXTURE")
- var fixture struct{FixtureOnly bool `json:"fixtureOnly"`;NeverUseForProduction bool `json:"neverUseForProduction"`;Accounts map[string]map[string]interface{} `json:"accounts"`;PublicManifest struct{AllocationAddresses map[string]string `json:"allocationAddresses"`;Contracts map[string]string `json:"contracts"`} `json:"publicManifest"`}
+ var fixture struct{FixtureOnly bool `json:"fixtureOnly"`;NeverUseForProduction bool `json:"neverUseForProduction"`;Accounts map[string]map[string]interface{} `json:"accounts"`;PublicManifest struct{GenesisTimestamp uint64 `json:"genesisTimestamp"`;AllocationAddresses map[string]string `json:"allocationAddresses"`;Contracts map[string]string `json:"contracts"`} `json:"publicManifest"`}
  fixtureRaw,err:=os.ReadFile(fixturePath);if err!=nil{t.Fatal(err)}
  if err:=json.Unmarshal(fixtureRaw,&fixture);err!=nil||!fixture.FixtureOnly||!fixture.NeverUseForProduction{t.Fatal("explicit fixture-only predeploy data required",err)}
  roles:=[]string{"liquidity","treasury","team","rewards","presale1","presale2","presale3"}
@@ -78,7 +78,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  for _,raw:=range alloc{entry:=raw.(map[string]interface{});amount,ok:=new(big.Int).SetString(entry["balance"].(string),0);if !ok{t.Fatal("invalid fixture balance")};supply.Add(supply,amount)}
  if supply.Cmp(new(big.Int).Mul(big.NewInt(100000000),unit))!=0{t.Fatal("C00 supply changed",supply)}
  cfg["rewardManagerConfig"]=map[string]interface{}{"blockTimestamp":0,"initialRewardConfig":map[string]interface{}{"rewardAddress":fixture.PublicManifest.Contracts["feeDistributor"]}}
- genesis,_:=json.Marshal(map[string]interface{}{"config":cfg,"alloc":alloc,"difficulty":"0x0","gasLimit":"0xe4e1c0","timestamp":"0x0","nonce":"0x0","extraData":"0x"})
+ genesis,_:=json.Marshal(map[string]interface{}{"config":cfg,"alloc":alloc,"difficulty":"0x0","gasLimit":"0xe4e1c0","timestamp":fmt.Sprintf("0x%x",fixture.PublicManifest.GenesisTimestamp),"nonce":"0x0","extraData":"0x"})
  chainCtx:=snowtest.Context(t,ids.GenerateTestID())
  chainCtx.ValidatorState.(*validatorstest.State).GetCurrentValidatorSetF=func(context.Context,ids.ID)(map[ids.ID]*validators.GetCurrentValidatorOutput,uint64,error){return map[ids.ID]*validators.GetCurrentValidatorOutput{},0,nil}
  db:=memdb.New()
