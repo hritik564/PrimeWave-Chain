@@ -3,6 +3,7 @@
     "eth",
     "eth-filter",
     "internal-blockchain",
+    "internal-transaction",
     "net",
     "web3"
   ],

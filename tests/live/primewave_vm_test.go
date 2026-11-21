@@ -69,7 +69,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  chainCtx.ValidatorState.(*validatorstest.State).GetCurrentValidatorSetF=func(context.Context,ids.ID)(map[ids.ID]*validators.GetCurrentValidatorOutput,uint64,error){return map[ids.ID]*validators.GetCurrentValidatorOutput{},0,nil}
  db:=memdb.New()
  senderApp:=&enginetest.Sender{T:t,SendAppGossipF:func(context.Context,common.SendConfig,[]byte)error{return nil}}
- config:=[]byte(`{"eth-apis":["eth","eth-filter","internal-blockchain","net","web3"],"pruning-enabled":true,"state-sync-enabled":false,"allow-unprotected-txs":false}`)
+ config:=[]byte(`{"eth-apis":["eth","eth-filter","internal-blockchain","internal-transaction","net","web3"],"pruning-enabled":true,"state-sync-enabled":false,"allow-unprotected-txs":false}`)
  if err:=vm.Initialize(ctx,chainCtx,db,genesis,nil,config,nil,senderApp);err!=nil{t.Fatal("GENESIS/INITIALIZE FAILED",err)}
  if err:=vm.SetState(ctx,snow.Bootstrapping);err!=nil{t.Fatal(err)}
  if err:=vm.SetState(ctx,snow.NormalOp);err!=nil{t.Fatal(err)}

@@ -45,7 +45,7 @@ def validate(config, chain, identity):
         raise ValueError('Inline key content refused')
     if chain.get('pruning-enabled') is not True:
         raise ValueError('Pruned validator storage configuration required')
-    expected={'eth','eth-filter','internal-blockchain','net','web3'}
+    expected={'eth','eth-filter','internal-blockchain','internal-transaction','net','web3'}
     if set(chain.get('eth-apis',[])) != expected or chain.get('allow-unprotected-txs') is not False:
         raise ValueError('Restricted Subnet-EVM API list and replay protection required')
     return network

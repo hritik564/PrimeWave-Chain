@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/primewave-live-vm.yml
       - tests/live/primewave_vm_test.go
+      - tools/fresh-identity/main.go
 permissions:
   contents: read
 jobs:
@@ -33,7 +34,10 @@ jobs:
           set -euo pipefail
           python3 scripts/mainnet/verify-binaries.py --platform linux-amd64 --output "$RUNNER_TEMP/primewave-live-binaries"
           cp tests/live/primewave_vm_test.go upstream/vms/rpcchainvm/primewave_vm_test.go
+          mkdir -p upstream/primewave-identity
+          cp tools/fresh-identity/main.go upstream/primewave-identity/main.go
           cd upstream
+          go build -o "$RUNNER_TEMP/primewave-fresh-identity" ./primewave-identity
           export PRIMEWAVE_VM_BINARY="$RUNNER_TEMP/primewave-live-binaries/subnet-evm"
           export TMPDIR="$RUNNER_TEMP"
           go test ./vms/rpcchainvm -run '^TestPrimeWaveReleasedVMLive$' -count=1 -v -timeout=180s | tee "$RUNNER_TEMP/primewave-live-result.log"
