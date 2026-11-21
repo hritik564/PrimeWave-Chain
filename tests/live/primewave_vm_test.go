@@ -56,14 +56,28 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  "subnetEVMTimestamp":0,"durangoTimestamp":0,"etnaTimestamp":0,"fortunaTimestamp":0,"graniteTimestamp":0,
  "feeConfig":map[string]interface{}{"gasLimit":15000000,"targetBlockRate":2,"minBaseFee":1000000000,
  "targetGas":10000000,"baseFeeChangeDenominator":36,"minBlockGasCost":0,"maxBlockGasCost":1000000,"blockGasCostStep":200000}}
+ fixturePath:=os.Getenv("PRIMEWAVE_PREDEPLOY_FIXTURE")
+ var fixture struct{FixtureOnly bool `json:"fixtureOnly"`;NeverUseForProduction bool `json:"neverUseForProduction"`;Accounts map[string]map[string]interface{} `json:"accounts"`;PublicManifest struct{AllocationAddresses map[string]string `json:"allocationAddresses"`;Contracts map[string]string `json:"contracts"`} `json:"publicManifest"`}
+ fixtureRaw,err:=os.ReadFile(fixturePath);if err!=nil{t.Fatal(err)}
+ if err:=json.Unmarshal(fixtureRaw,&fixture);err!=nil||!fixture.FixtureOnly||!fixture.NeverUseForProduction{t.Fatal("explicit fixture-only predeploy data required",err)}
+ roles:=[]string{"liquidity","treasury","team","rewards","presale1","presale2","presale3"}
  amounts:=[]int64{40000000,15000000,10000000,15000000,5000000,7500000,7500000}
  alloc:=map[string]interface{}{}
  unit:=new(big.Int).Exp(big.NewInt(10),big.NewInt(18),nil)
  for i,amount:=range amounts{
-  address:=fmt.Sprintf("%040x",i+100)
+  address:=fixture.PublicManifest.AllocationAddresses[roles[i]]
   if i==0{address=sender.Hex()[2:]}
   alloc[address]=map[string]interface{}{"balance":"0x"+new(big.Int).Mul(big.NewInt(amount),unit).Text(16)}
  }
+ for address,state:=range fixture.Accounts{alloc[address]=state}
+ // Normalize address case to avoid counting the rewards predeploy twice.
+ normalized:=map[string]interface{}{}
+ for address,state:=range alloc{normalized[ethcommon.HexToAddress(address).Hex()[2:]]=state}
+ alloc=normalized
+ supply:=new(big.Int)
+ for _,raw:=range alloc{entry:=raw.(map[string]interface{});amount,ok:=new(big.Int).SetString(entry["balance"].(string),0);if !ok{t.Fatal("invalid fixture balance")};supply.Add(supply,amount)}
+ if supply.Cmp(new(big.Int).Mul(big.NewInt(100000000),unit))!=0{t.Fatal("C00 supply changed",supply)}
+ cfg["rewardManagerConfig"]=map[string]interface{}{"blockTimestamp":0,"initialRewardConfig":map[string]interface{}{"rewardAddress":fixture.PublicManifest.Contracts["feeDistributor"]}}
  genesis,_:=json.Marshal(map[string]interface{}{"config":cfg,"alloc":alloc,"difficulty":"0x0","gasLimit":"0xe4e1c0","timestamp":"0x0","nonce":"0x0","extraData":"0x"})
  chainCtx:=snowtest.Context(t,ids.GenerateTestID())
  chainCtx.ValidatorState.(*validatorstest.State).GetCurrentValidatorSetF=func(context.Context,ids.ID)(map[ids.ID]*validators.GetCurrentValidatorOutput,uint64,error){return map[ids.ID]*validators.GetCurrentValidatorOutput{},0,nil}
@@ -90,6 +104,10 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  if chain!=fmt.Sprintf("0x%x",chainID.Int64()){t.Fatal("unexpected chainID",chain)}
  call("eth_blockNumber",[]interface{}{})
  call("eth_getBlockByNumber",[]interface{}{"0x0",false})
+ rewardAddress:=fixture.PublicManifest.Contracts["rewardVault"]
+ var funded string;json.Unmarshal(call("eth_call",[]interface{}{map[string]interface{}{"to":rewardAddress,"data":"0x"+hex.EncodeToString(crypto.Keccak256([]byte("totalFunded()"))[:4])},"latest"}),&funded)
+ fundedInt,ok:=new(big.Int).SetString(funded[2:],16);if !ok||fundedInt.Cmp(new(big.Int).Mul(big.NewInt(15000000),unit))!=0{t.Fatal("GENESIS REWARD ACCOUNTING",funded)}
+ t.Log("REAL_VM_GENESIS_REWARD_ACCOUNTING_15M_MATCHES_BALANCE_AND_C00")
  var before string;json.Unmarshal(call("eth_getBalance",[]interface{}{sender.Hex(),"latest"}),&before)
  expected:=new(big.Int).Mul(big.NewInt(40000000),unit)
  if before!="0x"+expected.Text(16){t.Fatal("C00 fixture balance mismatch")}
@@ -97,6 +115,7 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
  tx,err:=types.SignTx(types.NewTransaction(0,recipient,new(big.Int).Set(unit),21000,big.NewInt(25000000000),nil),types.NewEIP155Signer(chainID),key)
  if err!=nil{t.Fatal(err)}
  txBytes,_:=tx.MarshalBinary();call("eth_sendRawTransaction",[]interface{}{"0x"+hex.EncodeToString(txBytes)})
+ acceptNext:=func(){
  deadline:=time.Now().Add(15*time.Second)
  for{
   block,err:=vm.BuildBlock(ctx)
@@ -109,10 +128,29 @@ func TestPrimeWaveReleasedVMLive(t *testing.T) {
   if time.Now().After(deadline){t.Fatal("BUILD BLOCK",err)}
   time.Sleep(100*time.Millisecond)
  }
+ }
+ acceptNext()
  receipt:=call("eth_getTransactionReceipt",[]interface{}{tx.Hash().Hex()})
  var decoded map[string]interface{};json.Unmarshal(receipt,&decoded)
  if decoded["status"]!="0x1"{t.Fatal("local fixture receipt failed",decoded)}
  var balance string;json.Unmarshal(call("eth_getBalance",[]interface{}{recipient.Hex(),"latest"}),&balance)
  if balance!="0x"+unit.Text(16){t.Fatal("local fixture transfer balance",balance)}
+ // Exercise the existing 70/20/10 contract with only synthetic local fees.
+ feeAddress:=ethcommon.HexToAddress(fixture.PublicManifest.Contracts["feeDistributor"])
+ var feeBeforeHex string;json.Unmarshal(call("eth_getBalance",[]interface{}{feeAddress.Hex(),"latest"}),&feeBeforeHex)
+ feeBefore,_:=new(big.Int).SetString(feeBeforeHex[2:],16)
+ treasury:=fixture.PublicManifest.AllocationAddresses["treasury"]
+ var treasuryBeforeHex string;json.Unmarshal(call("eth_getBalance",[]interface{}{treasury,"latest"}),&treasuryBeforeHex)
+ treasuryBefore,_:=new(big.Int).SetString(treasuryBeforeHex[2:],16)
+ distribution,err:=types.SignTx(types.NewTransaction(1,feeAddress,big.NewInt(0),200000,big.NewInt(25000000000),crypto.Keccak256([]byte("distribute()"))[:4]),types.NewEIP155Signer(chainID),key);if err!=nil{t.Fatal(err)}
+ distributionRaw,_:=distribution.MarshalBinary();call("eth_sendRawTransaction",[]interface{}{"0x"+hex.EncodeToString(distributionRaw)})
+ acceptNext()
+ distributionReceipt:=call("eth_getTransactionReceipt",[]interface{}{distribution.Hash().Hex()});json.Unmarshal(distributionReceipt,&decoded)
+ if decoded["status"]!="0x1"{t.Fatal("fee distribution receipt failed")}
+ var treasuryAfterHex string;json.Unmarshal(call("eth_getBalance",[]interface{}{treasury,"latest"}),&treasuryAfterHex)
+ treasuryAfter,_:=new(big.Int).SetString(treasuryAfterHex[2:],16)
+ expectedTreasury:=new(big.Int).Div(new(big.Int).Mul(feeBefore,big.NewInt(2000)),big.NewInt(10000))
+ if new(big.Int).Sub(treasuryAfter,treasuryBefore).Cmp(expectedTreasury)!=0{t.Fatal("treasury fee split mismatch")}
+ t.Log("REAL_VM_PREDEPLOY_FEE_DISTRIBUTION_RECEIPT_SUCCESS; treasury20percentVerified",distribution.Hash())
  t.Log("PASS_REAL_VM_HANDSHAKE_C00_SUPPLY_GENESIS_FOUR_RPC_AND_LOCAL_EVM_BLOCK; PCHAIN_BROADCASTS=0")
 }
