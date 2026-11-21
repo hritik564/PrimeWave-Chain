@@ -1,0 +1,35 @@
+name: PrimeWave Fuji ceremony tool build only
+on:
+  push:
+    branches: [codex/mainnet-blocker-resolution]
+    paths: [.github/workflows/primewave-fuji-tool-build.yml]
+permissions:
+  contents: read
+jobs:
+  build-no-rpc-no-keys:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: ava-labs/avalanche-deploy
+          ref: 5989dd8a057f0c074b7fd6a656fb401b0222951c
+          persist-credentials: false
+          lfs: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.26.8'
+          cache: false
+      - name: Compile and inspect help only; no ceremony execution
+        working-directory: tools/create-l1
+        shell: bash
+        run: |
+          set -euo pipefail
+          go build -trimpath -o "$RUNNER_TEMP/primewave-create-l1" .
+          export HOME="$RUNNER_TEMP/empty-operator-home"
+          mkdir -m 700 "$HOME"
+          "$RUNNER_TEMP/primewave-create-l1" --help > "$RUNNER_TEMP/create-l1-help.txt" 2>&1
+          grep -q 'genesis-proxy-address' "$RUNNER_TEMP/create-l1-help.txt"
+          grep -q 'key-name' "$RUNNER_TEMP/create-l1-help.txt"
+          sha256sum "$RUNNER_TEMP/primewave-create-l1" >> "$GITHUB_STEP_SUMMARY"
+          echo 'BUILD_ONLY_PASSED; KEYS=0; RPC=0; BROADCASTS=0' >> "$GITHUB_STEP_SUMMARY"
