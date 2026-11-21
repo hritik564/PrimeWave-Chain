@@ -27,5 +27,6 @@
   "longRunningPublicTestnet": false,
   "initialProductionProvider": "aws",
   "initialProductionDeploymentManifest": "../../deploy/aws/deployment.review.json",
-  "deferredMigrationProvider": "netcup"
+  "deferredMigrationProvider": "netcup",
+  "historicalNetcupAccessible": false
 }

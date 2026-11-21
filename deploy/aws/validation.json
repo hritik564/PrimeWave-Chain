@@ -1,8 +1,8 @@
 {
-  "baseCommit": "11a02965ab3b585491318879bd1fc5471650aaad",
+  "baseCommit": "f08d9e89c0af4304f7d0eb1bdc9a021a2a015cf9",
   "python": {
     "command": "python3 -m unittest discover -s tests -p 'test_*.py'",
-    "passed": 105,
+    "passed": 117,
     "skipped": 2,
     "failed": 0,
     "skipReason": "Previously completed binary checks not repeated"
@@ -10,10 +10,10 @@
   "ansible": {
     "core": "2.19.4",
     "awsCollection": "amazon.aws12.0.0",
-    "awsPlaybookSyntax": "PASS with synthetic SSM inventory",
+    "awsPlaybookSyntax": "PASS for both selected-profile SSM inventories",
     "netcupPlaybookSyntax": "PASS",
     "ssmConnectionPluginDocumentationLoad": "PASS",
-    "ssmInventoryAndSystemdTemplateRender": "PASS including mount/UUID guard; starts/key creation defaultfalse",
+    "ssmInventoryAndSystemdTemplateRender": "PASS:4 profile/environment combinations, CPU/RAM boundaries, actual partial-sync JSON/unit path and retained mount guard",
     "remoteConnectionsOpened": 0
   },
   "bashSyntax": "PASS identity builder and recovery helper",
@@ -27,5 +27,12 @@
     "public-network transaction",
     "mainnet or PWUSD deployment"
   ],
-  "currentReadiness": "Placeholder manifest intentionally BLOCKED; host/runtime readiness requires real owner-supplied evidence"
+  "currentReadiness": "Placeholder manifest intentionally BLOCKED; host/runtime readiness requires real owner-supplied evidence",
+  "integrationCommand": "PYTHONPATH=<isolated-controller-dependencies> python3 tests/integration/aws_profile_render.py",
+  "profiles": {
+    "smaller": "2xm6a.large needs4vCPUs and fits owner-reported5/0 quota; not live-tested or production-approved",
+    "headroom": "2xm6a.xlarge needs8vCPUs and exceeds owner-reported quota; preserved as canonical selection",
+    "benchmark": "Only synthetic acceptance/refusal tests; no traffic or hardware performance test executed",
+    "Netcup": "Historical hosts inaccessible; offline adapter syntax only, no fallback"
+  }
 }

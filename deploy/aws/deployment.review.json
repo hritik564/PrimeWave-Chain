@@ -290,5 +290,24 @@
   "serviceIdentity": {
     "uid": null,
     "gid": null
-  }
+  },
+  "deploymentProfile": "aws-m6a-xlarge-headroom",
+  "quotaEvidence": {
+    "source": "Owner reports verified Mumbai Standard On-Demand quota; not queried by this utility",
+    "standardOnDemandVcpus": 5,
+    "usedVcpus": 0,
+    "accountId": null,
+    "checkedAt": null
+  },
+  "awsLaunchApprovals": {
+    "accountVerified": false,
+    "ec2LaunchAuthorized": false
+  },
+  "smallProfileProduction": {
+    "ownerApproved": false,
+    "physicalCoreExceptionAccepted": false,
+    "workloadEvidenceFile": null,
+    "workloadEvidenceSha256": null
+  },
+  "historicalNetcupAccessible": false
 }

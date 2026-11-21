@@ -1,0 +1,14 @@
+{
+  "id": "aws-m6a-xlarge-headroom",
+  "instanceType": "m6a.xlarge",
+  "vcpusPerHost": 4,
+  "physicalCoresPerHost": 2,
+  "threadsPerCore": 2,
+  "nominalRamGiB": 16,
+  "minimumUsableRamGiB": 15,
+  "minimumMemoryMiB": 15360,
+  "maximumTrafficTpsExclusive": 10,
+  "partialSyncPrimaryNetworkRequired": true,
+  "requiresSmallProfileProductionAcceptance": false,
+  "scope": "Two-validator non-resilient, pruned L1 pilot only; no archive, indexer, public RPC or full Primary Network validation"
+}

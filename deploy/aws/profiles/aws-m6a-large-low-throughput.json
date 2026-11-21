@@ -1,0 +1,14 @@
+{
+  "id": "aws-m6a-large-low-throughput",
+  "instanceType": "m6a.large",
+  "vcpusPerHost": 2,
+  "physicalCoresPerHost": 1,
+  "threadsPerCore": 2,
+  "nominalRamGiB": 8,
+  "minimumUsableRamGiB": 7.5,
+  "minimumMemoryMiB": 7680,
+  "maximumTrafficTpsExclusive": 10,
+  "partialSyncPrimaryNetworkRequired": true,
+  "requiresSmallProfileProductionAcceptance": true,
+  "scope": "Two-validator non-resilient, pruned L1 pilot only; no archive, indexer, public RPC or full Primary Network validation"
+}

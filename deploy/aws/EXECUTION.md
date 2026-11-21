@@ -1,5 +1,9 @@
 # AWS Mumbai execution handoff
 
+Select an explicit profile using `PROFILES.md`. The canonical manifest retains
+xlarge; the quota-compatible large option is a separate reviewed selection.
+Historical Netcup servers are inaccessible and must not be used.
+
 Source-only preparation. No instance/session/node/key creation, fee payment or
 transaction broadcast was performed. One public manifest is authoritative:
 `deploy/aws/deployment.review.json`. Null values and false approval flags are
@@ -8,7 +12,7 @@ AWS selection does not authorize spending, IAM/resource changes or signing.
 
 ## Host and administration requirements
 
-Two existing owner-approved `m6a.xlarge`, Ubuntu 24.04 x86-64 instances in distinct
+Two existing owner-approved instances of the selected AWS profile, Ubuntu 24.04 x86-64, in distinct
 Mumbai AZs. Use a **dedicated 150GiB encrypted gp3 data EBS per node**, separate
 from an owner-sized OS root volume. Root volume cost/layout needs explicit
 approval. Data attachment must have `DeleteOnTermination=false`. Mount by the
@@ -86,11 +90,11 @@ API is called when manifest inputs are incomplete. Do not send credentials here.
 Inside an owner-opened Session Manager shell on the matching instance:
 
 ```bash
-sudo python3 /opt/primewave/source/scripts/deploy/aws_pilot.py --manifest /opt/primewave/source/deploy/aws/deployment.review.json --host validator-1 --collect-local
+sudo python3 /opt/primewave/source/scripts/deploy/aws_pilot.py --manifest /opt/primewave/source/deploy/aws/deployment.review.json --host validator-1 --environment fuji --collect-local
 ```
 
 Save only its public JSON output as `deploy-output/validator-1.host.json` on the
-controller. Repeat for validator-2. The collector reads public IMDSv2 identity,
+controller. Repeat for validator-2. The collector verifies the actual environment unit/config uses partial P-Chain sync, and reads public IMDSv2 identity,
 mount/NVMe metadata, effective listeners/firewall and services. fio uses only a
 dedicated existing benchmark: readonly, no file creation, QD32 random4KiB reads.
 It never reads a private key or blockchain database file.
@@ -102,7 +106,7 @@ python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json
 ```
 
 Exit0/PASS requires matching account/instance/AZ/IMDS identity, separate AZs,
-SSM Online, Ubuntu 24.04/x86-64, >=4vCPU and15GiB usable RAM, encrypted retained
+SSM Online, Ubuntu 24.04/x86-64, selected-profile CPU/RAM and actual physical topology, encrypted retained
 >=150GiB gp3 with >=3000 provisioned IOPS/125MiBps, exact local EBS serial/UUID,
 >=140GiB usable filesystem total (overhead allowed), >=100GiB free, measured
 >=2700 read IOPS and <=10ms mean latency, default-deny firewall, no SSH/public

@@ -27,8 +27,8 @@
           - ansible_facts.distribution == 'Ubuntu'
           - ansible_facts.distribution_version in ['22.04', '24.04']
           - ansible_facts.architecture == 'x86_64'
-          - ansible_facts.processor_vcpus | int >= 4
-          - ansible_facts.memtotal_mb | int >= 7600
+          - ansible_facts.processor_vcpus | int >= minimum_vcpus | int
+          - ansible_facts.memtotal_mb | int >= minimum_memory_mib | int
     - name: Inspect actual persistent block mount without formatting disks
       ansible.builtin.command: "findmnt -J -T {{ persistent_mount }} -o TARGET,SOURCE,FSTYPE,OPTIONS"
       changed_when: false
@@ -228,12 +228,12 @@
             path: "{{ source_root }}/{{ item }}"
             state: directory
             mode: '0755'
-          loop: [scripts/deploy, deploy/aws]
+          loop: [scripts/deploy, deploy/aws, deploy/aws/profiles]
         - ansible.builtin.copy:
             src: "../../{{ item }}"
             dest: "{{ source_root }}/{{ item }}"
             mode: '0644'
-          loop: [scripts/deploy/aws_pilot.py, scripts/mainnet/chain_id.py, scripts/check-evm-rpc.py]
+          loop: [scripts/deploy/aws_pilot.py, scripts/mainnet/chain_id.py, scripts/check-evm-rpc.py, deploy/aws/profiles/aws-m6a-large-low-throughput.json, deploy/aws/profiles/aws-m6a-xlarge-headroom.json]
         - ansible.builtin.copy:
             dest: "{{ source_root }}/deploy/aws/deployment.review.json"
             content: "{{ aws_deployment_manifest | to_nice_json }}\n"
@@ -354,6 +354,9 @@
         src: primewave.service.j2
         dest: "/etc/systemd/system/primewave-{{ purpose }}.service"
         mode: '0644'
+    - name: Load reviewed unit for read-only preflight without starting the node
+      ansible.builtin.systemd_service:
+        daemon_reload: true
     - ansible.builtin.service:
         name: chrony
         state: started
