@@ -1,0 +1,29 @@
+{
+  "avalancheGoVersion": "v1.15.1",
+  "subnetEvmVersion": "v1.15.1",
+  "pluginProtocol": 46,
+  "releaseUrl": "https://github.com/ava-labs/avalanchego/releases/tag/v1.15.1",
+  "metadataUrl": "https://api.github.com/repos/ava-labs/avalanchego/releases/401189785",
+  "releasePublishedAt": "2026-10-01T19:46:37Z",
+  "evidence": "Official stable v1.15.1 release explicitly reports protocol 46 and compatibility with v1.15.0. Newer v1.15.2/3 use protocol47 and are optional; this pin deliberately satisfies the requested protocol46 constraint, not a claim of an upstream LTS support guarantee.",
+  "assets": {
+    "avalanchego-linux-amd64-v1.15.1.tar.gz": {
+      "url": "https://github.com/ava-labs/avalanchego/releases/download/v1.15.1/avalanchego-linux-amd64-v1.15.1.tar.gz",
+      "sha256": "6d57678a0fb9cc90eea31aa86bfdf582f79ec5187162672123c0fbd0d473ff78",
+      "binarySha256": "a5513e76e61be9042a81af1c8731cf74c93f95a0edaa1c6557200dfb5458a431"
+    },
+    "avalanchego-macos-v1.15.1.zip": {
+      "url": "https://github.com/ava-labs/avalanchego/releases/download/v1.15.1/avalanchego-macos-v1.15.1.zip",
+      "sha256": "3ff2cc4f9bd59eca0aab16bf90955c1fc02a1f44d065eef08a2eb255f36816a5"
+    },
+    "subnet-evm-linux-amd64-v1.15.1.tar.gz": {
+      "url": "https://github.com/ava-labs/avalanchego/releases/download/v1.15.1/subnet-evm-linux-amd64-v1.15.1.tar.gz",
+      "sha256": "984090867966368608fa2a46353030352d0e8d0b20029c022a3755b991432e21",
+      "binarySha256": "42f68125b3ba6fccba3f0dc33577d2ac176064016710cf1b301c77c424d78b4a"
+    },
+    "subnet-evm-macos-v1.15.1.zip": {
+      "url": "https://github.com/ava-labs/avalanchego/releases/download/v1.15.1/subnet-evm-macos-v1.15.1.zip",
+      "sha256": "dcafdfb33c8e548ea3cd080f23acb5a4ebfae52f8c990fc79e32197dbd695df9"
+    }
+  }
+}

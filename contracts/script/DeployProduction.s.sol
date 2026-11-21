@@ -10,7 +10,7 @@ pragma solidity 0.8.30;
 // deployment to the wrong chain or network.
 //
 // SAFETY GUARDS:
-//   1. Chain ID must match EXPECTED_CHAIN_ID (73571 — primewavedev)
+//   1. Chain ID must match explicitly approved PRIMEWAVE_MAINNET_CHAIN_ID
 //   2. PRIMEWAVE_ENV env var must be "production"
 //   3. RPC URL must be explicitly provided (no default)
 //   4. All contract addresses printed before any broadcast
@@ -21,7 +21,7 @@ pragma solidity 0.8.30;
 //   PRIMEWAVE_ENV=production \
 //   forge script contracts/script/DeployProduction.s.sol \
 //     --rpc-url $PRIMEWAVE_RPC_URL \
-//     --chain-id 73571 \
+//     --chain-id $PRIMEWAVE_MAINNET_CHAIN_ID \
 //     --broadcast \
 //     --sig "run()"
 //
@@ -70,7 +70,7 @@ interface IEMSDeploy {
 contract DeployProduction is Script {
 
     // ── Locked constants ──────────────────────────────────────────────────────
-    uint256 constant EXPECTED_CHAIN_ID     = 73571;       // primewavedev mainnet
+    // Production Chain ID is ceremony-approved; local73571 is always refused.
     uint256 constant REWARD_VAULT_FUND     = 15_000_000 ether;
     uint256 constant INITIAL_RATE          = uint256(3_000_000 * 1 ether) / 31_536_000;
     uint256 constant TIMELOCK_DELAY        = 172_800;     // 48h
@@ -84,19 +84,29 @@ contract DeployProduction is Script {
             "DeployProduction: PRIMEWAVE_ENV must be 'production' -- set env var before running"
         );
 
-        // ── GUARD 2: Chain ID ────────────────────────────────────────────────
-        require(
-            block.chainid == EXPECTED_CHAIN_ID,
-            string(abi.encodePacked(
-                "DeployProduction: wrong chain ID -- got ",
-                vm.toString(block.chainid),
-                " expected 73571 (primewavedev)"
-            ))
-        );
+        // Reject local/testnet IDs before accessing any signing material.
+        uint256 expectedChainId = vm.envUint("PRIMEWAVE_MAINNET_CHAIN_ID");
+        require(vm.envBool("PRIMEWAVE_MAINNET_CHAIN_ID_APPROVED"), "DeployProduction: Chain ID approval required");
+        require(expectedChainId >= 1000 && expectedChainId <= 9007199254740991
+            && expectedChainId != 73571 && expectedChainId != 43113 && expectedChainId != 43114
+            && expectedChainId != 31337 && expectedChainId != 1337,
+            "DeployProduction: local/testnet/reserved Chain ID forbidden");
+        require(block.chainid == expectedChainId, "DeployProduction: wrong chain ID");
+
+        require(vm.envBool("POST_DEPLOY_REWARD_FUNDING_APPROVED"),
+            "DeployProduction: explicit post-deployment RewardVault funding approval required");
+        address governanceProposer = vm.envAddress("GOVERNANCE_PROPOSER");
+        require(governanceProposer != address(0), "DeployProduction: governance proposer required");
 
         // ── GUARD 3: Explicit deployer key (never hardcoded) ─────────────────
         uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer    = vm.addr(deployerKey);
+        uint256 approvedNonce = vm.envUint("APPROVED_DEPLOYER_NONCE");
+        require(vm.getNonce(deployer) == approvedNonce, "DeployProduction: deployer nonce drift");
+        address genesisFeeDistributor = vm.envAddress("GENESIS_FEE_DISTRIBUTOR");
+        require(approvedNonce <= type(uint64).max - 4
+            && vm.computeCreateAddress(deployer, uint64(approvedNonce + 4)) == genesisFeeDistributor,
+            "DeployProduction: genesis fee destination differs from predicted deployment");
 
         // ── PRE-FLIGHT PRINT ─────────────────────────────────────────────────
         console.log("===========================================================");
@@ -140,9 +150,8 @@ contract DeployProduction is Script {
         require(ems.MAX_SIGNERS() == 5, "EMS max signers mismatch");
         console.log("EmergencyMultisig:", address(ems));
 
-        // 2. PrimeWaveTimelock (48h, proposer = deployer for initial setup)
-        //    Production: proposer should be set to the Protocol Admin multisig after deployment.
-        PrimeWaveTimelock timelock = new PrimeWaveTimelock(deployer);
+        // 2. PrimeWaveTimelock: explicit governance proposer from construction (48h).
+        PrimeWaveTimelock timelock = new PrimeWaveTimelock(governanceProposer);
         require(timelock.MIN_DELAY() == TIMELOCK_DELAY, "Timelock delay mismatch");
         console.log("PrimeWaveTimelock:", address(timelock));
 
@@ -180,9 +189,9 @@ contract DeployProduction is Script {
         require(feeDistributor.VALIDATOR_BPS() == 7000, "FD: validator BPS mismatch");
         require(feeDistributor.TREASURY_BPS()  == 2000, "FD: treasury BPS mismatch");
 
-        // 4. ValidatorRegistry — protocolAdmin=deployer initially; transfer to timelock post-deployment
+        // 4. Immutable protocol admin is the timelock from construction.
         PrimeWaveValidatorRegistry registry = new PrimeWaveValidatorRegistry(
-            deployer,             // protocolAdmin (transfer to timelock after deployment)
+            address(timelock),    // immutable governance admin; no nonexistent transfer step
             validatorManagerAddr, // ACP-99 ValidatorManager
             address(feeVault)     // feeVault (registry is its protocolAdmin)
         );
@@ -191,7 +200,11 @@ contract DeployProduction is Script {
 
         // 5. RewardVault — admin is timelock (governance-controlled)
         RewardVault rewardVault = new RewardVault(address(timelock), INITIAL_RATE);
-        rewardVault.setPauseController(address(ems));
+        // RewardVault.admin is immutable and already points to the timelock.
+        // The deployer cannot initialize this setter. Schedule/execute it through
+        // the approved governance proposer after MIN_DELAY; never bypass the delay.
+        console.log("GOVERNANCE ACTION REQUIRED: setPauseController(EMS) via timelock");
+        console.logBytes(abi.encodeCall(RewardVault.setPauseController, (address(ems))));
         console.log("RewardVault:", address(rewardVault));
 
         vm.stopBroadcast();

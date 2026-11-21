@@ -1,0 +1,17 @@
+{
+  "version": "v1.15.1",
+  "protocol": 46,
+  "archives": [
+    {
+      "name": "avalanchego-linux-amd64-v1.15.1.tar.gz",
+      "sha256": "6d57678a0fb9cc90eea31aa86bfdf582f79ec5187162672123c0fbd0d473ff78",
+      "binarySha256": "a5513e76e61be9042a81af1c8731cf74c93f95a0edaa1c6557200dfb5458a431"
+    },
+    {
+      "name": "subnet-evm-linux-amd64-v1.15.1.tar.gz",
+      "sha256": "984090867966368608fa2a46353030352d0e8d0b20029c022a3755b991432e21",
+      "binarySha256": "42f68125b3ba6fccba3f0dc33577d2ac176064016710cf1b301c77c424d78b4a"
+    }
+  ],
+  "execution": []
+}

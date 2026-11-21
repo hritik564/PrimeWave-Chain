@@ -1,0 +1,26 @@
+{
+  "version": "v1.15.1",
+  "protocol": 46,
+  "archives": [
+    {
+      "name": "avalanchego-macos-v1.15.1.zip",
+      "sha256": "3ff2cc4f9bd59eca0aab16bf90955c1fc02a1f44d065eef08a2eb255f36816a5",
+      "binarySha256": "e672f05d3184ac4345504a799ae6026652e5715e7aa9295395cde02f2862762a"
+    },
+    {
+      "name": "subnet-evm-macos-v1.15.1.zip",
+      "sha256": "dcafdfb33c8e548ea3cd080f23acb5a4ebfae52f8c990fc79e32197dbd695df9",
+      "binarySha256": "2633078a34034db04cda4a89ab6565f24497398330f4b3a483b51f289fb1e84a"
+    }
+  ],
+  "execution": [
+    {
+      "component": "avalanchego",
+      "versionOutput": "avalanchego/1.15.1 [database=v1.4.5, rpcchainvm=46, commit=fdb2c1b9b02ef357b5867d5ababb6acc83837a01, go=1.26.8]"
+    },
+    {
+      "component": "subnet-evm",
+      "versionOutput": "Subnet-EVM/v1.15.1@fdb2c1b9b02ef357b5867d5ababb6acc83837a01 [rpcchainvm=46]"
+    }
+  ]
+}

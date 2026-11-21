@@ -1,0 +1,9 @@
+{
+  "candidate": 73571001,
+  "ownerApproved": false,
+  "approvedChainId": null,
+  "registrySource": "https://chainid.network/chains.json",
+  "registrySha256": "12dfeaeed7bb1d1add3bccbb02256a7f677f94f61e075099b3600e6a0a755623",
+  "checkedAt": "2026-11-21T14:37:13.812187+00:00",
+  "note": "Snapshot absence is not a reservation or proof that no unlisted chain uses this ID; recheck within 24h before ceremony."
+}

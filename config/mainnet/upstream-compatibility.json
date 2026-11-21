@@ -1,0 +1,26 @@
+{
+  "version": "v1.15.1",
+  "commit": "fdb2c1b9b02ef357b5867d5ababb6acc83837a01",
+  "sources": {
+    "config": {
+      "url": "https://raw.githubusercontent.com/ava-labs/avalanchego/v1.15.1/graft/subnet-evm/plugin/evm/config/config.go",
+      "sha256": "ca340d73025cfa66f4b0179a2f356bbc15947657e6c7eeb8f1867a6c60b6d974"
+    },
+    "apiRegistration": {
+      "url": "https://raw.githubusercontent.com/ava-labs/avalanchego/v1.15.1/graft/subnet-evm/internal/ethapi/backend.go",
+      "sha256": "1cfd4053b09efd324729261d863067af21105c41114c9183550810981c9c20d8"
+    }
+  },
+  "confirmed": [
+    "eth-apis remains the Subnet-EVM config key",
+    "internal-blockchain remains a service under eth",
+    "C-Chain apis migration must not be conflated with Subnet-EVM config"
+  ],
+  "icmManagerSource": {
+    "repository": "https://github.com/ava-labs/icm-services",
+    "tag": "icm-relayer-v1.7.5",
+    "commit": "40e1c898d44242aee25693a9cde4bc2485bd8242",
+    "path": "icm-contracts/avalanche/validator-manager/PoAManager.sol",
+    "artifactRehearsalComplete": false
+  }
+}

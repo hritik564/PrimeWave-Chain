@@ -1,0 +1,20 @@
+{
+  "ownerApproved": false,
+  "baseline": "C00_PRIMEWAVE_TOKENOMICS",
+  "allocationsPW": {
+    "liquidity": 40000000,
+    "treasury": 15000000,
+    "team": 10000000,
+    "rewards": 15000000,
+    "presale1": 5000000,
+    "presale2": 7500000,
+    "presale3": 7500000
+  },
+  "addresses": {},
+  "unresolved": [
+    "Confirm C00 baseline remains authoritative or supply explicit superseding C11 approval",
+    "Supply production-only governance/vesting/presale/RewardVault addresses",
+    "Specify genesis RewardVault initialization versus temporary funding custody without double counting or reallocating PW",
+    "Allocate deployment gas within the approved distribution; no additional treasury/deployer grant invented"
+  ]
+}

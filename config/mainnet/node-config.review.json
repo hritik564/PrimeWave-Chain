@@ -1,0 +1,20 @@
+{
+  "network-id": "mainnet",
+  "http-host": "127.0.0.1",
+  "http-port": 9650,
+  "staking-host": "0.0.0.0",
+  "staking-port": 9651,
+  "public-ip": null,
+  "partial-sync-primary-network": true,
+  "sybil-protection-enabled": true,
+  "api-admin-enabled": false,
+  "track-subnets": null,
+  "db-dir": null,
+  "data-dir": null,
+  "log-dir": null,
+  "plugin-dir": null,
+  "chain-config-dir": null,
+  "staking-tls-cert-file": null,
+  "staking-tls-key-file": null,
+  "staking-signer-key-file": null
+}

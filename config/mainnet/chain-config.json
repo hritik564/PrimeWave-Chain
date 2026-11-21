@@ -1,0 +1,15 @@
+{
+  "eth-apis": [
+    "eth",
+    "eth-filter",
+    "internal-blockchain",
+    "net",
+    "web3"
+  ],
+  "pruning-enabled": true,
+  "state-sync-enabled": false,
+  "allow-unprotected-txs": false,
+  "log-level": "info",
+  "rpc-gas-cap": 50000000,
+  "rpc-tx-fee-cap": 1
+}

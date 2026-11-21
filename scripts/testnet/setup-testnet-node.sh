@@ -87,7 +87,7 @@ if [[ "$NODE_ROLE" == "rpc" ]]; then
   python3 -c "
 import json
 with open('$CHAIN_CONFIG_DIR/config.json','r') as f: cfg=json.load(f)
-cfg['eth-apis'] = ['eth','eth-filter','net','web3','internal-eth','debug']
+cfg['eth-apis'] = ['eth','eth-filter','internal-blockchain','net','web3']
 cfg['state-sync-enabled'] = False
 with open('$CHAIN_CONFIG_DIR/config.json','w') as f: json.dump(cfg,f,indent=2)
 print('[OK]    Chain config updated for RPC/archive node')

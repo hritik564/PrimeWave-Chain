@@ -3,7 +3,13 @@
   "_environment": "TESTNET ONLY",
   "pruning-enabled": false,
   "state-sync-enabled": false,
-  "eth-apis": ["eth", "eth-filter", "net", "web3", "internal-eth"],
+  "eth-apis": [
+    "eth",
+    "eth-filter",
+    "internal-blockchain",
+    "net",
+    "web3"
+  ],
   "log-level": "info",
   "allow-unprotected-txs": false,
   "rpc-gas-cap": 50000000,

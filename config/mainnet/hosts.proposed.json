@@ -1,0 +1,14 @@
+[
+  {
+    "name": "validator-1",
+    "cpuCores": 4,
+    "ramGiB": 8,
+    "diskGiB": 128
+  },
+  {
+    "name": "validator-2",
+    "cpuCores": 4,
+    "ramGiB": 8,
+    "diskGiB": 128
+  }
+]

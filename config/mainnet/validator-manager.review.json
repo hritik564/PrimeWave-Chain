@@ -1,0 +1,20 @@
+{
+  "status": "review-only",
+  "mode": "PoA (C00 phase1 baseline)",
+  "environment": "fuji",
+  "freshTestIdentitiesRequired": true,
+  "managerAddress": null,
+  "proxyAdminAddress": null,
+  "managerArtifactSha256": null,
+  "icmReference": "icm-relayer-v1.7.5 / 40e1c89",
+  "initialValidators": [],
+  "registrationFlow": [
+    "CreateSubnetTx",
+    "CreateChainTx",
+    "ConvertSubnetToL1Tx (initial validator BLS proofs and fee balances)",
+    "initializeValidatorSet via reviewed ICM manager artifact",
+    "RegisterL1ValidatorTx for subsequent additions only"
+  ],
+  "broadcastApproved": false,
+  "compatibilityRehearsed": false
+}

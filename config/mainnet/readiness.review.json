@@ -1,0 +1,25 @@
+{
+  "status": "blocked-review",
+  "avalancheNetworkId": 1,
+  "evmChainId": null,
+  "avalancheGoVersion": "v1.15.1",
+  "subnetEvmVersion": "v1.15.1",
+  "pluginProtocol": 46,
+  "upstreamBinariesVerified": true,
+  "ownerApprovals": {
+    "allocationPolicy": false,
+    "governanceAndCustody": false,
+    "validatorTopology": false,
+    "stakingLaunchScope": true,
+    "operationsAndRecovery": false,
+    "launchAuthority": false
+  },
+  "pChainFundingConfirmed": false,
+  "validatorRegistrationPrepared": false,
+  "productionIdentitiesVerified": false,
+  "genesisReviewed": false,
+  "twoValidatorRiskAccepted": false,
+  "subnetId": null,
+  "blockchainId": null,
+  "launchMode": "PoA phase1 \u2014 preserved C00 decision"
+}
