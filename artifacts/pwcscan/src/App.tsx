@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { shouldRetryApiError } from '@/lib/api';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -24,6 +25,7 @@ import BlockDetail from '@/pages/block-detail';
 import Transactions from '@/pages/transactions';
 import TransactionDetail from '@/pages/transaction-detail';
 import AddressDetail from '@/pages/address-detail';
+import ContractDetail from '@/pages/contract-detail';
 import Contracts from '@/pages/contracts';
 import Validators from '@/pages/validators';
 import ValidatorDetail from '@/pages/validator-detail';
@@ -35,34 +37,46 @@ import Stats from '@/pages/stats';
 import SearchResults from '@/pages/search';
 import NotFound from '@/pages/not-found';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: shouldRetryApiError,
+      staleTime: 10_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: true,
+    },
+  },
+});
 
 function NetworkUnavailableState() {
   const { network } = useNetwork();
   const isMainnet = network.id === 'mainnet';
 
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+    <section
+      className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4"
+      data-testid={isMainnet ? 'mainnet-not-launched' : 'network-unavailable'}
+    >
       <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-6">
-        <Clock3 className="h-8 w-8 text-muted-foreground" />
+        <Clock3 className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
       </div>
-      <h1 className="text-3xl font-display font-bold tracking-tight mb-2">
-        {network.label}
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {isMainnet ? 'NOT LAUNCHED' : 'UNAVAILABLE'}
+      </p>
+      <h1 className="text-3xl font-display font-bold tracking-tight mb-3">
+        {isMainnet ? 'PrimeWave Mainnet' : network.label}
       </h1>
-      <h2 className="text-xl text-foreground font-medium mb-4">
-        {isMainnet ? 'Configuration pending' : 'Indexer endpoint unavailable'}
-      </h2>
-      <p className="text-muted-foreground max-w-md">
+      <p className="text-muted-foreground max-w-xl">
         {isMainnet
-          ? 'Mainnet network identity and explorer endpoints will appear here after the architecture and deployment are finalized.'
-          : `${network.label} is registered, but its explorer indexer endpoint is not configured for this preview.`}
+          ? 'No verified Mainnet launch configuration is available in this explorer. Mainnet data will remain hidden until its Chain ID, indexer, and genesis identity are configured and verified.'
+          : `${network.label} is registered, but its explorer indexer endpoint is not configured for this environment.`}
       </p>
-      <p className="text-sm text-muted-foreground mt-3">
-        {isMainnet
-          ? `No ${network.label} data source is configured.`
-          : `Set VITE_${network.id.toUpperCase()}_INDEXER_API_URL to connect this network.`}
-      </p>
-    </div>
+      {!isMainnet && (
+        <p className="text-sm text-muted-foreground mt-3">
+          Configure VITE_{network.id.toUpperCase()}_INDEXER_API_URL to connect this network.
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -123,7 +137,7 @@ function NetworkRoutes() {
             <Route path="/:networkId/transactions" component={Transactions} />
             <Route path="/:networkId/tx/:hash" component={TransactionDetail} />
             <Route path="/:networkId/address/:address" component={AddressDetail} />
-            <Route path="/:networkId/contract/:address" component={AddressDetail} />
+            <Route path="/:networkId/contract/:address" component={ContractDetail} />
             <Route path="/:networkId/contracts" component={Contracts} />
             <Route path="/:networkId/validators" component={Validators} />
             <Route path="/:networkId/validator/:id" component={ValidatorDetail} />

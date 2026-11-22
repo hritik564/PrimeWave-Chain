@@ -1,6 +1,6 @@
 import { useParams } from "wouter"
-import { useBlock, useTransactions } from "@/lib/api"
-import { formatAge, formatTimestamp, formatNumber, formatPW, formatGasPercent } from "@/lib/format"
+import { useBlock, useBlockTransactions, type Transaction } from "@/lib/api"
+import { formatAge, formatTimestamp, formatNumber, formatPW, formatGasPercent, formatHash } from "@/lib/format"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { HashDisplay } from "@/components/pwcscan/hash-display"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
@@ -8,14 +8,64 @@ import { GasBar } from "@/components/pwcscan/gas-bar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ErrorState } from "@/components/pwcscan/error-state"
 import { EmptyState } from "@/components/pwcscan/empty-state"
+import { DataTable } from "@/components/pwcscan/data-table"
+import { NetworkLink } from "@/lib/network"
+import { StatusBadge } from "@/components/pwcscan/status-badge"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 
 export default function BlockDetail() {
   const { number } = useParams()
   const { data: block, isLoading, error, refetch } = useBlock(number || "")
+  const pagination = useCursorPagination<string>()
+  const {
+    data: transactions,
+    isLoading: transactionsLoading,
+    error: transactionsError,
+    refetch: refetchTransactions,
+  } = useBlockTransactions(block?.number, { limit: 25, cursor: pagination.cursor })
 
   if (error) return <ErrorState onRetry={refetch} />
   if (isLoading) return <Skeleton className="h-[400px] w-full rounded-xl" />
   if (!block) return <EmptyState type="not-found" title="Block not found" description={`Block ${number} could not be found.`} />
+
+  const transactionColumns = [
+    {
+      key: "hash",
+      header: "Transaction",
+      render: (tx: Transaction) => (
+        <NetworkLink href={`/tx/${tx.hash}`} className="font-mono text-primary hover:underline">
+          {formatHash(tx.hash)}
+        </NetworkLink>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (tx: Transaction) => (
+        <StatusBadge
+          status={tx.status === 1 ? "success" : tx.status === 0 ? "failed" : "pending"}
+          label={tx.status === null ? "Receipt unavailable" : undefined}
+        />
+      ),
+    },
+    {
+      key: "from",
+      header: "From",
+      render: (tx: Transaction) => <AddressDisplay address={tx.from_address} />,
+    },
+    {
+      key: "to",
+      header: "To",
+      render: (tx: Transaction) => tx.to_address
+        ? <AddressDisplay address={tx.to_address} />
+        : <span className="text-muted-foreground">Contract creation</span>,
+    },
+    {
+      key: "value",
+      header: "Value",
+      render: (tx: Transaction) => <span className="font-mono text-xs">{formatPW(tx.value)}</span>,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -98,6 +148,33 @@ export default function BlockDetail() {
               </div>
             )}
           </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Transactions in this block</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {transactionsError ? (
+            <ErrorState
+              message="Unable to load transactions for this block."
+              onRetry={refetchTransactions}
+            />
+          ) : (
+            <DataTable
+              columns={transactionColumns}
+              data={transactions?.data}
+              isLoading={transactionsLoading}
+              keyExtractor={(tx) => tx.hash}
+              pagination={{
+                hasPrev: pagination.hasPrevious,
+                hasNext: !!transactions?.pagination.nextCursor,
+                onPrev: pagination.goPrevious,
+                onNext: () => pagination.goNext(transactions?.pagination.nextCursor),
+              }}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

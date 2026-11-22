@@ -6,6 +6,7 @@ import { MetricCard } from "@/components/pwcscan/metric-card"
 import { ReserveBar } from "@/components/pwcscan/reserve-bar"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ErrorState } from "@/components/pwcscan/error-state"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Rewards() {
   const { data: statsRes, isLoading, error, refetch } = useStats()
@@ -13,8 +14,23 @@ export default function Rewards() {
 
   if (error) return <ErrorState onRetry={refetch} />
 
-  const funded = stats?.rewardVault.totalFunded || "0";
-  const emitted = stats?.rewardVault.totalEmitted || "0";
+  const funded = stats?.rewardVault.totalFunded;
+  const emitted = stats?.rewardVault.totalEmitted;
+
+  if (isLoading) {
+    return <Skeleton className="h-[420px] w-full rounded-xl" />
+  }
+  if (!stats || funded === null || funded === undefined ||
+    emitted === null || emitted === undefined ||
+    stats.rewardVault.emissionRate === null) {
+    return (
+      <ErrorState
+        title="Reward data unavailable"
+        message="The indexer has not returned verified RewardVault data for this network."
+        onRetry={refetch}
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -58,7 +74,7 @@ export default function Rewards() {
           />
           <MetricCard 
             title="Emission Rate"
-            value={formatEmissionRate(stats?.rewardVault.emissionRate || "0")}
+            value={formatEmissionRate(stats.rewardVault.emissionRate)}
             icon={<Activity className="h-5 w-5" />}
             isLoading={isLoading}
           />
@@ -66,7 +82,7 @@ export default function Rewards() {
       </div>
       
       <div className="text-center text-muted-foreground mt-10">
-        Detailed reward claims view coming soon. Check individual <NetworkLink href="/validators" className="text-primary hover:underline">validators</NetworkLink> for their claims.
+        Individual reward claim history is not available from the current indexer. View indexed totals on <NetworkLink href="/validators" className="text-primary hover:underline">validator pages</NetworkLink>.
       </div>
     </div>
   )

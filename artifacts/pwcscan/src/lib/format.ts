@@ -1,5 +1,5 @@
-export function formatPW(wei: string): string {
-  if (!wei) return '0 PW';
+export function formatPW(wei: string | null | undefined): string {
+  if (wei === null || wei === undefined || wei.trim() === '') return 'Unavailable';
   try {
     const val = BigInt(wei);
     const divisor = BigInt(10 ** 18);
@@ -21,12 +21,12 @@ export function formatPW(wei: string): string {
     
     return `${integerPart.toString()}.${formattedFrac} PW`;
   } catch (e) {
-    return '0 PW';
+    return 'Unavailable';
   }
 }
 
-export function formatPWCompact(wei: string): string {
-  if (!wei) return '0 PW';
+export function formatPWCompact(wei: string | null | undefined): string {
+  if (wei === null || wei === undefined || wei.trim() === '') return 'Unavailable';
   try {
     const val = BigInt(wei);
     const divisor = BigInt(10 ** 18);
@@ -43,7 +43,7 @@ export function formatPWCompact(wei: string): string {
     }
     return formatPW(wei);
   } catch (e) {
-    return '0 PW';
+    return 'Unavailable';
   }
 }
 
@@ -58,7 +58,7 @@ export function formatAddress(addr: string, chars = 6): string {
 }
 
 export function formatAge(unixTs: number): string {
-  if (!unixTs) return '';
+  if (!Number.isFinite(unixTs)) return 'Unavailable';
   const now = Math.floor(Date.now() / 1000);
   const diff = now - unixTs;
   
@@ -69,7 +69,7 @@ export function formatAge(unixTs: number): string {
 }
 
 export function formatTimestamp(unixTs: number, utc: boolean): string {
-  if (!unixTs) return '';
+  if (!Number.isFinite(unixTs)) return 'Unavailable';
   const date = new Date(unixTs * 1000);
   
   const options: Intl.DateTimeFormatOptions = {
@@ -86,40 +86,43 @@ export function formatTimestamp(unixTs: number, utc: boolean): string {
   return date.toLocaleString('en-US', options);
 }
 
-export function formatNumber(n: string | number): string {
-  if (n === null || n === undefined) return '';
+export function formatNumber(n: string | number | null | undefined): string {
+  if (n === null || n === undefined) return 'Unavailable';
   const num = typeof n === 'string' ? parseFloat(n) : n;
-  if (isNaN(num)) return n.toString();
+  if (!Number.isFinite(num)) return 'Unavailable';
   return new Intl.NumberFormat('en-US').format(num);
 }
 
-export function formatGas(gas: string): string {
-  if (!gas) return '0';
+export function formatGas(gas: string | null | undefined): string {
+  if (gas === null || gas === undefined || gas.trim() === '') return 'Unavailable';
   return formatNumber(gas);
 }
 
-export function formatGasPercent(used: string, limit: string): string {
-  if (!used || !limit) return '0%';
+export function formatGasPercent(used: string | null | undefined, limit: string | null | undefined): string {
+  if (
+    used === null || used === undefined || used.trim() === '' ||
+    limit === null || limit === undefined || limit.trim() === ''
+  ) return 'Unavailable';
   try {
     const u = BigInt(used);
     const l = BigInt(limit);
-    if (l === 0n) return '0%';
+    if (l === 0n) return 'Unavailable';
     
     const percent = Number(u * 10000n / l) / 100;
     return `${percent.toFixed(2)}%`;
   } catch (e) {
-    return '0%';
+    return 'Unavailable';
   }
 }
 
-export function formatEmissionRate(weiPerSec: string): string {
-  if (!weiPerSec) return '0 PW / year';
+export function formatEmissionRate(weiPerSec: string | null | undefined): string {
+  if (weiPerSec === null || weiPerSec === undefined || weiPerSec.trim() === '') return 'Unavailable';
   try {
     const weiSec = BigInt(weiPerSec);
     const secondsPerYear = BigInt(365 * 24 * 60 * 60);
     const weiYear = weiSec * secondsPerYear;
     return formatPWCompact(weiYear.toString()) + ' / year';
   } catch (e) {
-    return '0 PW / year';
+    return 'Unavailable';
   }
 }

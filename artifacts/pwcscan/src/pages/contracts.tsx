@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { NetworkLink } from "@/lib/network"
-import { FileCode, Search } from "lucide-react"
+import { FileCode, Search, BadgeCheck, CircleHelp } from "lucide-react"
 import { useContracts } from "@/lib/api"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { DataTable } from "@/components/pwcscan/data-table"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +11,7 @@ import { Contract } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
 export default function Contracts() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined)
+  const { cursor, hasPrevious, goPrevious, goNext, reset } = useCursorPagination<string>()
   const [knownOnly, setKnownOnly] = useState(true)
   
   const { data: res, isLoading, error, refetch } = useContracts({ limit: 25, cursor, known_only: knownOnly })
@@ -24,7 +25,7 @@ export default function Contracts() {
       render: (c: Contract) => (
         <div className="flex items-center gap-2">
           <FileCode className="h-4 w-4 text-muted-foreground" />
-          <NetworkLink href={`/address/${c.address}`} className="font-mono font-medium text-primary hover:underline">
+          <NetworkLink href={`/contract/${c.address}`} className="font-mono font-medium text-primary hover:underline">
             <AddressDisplay address={c.address} showCopy={false} />
           </NetworkLink>
         </div>
@@ -42,6 +43,21 @@ export default function Contracts() {
       )
     },
     {
+      key: "verification",
+      header: "Source Status",
+      render: (c: Contract) => c.is_verified ? (
+        <Badge variant="outline" className="gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <BadgeCheck className="h-3.5 w-3.5" />
+          Verified
+        </Badge>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <CircleHelp className="h-3.5 w-3.5" />
+          Unverified
+        </span>
+      )
+    },
+    {
       key: "txs",
       header: "Tx Count",
       render: (c: Contract) => <span>{c.tx_count}</span>
@@ -49,13 +65,13 @@ export default function Contracts() {
     {
       key: "creation",
       header: "Creation",
-      render: (c: Contract) => c.creation_block ? (
+      render: (c: Contract) => c.creation_block !== null ? (
         <div className="flex flex-col">
           <NetworkLink href={`/blocks/${c.creation_block}`} className="text-primary hover:underline text-sm">
             Block {c.creation_block}
           </NetworkLink>
         </div>
-      ) : <span>-</span>
+      ) : <span>Unavailable</span>
     }
   ]
 
@@ -71,7 +87,7 @@ export default function Contracts() {
             variant="ghost" 
             size="sm"
             className={knownOnly ? "bg-background shadow-sm" : ""}
-            onClick={() => { setKnownOnly(true); setCursor(undefined) }}
+          onClick={() => { setKnownOnly(true); reset() }}
           >
             Known Protocols
           </Button>
@@ -79,12 +95,16 @@ export default function Contracts() {
             variant="ghost" 
             size="sm"
             className={!knownOnly ? "bg-background shadow-sm" : ""}
-            onClick={() => { setKnownOnly(false); setCursor(undefined) }}
+          onClick={() => { setKnownOnly(false); reset() }}
           >
             All Contracts
           </Button>
         </div>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        The indexer provides a contract verification flag and activity metadata. Source code, ABI, and read-only contract calls are not currently served.
+      </p>
 
       <DataTable 
         columns={columns}
@@ -92,14 +112,10 @@ export default function Contracts() {
         isLoading={isLoading}
         keyExtractor={(c) => c.address}
         pagination={{
-          hasPrev: false,
+          hasPrev: hasPrevious,
           hasNext: !!res?.pagination?.nextCursor,
-          onPrev: () => setCursor(undefined),
-          onNext: () => {
-            if (res?.pagination?.nextCursor) {
-              setCursor(res.pagination.nextCursor)
-            }
-          }
+          onPrev: goPrevious,
+          onNext: () => goNext(res?.pagination?.nextCursor),
         }}
       />
     </div>

@@ -2,6 +2,7 @@ import { isIP } from 'node:net';
 
 export const LOCAL_DEV_CHAIN_ID = 73571;
 export const LOCAL_DEV_RPC_PORT = '9656';
+export const HISTORICAL_TESTNET_CHAIN_ID = 77;
 
 type Environment = Record<string, string | undefined>;
 
@@ -28,6 +29,22 @@ export function assertDevelopmentDatabaseSafety(
   if (env.DATABASE_URL?.trim() === dbUrl) {
     throw new Error(
       'INDEXER_DB_URL must be distinct from DATABASE_URL for isolated development startup.',
+    );
+  }
+}
+
+export function assertProductionGenesisBinding(
+  chainId: number,
+  expectedGenesisHash: string | null,
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): void {
+  if (
+    nodeEnv === 'production' &&
+    chainId !== HISTORICAL_TESTNET_CHAIN_ID &&
+    !expectedGenesisHash
+  ) {
+    throw new Error(
+      'Production non-Testnet indexers require INDEXER_EXPECTED_GENESIS_HASH before database access.',
     );
   }
 }
@@ -85,6 +102,34 @@ export async function verifyRpcChainId(
   if (!Number.isInteger(actualChainId) || actualChainId !== expectedChainId) {
     throw new Error(
       `RPC Chain ID mismatch: expected ${expectedChainId}, received ${actualChainId}. Startup aborted before database access.`,
+    );
+  }
+}
+
+export async function verifyRpcGenesisHash(
+  getGenesisHash: () => Promise<string | null>,
+  expectedGenesisHash: string,
+): Promise<void> {
+  if (!/^0x[0-9a-f]{64}$/i.test(expectedGenesisHash)) {
+    throw new Error('INDEXER_EXPECTED_GENESIS_HASH must be a 32-byte 0x-prefixed hash.');
+  }
+
+  let actualGenesisHash: string | null;
+  try {
+    actualGenesisHash = await getGenesisHash();
+  } catch {
+    throw new Error(
+      'Unable to verify RPC genesis hash; startup aborted before database access.',
+    );
+  }
+
+  if (
+    typeof actualGenesisHash !== 'string' ||
+    !/^0x[0-9a-f]{64}$/i.test(actualGenesisHash) ||
+    actualGenesisHash.toLowerCase() !== expectedGenesisHash.toLowerCase()
+  ) {
+    throw new Error(
+      'RPC genesis hash mismatch. Startup aborted before database access.',
     );
   }
 }

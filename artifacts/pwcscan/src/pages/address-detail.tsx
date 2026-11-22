@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect } from "react"
 import { useParams } from "wouter"
-import { FileCode, Activity, ArrowRightLeft, ArrowUpRight, ArrowDownRight, Award } from "lucide-react"
+import { FileCode, Activity, ArrowRightLeft, ArrowUpRight, ArrowDownRight, Award, Coins } from "lucide-react"
 import { useAddress, useAddressTransactions, useStakingByAddress, useRewardsByAddress } from "@/lib/api"
 import { NetworkLink } from "@/lib/network"
 import { formatPW, formatAge, formatHash, formatNumber } from "@/lib/format"
@@ -16,18 +16,41 @@ import { EmptyState } from "@/components/pwcscan/empty-state"
 import { StatusBadge } from "@/components/pwcscan/status-badge"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { Transaction, StakingPosition, RewardEvent } from "@/lib/api"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 
 export default function AddressDetail() {
   const { address } = useParams()
   const { data: addrRes, isLoading, error, refetch } = useAddress(address || "")
 
-  const [txCursor, setTxCursor] = useState<number | undefined>(undefined)
-  const { data: txsRes, isLoading: txsLoading } = useAddressTransactions(address || "", { limit: 20, cursor: txCursor })
+  const txPagination = useCursorPagination<string>()
+  const txCursor = txPagination.cursor
+  const {
+    data: txsRes,
+    isLoading: txsLoading,
+    error: txsError,
+    refetch: refetchTxs,
+  } = useAddressTransactions(address || "", { limit: 20, cursor: txCursor })
 
-  const [rewardsCursor, setRewardsCursor] = useState<number | undefined>(undefined)
-  const { data: rewardsRes, isLoading: rewardsLoading } = useRewardsByAddress(address || "", { limit: 20, cursor: rewardsCursor })
+  const rewardsPagination = useCursorPagination()
+  const rewardsCursor = rewardsPagination.cursor
+  const {
+    data: rewardsRes,
+    isLoading: rewardsLoading,
+    error: rewardsError,
+    refetch: refetchRewards,
+  } = useRewardsByAddress(address || "", { limit: 20, cursor: rewardsCursor })
 
-  const { data: stakingRes, isLoading: stakingLoading } = useStakingByAddress(address || "")
+  const {
+    data: stakingRes,
+    isLoading: stakingLoading,
+    error: stakingError,
+    refetch: refetchStaking,
+  } = useStakingByAddress(address || "")
+
+  useEffect(() => {
+    txPagination.reset()
+    rewardsPagination.reset()
+  }, [address, txPagination.reset, rewardsPagination.reset])
 
   if (error) return <ErrorState onRetry={refetch} />
   if (isLoading) return <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -43,8 +66,10 @@ export default function AddressDetail() {
         <div className="flex items-center gap-2">
           {tx.status === 1 ? (
             <StatusBadge status="success" label="" className="w-2 h-2 p-0 rounded-full" />
-          ) : (
+          ) : tx.status === 0 ? (
             <StatusBadge status="failed" label="" className="w-2 h-2 p-0 rounded-full" />
+          ) : (
+            <StatusBadge status="pending" label="Receipt unavailable" className="text-[10px]" />
           )}
           <NetworkLink href={`/tx/${tx.hash}`} className="font-mono text-primary hover:underline">
             {formatHash(tx.hash)}
@@ -117,7 +142,11 @@ export default function AddressDetail() {
     {
       key: "amount",
       header: "Amount",
-      render: (evt: RewardEvent) => <span className="font-mono text-xs font-medium text-emerald-600 dark:text-emerald-400">+{evt.amount ? formatPW(evt.amount) : '0 PW'}</span>
+      render: (evt: RewardEvent) => (
+        <span className="font-mono text-xs font-medium text-emerald-600 dark:text-emerald-400">
+          {evt.amount === null ? "Unavailable" : `+${formatPW(evt.amount)}`}
+        </span>
+      )
     }
   ]
 
@@ -152,9 +181,14 @@ export default function AddressDetail() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           {addr.is_contract && (
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 px-2 py-1">
+        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1.5 px-2 py-1">
               <FileCode className="h-3.5 w-3.5" />
               Contract
+            </Badge>
+          )}
+          {!addr.is_contract && (
+            <Badge variant="outline" className="px-2 py-1">
+              Account
             </Badge>
           )}
           {addr.protocol_name && (
@@ -175,7 +209,7 @@ export default function AddressDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-card to-muted/20">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
@@ -189,6 +223,21 @@ export default function AddressDetail() {
               <span className="flex items-center gap-1"><ArrowUpRight className="h-3 w-3" /> {formatNumber(addr.sent_count)} sent</span>
               <span className="flex items-center gap-1"><ArrowDownRight className="h-3 w-3" /> {formatNumber(addr.received_count)} rec</span>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                <Coins className="h-5 w-5" />
+              </div>
+              <h3 className="font-medium text-muted-foreground">Native PW Balance</h3>
+            </div>
+            <div className="text-2xl font-display font-bold">
+              {formatPW(addr.native_balance_wei)}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Current read-only RPC value</p>
           </CardContent>
         </Card>
         
@@ -221,6 +270,9 @@ export default function AddressDetail() {
           </CardContent>
         </Card>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Balance is read from the configured server-side RPC; transaction history remains indexer-backed.
+      </p>
 
       <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="mb-4">
@@ -235,21 +287,23 @@ export default function AddressDetail() {
               <CardTitle className="text-lg">Transaction History</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <DataTable 
-                columns={txColumns}
-                data={txsRes?.data}
-                isLoading={txsLoading}
-                keyExtractor={(tx) => tx.hash}
-                className="border-0 shadow-none rounded-none"
-                pagination={{
-                  hasPrev: false,
-                  hasNext: !!txsRes?.pagination?.nextCursor,
-                  onPrev: () => setTxCursor(undefined),
-                  onNext: () => {
-                    if (txsRes?.pagination?.nextCursor) setTxCursor(txsRes.pagination.nextCursor)
-                  }
-                }}
-              />
+              {txsError ? (
+                <ErrorState message="Unable to load this address's transaction history." onRetry={refetchTxs} />
+              ) : (
+                <DataTable
+                  columns={txColumns}
+                  data={txsRes?.data}
+                  isLoading={txsLoading}
+                  keyExtractor={(tx) => tx.hash}
+                  className="border-0 shadow-none rounded-none"
+                  pagination={{
+                    hasPrev: txPagination.hasPrevious,
+                    hasNext: !!txsRes?.pagination?.nextCursor,
+                    onPrev: txPagination.goPrevious,
+                    onNext: () => txPagination.goNext(txsRes?.pagination?.nextCursor),
+                  }}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -260,15 +314,19 @@ export default function AddressDetail() {
               <CardTitle className="text-lg">Staking Positions</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <DataTable 
-                columns={stakingColumns}
-                data={stakingRes}
-                isLoading={stakingLoading}
-                keyExtractor={(pos) => `${pos.validation_id}-${pos.stake_block}`}
-                className="border-0 shadow-none rounded-none"
-                emptyTitle="No stakes found"
-                emptyDescription="This address has not staked any PW."
-              />
+              {stakingError ? (
+                <ErrorState message="Unable to load this address's staking positions." onRetry={refetchStaking} />
+              ) : (
+                <DataTable
+                  columns={stakingColumns}
+                  data={stakingRes?.positions}
+                  isLoading={stakingLoading}
+                  keyExtractor={(pos) => `${pos.validation_id}-${pos.stake_block}`}
+                  className="border-0 shadow-none rounded-none"
+                  emptyTitle="No stakes found"
+                  emptyDescription="This address has not staked any PW."
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -279,23 +337,36 @@ export default function AddressDetail() {
               <CardTitle className="text-lg">Reward History</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <DataTable 
-                columns={rewardColumns}
-                data={rewardsRes?.data}
-                isLoading={rewardsLoading}
-                keyExtractor={(evt) => evt.tx_hash + evt.id}
-                className="border-0 shadow-none rounded-none"
-                emptyTitle="No rewards claimed"
-                emptyDescription="This address has not claimed any rewards."
-                pagination={{
-                  hasPrev: false,
-                  hasNext: !!rewardsRes?.pagination?.nextCursor,
-                  onPrev: () => setRewardsCursor(undefined),
-                  onNext: () => {
-                    if (rewardsRes?.pagination?.nextCursor) setRewardsCursor(rewardsRes.pagination.nextCursor)
-                  }
-                }}
-              />
+              {rewardsError ? (
+                <ErrorState message="Unable to load this address's reward history." onRetry={refetchRewards} />
+              ) : rewardsRes?.data.available === false ? (
+                <p className="px-4 py-6 text-sm text-muted-foreground">
+                  Reward history is unavailable until the RewardVault is configured and the indexer is synchronized.
+                </p>
+              ) : (
+                <>
+                  <div className="px-4 py-3 text-sm text-muted-foreground">
+                    Total indexed claims: {rewardsRes?.data.totalClaimed === undefined
+                      ? "Unavailable"
+                      : formatPW(rewardsRes.data.totalClaimed)}
+                  </div>
+                  <DataTable
+                    columns={rewardColumns}
+                    data={rewardsRes?.data.events}
+                    isLoading={rewardsLoading}
+                    keyExtractor={(evt) => evt.tx_hash + evt.id}
+                    className="border-0 shadow-none rounded-none"
+                    emptyTitle="No rewards claimed"
+                    emptyDescription="This address has not claimed any indexed rewards."
+                    pagination={{
+                      hasPrev: rewardsPagination.hasPrevious,
+                      hasNext: !!rewardsRes?.pagination?.nextCursor,
+                      onPrev: rewardsPagination.goPrevious,
+                      onNext: () => rewardsPagination.goNext(rewardsRes?.pagination?.nextCursor),
+                    }}
+                  />
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

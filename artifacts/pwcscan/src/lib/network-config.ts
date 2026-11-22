@@ -1,3 +1,5 @@
+import { isGenesisHash, isSafeIndexerUrl } from './network-identity';
+
 export type NetworkId = 'devnet' | 'testnet' | 'mainnet';
 export type NetworkStatus = 'configured' | 'unconfigured';
 
@@ -19,6 +21,7 @@ export interface NetworkDefinition {
   chainId: number | null;
   rpcUrl: string | null;
   indexerApiUrl: string | null;
+  expectedGenesisHash: string | null;
   contractAddresses: Partial<Record<ContractName, string>>;
   visual: {
     color: 'devnet' | 'testnet' | 'mainnet';
@@ -70,6 +73,9 @@ const testnetIndexerApiUrl =
   envValue('VITE_TESTNET_INDEXER_API_URL') ??
   legacyValueForNetwork('testnet') ??
   null;
+const safeTestnetIndexerApiUrl = isSafeIndexerUrl(testnetIndexerApiUrl)
+  ? testnetIndexerApiUrl
+  : null;
 
 // Devnet is intentionally local-development-only. Never let a production
 // build inherit the same-origin Testnet proxy as its indexer endpoint.
@@ -82,6 +88,9 @@ const devnetIndexerApiUrl = IS_PRODUCTION_BUILD
   : envValue('VITE_DEVNET_INDEXER_API_URL') ??
     legacyValueForNetwork('devnet') ??
     '/indexer-api';
+const safeDevnetIndexerApiUrl = isSafeIndexerUrl(devnetIndexerApiUrl)
+  ? devnetIndexerApiUrl
+  : null;
 
 const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinition> = {
   devnet: {
@@ -89,10 +98,11 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
     label: 'Devnet',
     shortLabel: 'Devnet',
     description: 'Local development',
-    status: devnetIndexerApiUrl && devnetRpcUrl ? 'configured' : 'unconfigured',
+    status: safeDevnetIndexerApiUrl && devnetRpcUrl ? 'configured' : 'unconfigured',
     chainId: 73571,
     rpcUrl: devnetRpcUrl,
-    indexerApiUrl: devnetIndexerApiUrl,
+    indexerApiUrl: safeDevnetIndexerApiUrl,
+    expectedGenesisHash: null,
     contractAddresses: devnetAddresses,
     visual: {
       color: 'devnet',
@@ -103,15 +113,18 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
     id: 'testnet',
     label: 'Testnet',
     shortLabel: 'Testnet',
-    description: testnetIndexerApiUrl
+    description: safeTestnetIndexerApiUrl
       ? 'Chain 77 test environment'
       : 'Chain 77 indexer endpoint pending',
-    status: testnetIndexerApiUrl ? 'configured' : 'unconfigured',
+    status: safeTestnetIndexerApiUrl ? 'configured' : 'unconfigured',
     chainId: 77,
     rpcUrl:
       envValue('VITE_TESTNET_RPC_URL') ??
       `https://rpc.testnet.primewave.xyz/ext/bc/${TESTNET_BLOCKCHAIN_ID}/rpc`,
-    indexerApiUrl: testnetIndexerApiUrl,
+    indexerApiUrl: safeTestnetIndexerApiUrl,
+    expectedGenesisHash: isGenesisHash(envValue('VITE_TESTNET_GENESIS_HASH'))
+      ? envValue('VITE_TESTNET_GENESIS_HASH')!.toLowerCase()
+      : null,
     contractAddresses: testnetAddresses,
     visual: {
       color: 'testnet',
@@ -121,16 +134,25 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
 };
 
 const mainnetIndexerApiUrl = envValue('VITE_MAINNET_INDEXER_API_URL');
-const mainnetRpcUrl = envValue('VITE_MAINNET_RPC_URL');
+const safeMainnetIndexerApiUrl = isSafeIndexerUrl(mainnetIndexerApiUrl)
+  ? mainnetIndexerApiUrl
+  : null;
 const mainnetChainIdValue = envValue('VITE_MAINNET_CHAIN_ID');
-const mainnetChainId = mainnetChainIdValue ? Number(mainnetChainIdValue) : null;
+const mainnetChainId =
+  mainnetChainIdValue && /^\d+$/.test(mainnetChainIdValue)
+    ? Number(mainnetChainIdValue)
+    : null;
+const mainnetGenesisHashValue = envValue('VITE_MAINNET_GENESIS_HASH');
+const mainnetGenesisHash = isGenesisHash(mainnetGenesisHashValue)
+  ? mainnetGenesisHashValue.toLowerCase()
+  : null;
 const mainnetIsConfigured =
-  Boolean(mainnetIndexerApiUrl && mainnetRpcUrl) &&
+  Boolean(safeMainnetIndexerApiUrl && mainnetGenesisHash) &&
   mainnetChainId !== null &&
-  Number.isInteger(mainnetChainId) &&
+  Number.isSafeInteger(mainnetChainId) &&
   mainnetChainId > 0;
 const hasPartialMainnetConfiguration =
-  Boolean(mainnetIndexerApiUrl || mainnetRpcUrl || mainnetChainIdValue) &&
+  Boolean(mainnetIndexerApiUrl || mainnetChainIdValue || mainnetGenesisHashValue) &&
   !mainnetIsConfigured;
 
 export const NETWORKS: Record<NetworkId, NetworkDefinition> = {
@@ -139,13 +161,16 @@ export const NETWORKS: Record<NetworkId, NetworkDefinition> = {
     id: 'mainnet',
     label: 'Mainnet',
     shortLabel: 'Mainnet',
-    description: hasPartialMainnetConfiguration
-      ? 'Configuration incomplete'
-      : 'Production network',
+    description: mainnetIsConfigured
+      ? 'Identity verification required'
+      : hasPartialMainnetConfiguration
+        ? 'Launch configuration incomplete'
+        : 'Launch configuration pending',
     status: mainnetIsConfigured ? 'configured' : 'unconfigured',
     chainId: mainnetIsConfigured ? mainnetChainId : null,
-    rpcUrl: mainnetIsConfigured ? mainnetRpcUrl ?? null : null,
-    indexerApiUrl: mainnetIsConfigured ? mainnetIndexerApiUrl ?? null : null,
+    rpcUrl: null,
+    indexerApiUrl: mainnetIsConfigured ? safeMainnetIndexerApiUrl : null,
+    expectedGenesisHash: mainnetIsConfigured ? mainnetGenesisHash : null,
     contractAddresses: {},
     visual: {
       color: 'mainnet',
@@ -182,11 +207,9 @@ export function getDefaultNetwork(): NetworkId {
 }
 
 export function validateNetwork(network: NetworkDefinition): void {
-  if (network.id === 'mainnet' && hasPartialMainnetConfiguration) {
-    throw new Error('Mainnet network configuration is incomplete');
-  }
   if (network.status === 'unconfigured') return;
-  if (!network.indexerApiUrl || network.chainId === null) {
+  if (!network.indexerApiUrl || network.chainId === null ||
+    (network.id === 'mainnet' && !network.expectedGenesisHash)) {
     throw new Error(`${network.label} network is partially configured`);
   }
 }

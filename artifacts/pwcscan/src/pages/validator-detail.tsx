@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { useParams } from "wouter"
 import { Server, Activity, ArrowRightLeft } from "lucide-react"
 import { useValidator, useValidatorEvents } from "@/lib/api"
@@ -18,13 +17,19 @@ import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { ValidatorEvent } from "@/lib/api"
 import { EventLogItem } from "@/components/pwcscan/event-log-item"
 import { Button } from "@/components/ui/button"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 
 export default function ValidatorDetail() {
   const { id } = useParams()
   const { data: val, isLoading, error, refetch } = useValidator(id || "")
 
-  const [cursor, setCursor] = useState<number | undefined>(undefined)
-  const { data: eventsRes, isLoading: eventsLoading } = useValidatorEvents(id || "", { limit: 20, cursor })
+  const eventPagination = useCursorPagination()
+  const {
+    data: eventsRes,
+    isLoading: eventsLoading,
+    error: eventsError,
+    refetch: refetchEvents,
+  } = useValidatorEvents(id || "", { limit: 20, cursor: eventPagination.cursor })
 
   if (error) return <ErrorState onRetry={refetch} />
   if (isLoading) return <Skeleton className="h-[400px] w-full rounded-xl" />
@@ -129,7 +134,9 @@ export default function ValidatorDetail() {
               <CardTitle className="text-lg">Validator Events</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              {eventsLoading ? (
+              {eventsError ? (
+                <ErrorState message="Unable to load this validator's event history." onRetry={refetchEvents} />
+              ) : eventsLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-16 w-full" />
                   <Skeleton className="h-16 w-full" />
@@ -153,13 +160,22 @@ export default function ValidatorDetail() {
                     </div>
                   ))}
                   
-                  {eventsRes.pagination.nextCursor && (
-                    <div className="pt-4 flex justify-center border-t mt-4">
-                      <Button variant="outline" onClick={() => setCursor(eventsRes.pagination.nextCursor!)}>
-                        Load More
-                      </Button>
-                    </div>
-                  )}
+                  <div className="pt-4 flex justify-between border-t mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={eventPagination.goPrevious}
+                      disabled={!eventPagination.hasPrevious}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => eventPagination.goNext(eventsRes.pagination.nextCursor)}
+                      disabled={!eventsRes.pagination.nextCursor}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <EmptyState title="No events found" description="This validator has no recorded events." />

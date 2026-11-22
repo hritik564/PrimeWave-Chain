@@ -2,7 +2,7 @@ import { useParams } from "wouter"
 import { CheckCircle2, XCircle } from "lucide-react"
 import { useTransaction } from "@/lib/api"
 import { NetworkLink } from "@/lib/network"
-import { formatPW, formatNumber, formatGasPercent } from "@/lib/format"
+import { formatPW, formatNumber, formatGasPercent, formatTimestamp } from "@/lib/format"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HashDisplay } from "@/components/pwcscan/hash-display"
@@ -22,6 +22,7 @@ export default function TransactionDetail() {
   if (!tx) return <EmptyState type="not-found" title="Transaction not found" description={`Tx ${hash} could not be found.`} />
 
   const isSuccess = tx.status === 1;
+  const isFailed = tx.status === 0;
 
   return (
     <div className="space-y-6">
@@ -61,11 +62,13 @@ export default function TransactionDetail() {
                         <CheckCircle2 className="h-4 w-4" />
                         Success
                       </div>
-                    ) : (
+                    ) : isFailed ? (
                       <div className="flex items-center gap-1.5 text-destructive bg-destructive/10 px-2.5 py-1 rounded-md text-sm font-medium border border-destructive/20">
                         <XCircle className="h-4 w-4" />
                         Failed
                       </div>
+                    ) : (
+                      <StatusBadge status="pending" label="Receipt status unavailable" />
                     )}
                   </dd>
                 </div>
@@ -75,6 +78,14 @@ export default function TransactionDetail() {
                     <NetworkLink href={`/blocks/${tx.block_number}`} className="text-primary hover:underline font-medium">
                       {tx.block_number}
                     </NetworkLink>
+                  </dd>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
+                  <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Timestamp:</dt>
+                  <dd className="text-sm sm:col-span-3">
+                    {tx.timestamp_unix === undefined || tx.timestamp_unix === null
+                      ? "Unavailable"
+                      : formatTimestamp(tx.timestamp_unix, false)}
                   </dd>
                 </div>
                 
@@ -109,21 +120,23 @@ export default function TransactionDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Transaction Fee:</dt>
                   <dd className="text-sm sm:col-span-3 font-mono text-muted-foreground">
-                    {tx.transaction_fee ? formatPW(tx.transaction_fee) : '-'}
+                    {tx.transaction_fee === null ? "Unavailable" : formatPW(tx.transaction_fee)}
                   </dd>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Gas Price:</dt>
                   <dd className="text-sm sm:col-span-3 text-muted-foreground text-xs font-mono">
-                    {tx.gas_price ? formatPW(tx.gas_price) : '-'}
+                    {tx.gas_price === null ? "Unavailable" : formatPW(tx.gas_price)}
                   </dd>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-4 sm:p-6 hover:bg-muted/10 transition-colors">
                   <dt className="text-sm font-medium text-muted-foreground sm:col-span-1">Gas Usage:</dt>
                   <dd className="text-sm sm:col-span-3 flex items-center gap-2">
-                    <span>{formatNumber(tx.receipt_gas_used)}</span>
+                    <span>{tx.receipt_gas_used === null ? "Unavailable" : formatNumber(tx.receipt_gas_used)}</span>
                     <span className="text-muted-foreground text-xs">/ {formatNumber(tx.gas_limit)}</span>
-                    <span className="text-muted-foreground text-xs">({formatGasPercent(tx.receipt_gas_used, tx.gas_limit)})</span>
+                    <span className="text-muted-foreground text-xs">
+                      ({tx.receipt_gas_used === null ? "Unavailable" : formatGasPercent(tx.receipt_gas_used, tx.gas_limit)})
+                    </span>
                   </dd>
                 </div>
                 

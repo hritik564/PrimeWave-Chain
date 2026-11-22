@@ -26,12 +26,12 @@ export default function Home() {
   const blocks = blocksRes?.data || []
   const txs = txsRes?.data || []
   const syncLabel = statsLoading
-    ? '🔵 Loading...'
+    ? 'Connecting'
     : stats?.network.isSynced
-      ? '🟢 Synced'
+      ? 'Synced'
       : stats
-        ? '🟡 Syncing...'
-        : '⚪ Unavailable'
+        ? 'Syncing'
+        : 'Unavailable'
 
   if (!isConfigured) {
     return (
@@ -92,41 +92,59 @@ export default function Home() {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
           title="Latest Block"
-          value={formatNumber(stats?.network.currentBlock || 0)}
+          value={stats ? formatNumber(stats.network.currentBlock) : "Unavailable"}
           icon={<Blocks className="h-5 w-5" />}
           isLoading={statsLoading}
         />
         <MetricCard
           title="Total Transactions"
-          value={formatNumber(stats?.transactions.total || "0")}
-          subtitle={stats?.transactions.tps_60s ? `${stats.transactions.tps_60s.toFixed(1)} TPS` : undefined}
+          value={stats ? formatNumber(stats.transactions.total) : "Unavailable"}
+          subtitle={
+            !stats
+              ? undefined
+              : stats.transactions.tps_60s === null
+                ? "TPS unavailable"
+                : `${stats.transactions.tps_60s.toFixed(1)} TPS`
+          }
           icon={<ArrowRightLeft className="h-5 w-5" />}
           isLoading={statsLoading}
         />
         <MetricCard
           title="Active Validators"
-          value={formatNumber(stats?.validators.activeCount || "0")}
+          value={stats ? formatNumber(stats.validators.activeCount) : "Unavailable"}
           icon={<Users className="h-5 w-5" />}
           isLoading={statsLoading}
         />
         <MetricCard
           title="RewardVault Remaining"
-          value={stats ? formatPW(stats.rewardVault.totalFunded) : "0 PW"}
-          subtitle={`Emission: ${stats ? formatPW(stats.rewardVault.emissionRate) : '0 PW'}/s`}
+          value={stats?.rewardVault.totalFunded === null || !stats
+            ? "Unavailable"
+            : formatPW(stats.rewardVault.totalFunded)}
+          subtitle={stats?.rewardVault.emissionRate === null || !stats
+            ? undefined
+            : `Emission: ${formatPW(stats.rewardVault.emissionRate)}/s`}
           icon={<ShieldAlert className="h-5 w-5" />}
           isLoading={statsLoading}
         />
         <MetricCard
           title="Fees Distributed"
-          value={stats ? formatPW(stats.fees.totalDistributed) : "0 PW"}
-          subtitle={`${stats ? formatPW(stats.fees.totalToValidators) : '0 PW'} to validators`}
+          value={stats?.fees.totalDistributed === null || !stats
+            ? "Unavailable"
+            : formatPW(stats.fees.totalDistributed)}
+          subtitle={stats?.fees.totalToValidators === null || !stats
+            ? undefined
+            : `${formatPW(stats.fees.totalToValidators)} to validators`}
           icon={<Coins className="h-5 w-5" />}
           isLoading={statsLoading}
         />
         <MetricCard
           title="Gas Latest Block"
-          value={stats ? `${(Number(stats.gas.gasUsedLatestBlock) / 1000000).toFixed(2)}M` : "0"}
-          subtitle={`Limit: ${stats ? (Number(stats.gas.gasLimitLatestBlock) / 1000000).toFixed(2) : '0'}M`}
+          value={stats?.gas.gasUsedLatestBlock === null || !stats
+            ? "Unavailable"
+            : `${(Number(stats.gas.gasUsedLatestBlock) / 1000000).toFixed(2)}M`}
+          subtitle={stats?.gas.gasLimitLatestBlock === null || !stats
+            ? undefined
+            : `Limit: ${(Number(stats.gas.gasLimitLatestBlock) / 1000000).toFixed(2)}M`}
           icon={<Activity className="h-5 w-5" />}
           isLoading={statsLoading}
         />

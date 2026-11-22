@@ -59,12 +59,14 @@ function removeNetworkPrefix(path: string): string {
 
 export function NetworkProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useLocation();
+  const currentPath = pathnameOnly(location);
   const segment = firstPathSegment(location);
   const isNetworkScoped = isNetworkId(segment) && isNetworkAvailable(segment);
-  const invalidNetworkId =
-    segment && !isNetworkScoped && !isNetworkId(segment) && !LEGACY_ROUTE_SEGMENTS.has(segment)
+  const invalidNetworkId = segment && !isNetworkScoped
+    ? isNetworkId(segment) || !LEGACY_ROUTE_SEGMENTS.has(segment)
       ? segment
-      : null;
+      : null
+    : null;
 
   const storedNetwork =
     typeof window !== 'undefined' ? window.localStorage.getItem(NETWORK_STORAGE_KEY) : null;
@@ -73,7 +75,11 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     storedNetworkId && isNetworkAvailable(storedNetworkId)
       ? storedNetworkId
       : getDefaultNetwork();
-  const networkId = isNetworkScoped ? segment : fallbackNetworkId;
+  const networkId = currentPath === '/'
+    ? 'mainnet'
+    : isNetworkScoped
+      ? segment
+      : fallbackNetworkId;
   const network = getNetwork(networkId);
 
   const buildNetworkPath = useCallback((path: string, targetId: NetworkId = networkId): string => {

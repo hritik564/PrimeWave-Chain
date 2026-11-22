@@ -7,13 +7,32 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { query } from '../../db/client';
 import { validateAddress, validatePagination, ok } from '../validation';
 import { IndexerConfig } from '../../config';
+import { IndexerEngine } from '../../indexer/engine';
 
-export default function rewardsRouter(config: IndexerConfig): Router {
+export default function rewardsRouter(config: IndexerConfig, engine: IndexerEngine): Router {
   const router = Router();
 
   // GET /rewards
   router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     try {
+      const syncStatus = await engine.getSyncStatus().catch(() => ({
+        latestIndexed: -1,
+        chainHead: -1,
+        isSynced: false,
+      }));
+      const hasCompleteRewardData =
+        Boolean(config.contracts.rewardVault) &&
+        syncStatus.latestIndexed >= 0 &&
+        syncStatus.isSynced;
+      if (!hasCompleteRewardData) {
+        res.json(ok({
+          latestState: null,
+          totalClaimed: null,
+          emissionRate: null,
+        }));
+        return;
+      }
+
       // Latest RewardVault snapshot
       const stateRes = await query(
         `SELECT * FROM reward_vault_state ORDER BY block_number DESC LIMIT 1`
@@ -47,6 +66,23 @@ export default function rewardsRouter(config: IndexerConfig): Router {
         req.query['after'] as string | undefined,
         config.apiMaxLimit, config.apiDefaultLimit
       );
+      const syncStatus = await engine.getSyncStatus().catch(() => ({
+        latestIndexed: -1,
+        chainHead: -1,
+        isSynced: false,
+      }));
+      const available =
+        Boolean(config.contracts.rewardVault) &&
+        syncStatus.latestIndexed >= 0 &&
+        syncStatus.isSynced;
+      if (!available) {
+        res.json(ok({
+          available: false,
+          totalClaimed: null,
+          events: [],
+        }, { pagination: { limit, nextCursor: null } }));
+        return;
+      }
 
       const events = await query(
         `SELECT id, tx_hash, block_number, event_name, recipient_id, amount
@@ -69,6 +105,7 @@ export default function rewardsRouter(config: IndexerConfig): Router {
         : null;
 
       res.json(ok({
+        available: true,
         totalClaimed: totalClaimed.rows[0]?.total ?? '0',
         events:       events.rows,
       }, { pagination: { limit, nextCursor } }));

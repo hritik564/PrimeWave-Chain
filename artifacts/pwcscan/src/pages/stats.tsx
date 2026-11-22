@@ -29,25 +29,29 @@ export default function Stats() {
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard
             title="Current Block"
-            value={formatNumber(stats?.network.currentBlock || 0)}
+            value={stats ? formatNumber(stats.network.currentBlock) : "Unavailable"}
             icon={<Blocks className="h-5 w-5" />}
             isLoading={isLoading}
           />
           <MetricCard
             title="Transactions"
-            value={formatNumber(stats?.transactions.total || "0")}
+            value={stats ? formatNumber(stats.transactions.total) : "Unavailable"}
             icon={<ArrowRightLeft className="h-5 w-5" />}
             isLoading={isLoading}
           />
           <MetricCard
             title="TPS (60s avg)"
-            value={stats?.transactions.tps_60s ? stats.transactions.tps_60s.toFixed(2) : "0.00"}
+            value={
+              stats?.transactions.tps_60s === null || !stats
+                ? "Unavailable"
+                : stats.transactions.tps_60s.toFixed(2)
+            }
             icon={<Activity className="h-5 w-5" />}
             isLoading={isLoading}
           />
           <MetricCard
             title="Active Validators"
-            value={formatNumber(stats?.validators.activeCount || "0")}
+            value={stats ? formatNumber(stats.validators.activeCount) : "Unavailable"}
             icon={<Users className="h-5 w-5" />}
             isLoading={isLoading}
           />
@@ -55,37 +59,37 @@ export default function Stats() {
 
         <MetricCard
           title="RewardVault Remaining"
-          value={stats ? formatPW(stats.rewardVault.totalFunded) : "0 PW"}
-          subtitle={`Emission: ${stats ? formatPW(stats.rewardVault.emissionRate) : '0 PW'}/s`}
+          value={stats?.rewardVault.totalFunded === null || !stats ? "Unavailable" : formatPW(stats.rewardVault.totalFunded)}
+          subtitle={stats?.rewardVault.emissionRate === null || !stats ? undefined : `Emission: ${formatPW(stats.rewardVault.emissionRate)}/s`}
           icon={<ShieldAlert className="h-5 w-5" />}
           isLoading={isLoading}
         />
         <MetricCard
           title="RewardVault Emitted"
-          value={stats ? formatPW(stats.rewardVault.totalEmitted) : "0 PW"}
+          value={stats?.rewardVault.totalEmitted === null || !stats ? "Unavailable" : formatPW(stats.rewardVault.totalEmitted)}
           icon={<ShieldAlert className="h-5 w-5 text-primary" />}
           isLoading={isLoading}
         />
         <MetricCard
           title="Fees Distributed"
-          value={stats ? formatPW(stats.fees.totalDistributed) : "0 PW"}
+          value={stats?.fees.totalDistributed === null || !stats ? "Unavailable" : formatPW(stats.fees.totalDistributed)}
           icon={<Coins className="h-5 w-5" />}
           isLoading={isLoading}
         />
         <MetricCard
           title="Fees to Validators"
-          value={stats ? formatPW(stats.fees.totalToValidators) : "0 PW"}
+          value={stats?.fees.totalToValidators === null || !stats ? "Unavailable" : formatPW(stats.fees.totalToValidators)}
           icon={<Coins className="h-5 w-5 text-emerald-500" />}
           isLoading={isLoading}
         />
         <MetricCard
           title="Gas Limit (Latest Block)"
-          value={stats ? formatNumber(stats.gas.gasLimitLatestBlock) : "0"}
+          value={stats?.gas.gasLimitLatestBlock === null || !stats ? "Unavailable" : formatNumber(stats.gas.gasLimitLatestBlock)}
           isLoading={isLoading}
         />
         <MetricCard
           title="Gas Used (Latest Block)"
-          value={stats ? formatNumber(stats.gas.gasUsedLatestBlock) : "0"}
+          value={stats?.gas.gasUsedLatestBlock === null || !stats ? "Unavailable" : formatNumber(stats.gas.gasUsedLatestBlock)}
           isLoading={isLoading}
         />
       </div>

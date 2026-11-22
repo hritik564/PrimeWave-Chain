@@ -1,8 +1,10 @@
 import {
+  assertProductionGenesisBinding,
   assertDevelopmentDatabaseSafety,
   assertRpcEndpointAllowed,
   isAutoContractDeploymentEnabled,
   verifyRpcChainId,
+  verifyRpcGenesisHash,
 } from '../src/startup-safety';
 
 const isolatedDevelopmentEnv = {
@@ -48,6 +50,18 @@ describe('development startup gates', () => {
     ).not.toThrow();
   });
 
+  test('requires a genesis binding for production networks other than Testnet 77', () => {
+    expect(() => assertProductionGenesisBinding(77, null, 'production')).not.toThrow();
+    expect(() => assertProductionGenesisBinding(73571, null, 'production')).toThrow(
+      /INDEXER_EXPECTED_GENESIS_HASH.*before database access/,
+    );
+    expect(() => assertProductionGenesisBinding(
+      73571,
+      `0x${'ab'.repeat(32)}`,
+      'production',
+    )).not.toThrow();
+  });
+
   test('rejects a wrong development chain ID before database startup', async () => {
     await expect(
       verifyRpcChainId(async () => 77, 73571, 'development'),
@@ -60,6 +74,19 @@ describe('development startup gates', () => {
         throw new Error('transport details are intentionally not surfaced');
       }, 73571, 'development'),
     ).rejects.toThrow(/startup aborted before database access/);
+  });
+
+  test('requires configured genesis identity to match before database startup', async () => {
+    const genesisHash = `0x${'ab'.repeat(32)}`;
+    await expect(
+      verifyRpcGenesisHash(async () => genesisHash, genesisHash),
+    ).resolves.toBeUndefined();
+    await expect(
+      verifyRpcGenesisHash(async () => `0x${'cd'.repeat(32)}`, genesisHash),
+    ).rejects.toThrow(/genesis hash mismatch.*before database access/i);
+    await expect(
+      verifyRpcGenesisHash(async () => null, genesisHash),
+    ).rejects.toThrow(/genesis hash mismatch.*before database access/i);
   });
 
   test('disables contract deployment unless explicitly enabled', () => {

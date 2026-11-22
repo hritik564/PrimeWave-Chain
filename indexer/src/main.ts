@@ -21,18 +21,25 @@ import { IndexerEngine } from './indexer/engine';
 import { startApiServer } from './api/server';
 import {
   assertDevelopmentDatabaseSafety,
+  assertProductionGenesisBinding,
   assertRpcEndpointAllowed,
   verifyRpcChainId,
+  verifyRpcGenesisHash,
 } from './startup-safety';
 
 async function main(): Promise<void> {
   const config = loadConfig();
 
   console.log('[main] PrimeWave Indexer starting');
-  console.log(`[main] Chain: ${config.chainId}  RPC: ${config.rpcUrl}`);
+  console.log(`[main] Chain: ${config.chainId}  RPC endpoint configured`);
 
   const isProduction = process.env.NODE_ENV === 'production';
   assertDevelopmentDatabaseSafety(process.env);
+  assertProductionGenesisBinding(
+    config.chainId,
+    config.expectedGenesisHash,
+    process.env.NODE_ENV,
+  );
   assertRpcEndpointAllowed(config.rpcUrl, process.env.NODE_ENV);
 
   // Verify RPC identity before opening any database connection.
@@ -47,6 +54,13 @@ async function main(): Promise<void> {
     process.env.NODE_ENV,
   );
   console.log(`[main] Chain ID confirmed: ${config.chainId}`);
+  if (config.expectedGenesisHash) {
+    await verifyRpcGenesisHash(
+      async () => (await rpc.getBlockByNumber(0, false))?.hash ?? null,
+      config.expectedGenesisHash,
+    );
+    console.log('[main] Genesis hash confirmed');
+  }
 
   const pool = createPool(config.dbUrl, config.dbPoolMin, config.dbPoolMax);
 
@@ -65,7 +79,13 @@ async function main(): Promise<void> {
 
   // Start indexer + API
   const engine = new IndexerEngine(rpc, config);
-  startApiServer(config, engine);
+  const balanceRpc = new RpcClient({
+    url: config.rpcUrl,
+    maxRetries: 0,
+    retryDelayMs: 0,
+    timeoutMs: 5000,
+  });
+  startApiServer(config, engine, balanceRpc);
 
   // Graceful shutdown
   let stopping = false;

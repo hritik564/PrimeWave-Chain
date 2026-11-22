@@ -11,6 +11,7 @@ export interface IndexerConfig {
   rpcUrl:          string;
   wsUrl:           string | null;
   chainId:         number;
+  expectedGenesisHash: string | null;
 
   // Database
   dbUrl:           string;
@@ -62,6 +63,15 @@ function optionalAddr(key: string): string | null {
   return v.toLowerCase();
 }
 
+function optionalHash(key: string): string | null {
+  const value = process.env[key]?.trim();
+  if (!value) return null;
+  if (!/^0x[0-9a-f]{64}$/i.test(value)) {
+    throw new Error(`${key} must be a 32-byte 0x-prefixed hash.`);
+  }
+  return value.toLowerCase();
+}
+
 function int(key: string, fallback: number): number {
   const v = process.env[key];
   if (!v) return fallback;
@@ -75,6 +85,7 @@ export function loadConfig(): IndexerConfig {
     rpcUrl:         required('INDEXER_RPC_URL'),
     wsUrl:          process.env['INDEXER_WS_URL'] ?? null,
     chainId:        int('INDEXER_CHAIN_ID', 73571),
+    expectedGenesisHash: optionalHash('INDEXER_EXPECTED_GENESIS_HASH'),
 
     dbUrl:          required('INDEXER_DB_URL'),
     dbPoolMin:      int('INDEXER_DB_POOL_MIN', 2),
@@ -112,6 +123,7 @@ export function makeTestConfig(overrides: Partial<IndexerConfig> = {}): IndexerC
     rpcUrl:          'http://localhost:9650',
     wsUrl:           null,
     chainId:         73571,
+    expectedGenesisHash: null,
     dbUrl:           'postgresql://localhost:5432/primewave_test',
     dbPoolMin:       1,
     dbPoolMax:       2,

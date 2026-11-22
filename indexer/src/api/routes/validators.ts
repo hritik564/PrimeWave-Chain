@@ -6,7 +6,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { query } from '../../db/client';
-import { validateValidatorId, validatePagination, ok, err } from '../validation';
+import { validateValidatorId, validatePagination, ok, err, ValidationError } from '../validation';
 import { IndexerConfig } from '../../config';
 
 export default function validatorsRouter(config: IndexerConfig): Router {
@@ -15,14 +15,31 @@ export default function validatorsRouter(config: IndexerConfig): Router {
   // GET /validators
   router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { limit, after } = validatePagination(
+      const { limit } = validatePagination(
         req.query['limit'] as string | undefined,
-        req.query['after'] as string | undefined,
+        undefined,
         config.apiMaxLimit, config.apiDefaultLimit
       );
-      const statusFilter = req.query['status'] !== undefined
-        ? parseInt(req.query['status'] as string, 10)
-        : null;
+      const afterCursor = req.query['after'] as string | undefined;
+      let afterBlock: number | null = null;
+      let afterId: string | null = null;
+      if (afterCursor) {
+        const match = /^(\d+):(0x[0-9a-fA-F]{64})$/.exec(afterCursor);
+        if (!match) throw new ValidationError('after: invalid validator cursor');
+        afterBlock = Number(match[1]);
+        afterId = match[2]!.toLowerCase();
+        if (!Number.isSafeInteger(afterBlock)) {
+          throw new ValidationError('after: invalid validator cursor');
+        }
+      }
+      let statusFilter: number | null = null;
+      if (req.query['status'] !== undefined) {
+        const parsedStatus = Number(req.query['status']);
+        if (!Number.isSafeInteger(parsedStatus) || parsedStatus < 0) {
+          throw new ValidationError('status: must be a non-negative integer');
+        }
+        statusFilter = parsedStatus;
+      }
 
       const rows = await query(
         `SELECT validation_id, reward_recipient, acp99_weight, uptime_bips,
@@ -30,14 +47,17 @@ export default function validatorsRouter(config: IndexerConfig): Router {
                 first_seen_block, last_updated_block
          FROM validators
          WHERE ($1::int IS NULL OR status = $1)
-           AND ($2::bigint IS NULL OR first_seen_block > $2)
-         ORDER BY first_seen_block DESC
-         LIMIT $3`,
-        [statusFilter, after, limit]
+           AND (
+             $2::bigint IS NULL OR first_seen_block < $2 OR
+             (first_seen_block = $2 AND validation_id < $3)
+           )
+         ORDER BY first_seen_block DESC, validation_id DESC
+         LIMIT $4`,
+        [statusFilter, afterBlock, afterId, limit]
       );
 
       const nextCursor = rows.rows.length === limit
-        ? rows.rows[rows.rows.length - 1]?.first_seen_block
+        ? `${rows.rows[rows.rows.length - 1]?.first_seen_block}:${rows.rows[rows.rows.length - 1]?.validation_id}`
         : null;
 
       res.json(ok(rows.rows, { pagination: { limit, nextCursor } }));

@@ -14,6 +14,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { IndexerConfig } from '../config';
 import { IndexerEngine } from '../indexer/engine';
+import { RpcClient } from '../rpc';
 import { ValidationError } from './validation';
 
 // Route modules
@@ -27,8 +28,13 @@ import feesRouter       from './routes/fees';
 import contractsRouter  from './routes/contracts';
 import searchRouter     from './routes/search';
 import statsRouter      from './routes/stats';
+import identityRouter   from './routes/identity';
 
-export function createApp(config: IndexerConfig, engine: IndexerEngine): express.Application {
+export function createApp(
+  config: IndexerConfig,
+  engine: IndexerEngine,
+  balanceRpc?: RpcClient,
+): express.Application {
   const app = express();
 
   // Attach config + engine to request context
@@ -42,6 +48,7 @@ export function createApp(config: IndexerConfig, engine: IndexerEngine): express
 
   // ── Routes ──────────────────────────────────────────────────────────────────
 
+  app.use('/identity', identityRouter(config));
   app.get('/health', (_req, res) => {
     res.json({ success: true, data: { status: 'ok', service: 'primewave-indexer' } });
   });
@@ -49,11 +56,11 @@ export function createApp(config: IndexerConfig, engine: IndexerEngine): express
   app.use('/stats',        statsRouter(config, engine));
   app.use('/blocks',       blocksRouter(config));
   app.use('/transactions', transactionsRouter(config));
-  app.use('/addresses',    addressesRouter(config));
+  app.use('/addresses',    addressesRouter(config, balanceRpc));
   app.use('/validators',   validatorsRouter(config));
   app.use('/staking',      stakingRouter(config));
-  app.use('/rewards',      rewardsRouter(config));
-  app.use('/fees',         feesRouter(config));
+  app.use('/rewards',      rewardsRouter(config, engine));
+  app.use('/fees',         feesRouter(config, engine));
   app.use('/contracts',    contractsRouter(config));
   app.use('/search',       searchRouter());
 
@@ -77,8 +84,9 @@ export function createApp(config: IndexerConfig, engine: IndexerEngine): express
 export function startApiServer(
   config:  IndexerConfig,
   engine:  IndexerEngine,
+  balanceRpc?: RpcClient,
 ): void {
-  const app = createApp(config, engine);
+  const app = createApp(config, engine, balanceRpc);
   app.listen(config.apiPort, () => {
     console.log(`[api] Listening on :${config.apiPort}`);
   });

@@ -1,6 +1,6 @@
-import { useState } from "react"
 import { NetworkLink } from "@/lib/network"
 import { useTransactions } from "@/lib/api"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { formatAge, formatPW, formatHash } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/pwcscan/error-state"
 import { Transaction } from "@/lib/api"
 
 export default function Transactions() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined)
+  const { cursor, hasPrevious, goPrevious, goNext } = useCursorPagination<string>()
   const { data: res, isLoading, error, refetch } = useTransactions({ limit: 25, cursor })
 
   if (error) return <ErrorState onRetry={refetch} />
@@ -22,8 +22,10 @@ export default function Transactions() {
         <div className="flex items-center gap-2">
           {tx.status === 1 ? (
             <StatusBadge status="success" label="" className="w-2 h-2 p-0 rounded-full" />
-          ) : (
+          ) : tx.status === 0 ? (
             <StatusBadge status="failed" label="" className="w-2 h-2 p-0 rounded-full" />
+          ) : (
+            <StatusBadge status="pending" label="Receipt unavailable" className="text-[10px]" />
           )}
           <NetworkLink href={`/tx/${tx.hash}`} className="font-mono font-medium text-primary hover:underline">
             {formatHash(tx.hash)}
@@ -39,6 +41,13 @@ export default function Transactions() {
           {tx.block_number}
           </NetworkLink>
       )
+    },
+    {
+      key: "age",
+      header: "Age",
+      render: (tx: Transaction) => tx.timestamp_unix === undefined || tx.timestamp_unix === null
+        ? <span className="text-muted-foreground">Unavailable</span>
+        : <span className="text-muted-foreground">{formatAge(tx.timestamp_unix)}</span>
     },
     {
       key: "from",
@@ -62,7 +71,11 @@ export default function Transactions() {
     {
       key: "fee",
       header: "Txn Fee",
-      render: (tx: Transaction) => <span className="text-xs text-muted-foreground">{tx.transaction_fee ? formatPW(tx.transaction_fee) : '-'}</span>
+      render: (tx: Transaction) => (
+        <span className="text-xs text-muted-foreground">
+          {tx.transaction_fee === null ? "Unavailable" : formatPW(tx.transaction_fee)}
+        </span>
+      )
     }
   ]
 
@@ -79,14 +92,10 @@ export default function Transactions() {
         isLoading={isLoading}
         keyExtractor={(tx) => tx.hash}
         pagination={{
-          hasPrev: false,
+          hasPrev: hasPrevious,
           hasNext: !!res?.pagination?.nextCursor,
-          onPrev: () => setCursor(undefined),
-          onNext: () => {
-            if (res?.pagination?.nextCursor) {
-              setCursor(res.pagination.nextCursor)
-            }
-          },
+          onPrev: goPrevious,
+          onNext: () => goNext(res?.pagination?.nextCursor),
           label: "Showing latest transactions"
         }}
       />

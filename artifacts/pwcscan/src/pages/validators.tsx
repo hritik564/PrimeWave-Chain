@@ -2,7 +2,7 @@ import { useState } from "react"
 import { NetworkLink } from "@/lib/network"
 import { Server, ShieldCheck, Zap } from "lucide-react"
 import { useValidators, useStats } from "@/lib/api"
-import { formatPW, formatHash } from "@/lib/format"
+import { formatPW, formatHash, formatNumber } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
 import { ValidatorStatusBadge } from "@/components/pwcscan/status-badge"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
@@ -10,10 +10,16 @@ import { ErrorState } from "@/components/pwcscan/error-state"
 import { MetricCard } from "@/components/pwcscan/metric-card"
 import { Validator } from "@/lib/api"
 import { Button } from "@/components/ui/button"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 
 export default function Validators() {
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined)
-  const { data: valsRes, isLoading, error, refetch } = useValidators({ status: statusFilter })
+  const pagination = useCursorPagination<string>()
+  const { data: valsRes, isLoading, error, refetch } = useValidators({
+    status: statusFilter,
+    limit: 25,
+    cursor: pagination.cursor,
+  })
   const { data: statsRes } = useStats()
 
   if (error) return <ErrorState onRetry={refetch} />
@@ -68,12 +74,12 @@ export default function Validators() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
           <MetricCard 
             title="Active Validators"
-            value={statsRes?.validators.activeCount || "-"}
+            value={statsRes ? formatNumber(statsRes.validators.activeCount) : "Unavailable"}
             icon={<ShieldCheck className="h-5 w-5" />}
           />
           <MetricCard 
             title="Total Validator Rewards"
-            value={statsRes ? formatPW(statsRes.fees.totalToValidators) : "-"}
+            value={statsRes ? formatPW(statsRes.fees.totalToValidators) : "Unavailable"}
             icon={<Zap className="h-5 w-5" />}
           />
         </div>
@@ -83,7 +89,7 @@ export default function Validators() {
             variant="ghost" 
             size="sm"
             className={statusFilter === undefined ? "bg-background shadow-sm" : ""}
-            onClick={() => setStatusFilter(undefined)}
+            onClick={() => { setStatusFilter(undefined); pagination.reset() }}
           >
             All
           </Button>
@@ -91,7 +97,7 @@ export default function Validators() {
             variant="ghost" 
             size="sm"
             className={statusFilter === 2 ? "bg-background shadow-sm" : ""}
-            onClick={() => setStatusFilter(2)}
+            onClick={() => { setStatusFilter(2); pagination.reset() }}
           >
             Active
           </Button>
@@ -99,7 +105,7 @@ export default function Validators() {
             variant="ghost" 
             size="sm"
             className={statusFilter === 1 ? "bg-background shadow-sm" : ""}
-            onClick={() => setStatusFilter(1)}
+            onClick={() => { setStatusFilter(1); pagination.reset() }}
           >
             Pending
           </Button>
@@ -108,9 +114,15 @@ export default function Validators() {
 
       <DataTable 
         columns={columns}
-        data={valsRes}
+        data={valsRes?.data}
         isLoading={isLoading}
         keyExtractor={(v) => v.validation_id}
+        pagination={{
+          hasPrev: pagination.hasPrevious,
+          hasNext: !!valsRes?.pagination.nextCursor,
+          onPrev: pagination.goPrevious,
+          onNext: () => pagination.goNext(valsRes?.pagination.nextCursor),
+        }}
       />
     </div>
   )

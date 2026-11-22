@@ -14,11 +14,14 @@ export default function contractsRouter(config: IndexerConfig): Router {
   // GET /contracts
   router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { limit, after } = validatePagination(
+      const { limit } = validatePagination(
         req.query['limit'] as string | undefined,
-        req.query['after'] as string | undefined,
+        undefined,
         config.apiMaxLimit, config.apiDefaultLimit
       );
+      const afterAddress = req.query['after'] === undefined
+        ? null
+        : validateAddress(req.query['after'] as string, 'after');
 
       const knownOnly = req.query['known'] === 'true';
 
@@ -29,14 +32,14 @@ export default function contractsRouter(config: IndexerConfig): Router {
          FROM contracts c
          JOIN addresses a ON a.address = c.address
          WHERE ($1 = false OR c.is_known_protocol = true)
-           AND ($2::bigint IS NULL OR c.creation_block < $2)
-         ORDER BY c.creation_block DESC NULLS LAST
+           AND ($2::varchar IS NULL OR c.address < $2)
+         ORDER BY c.address DESC
          LIMIT $3`,
-        [knownOnly, after, limit]
+        [knownOnly, afterAddress, limit]
       );
 
       const nextCursor = rows.rows.length === limit
-        ? rows.rows[rows.rows.length - 1]?.creation_block
+        ? rows.rows[rows.rows.length - 1]?.address
         : null;
 
       res.json(ok(rows.rows, { pagination: { limit, nextCursor } }));
@@ -61,6 +64,7 @@ export default function contractsRouter(config: IndexerConfig): Router {
       // Recent decoded events for this contract
       const eventsRes = await query(
         `SELECT de.event_name, de.event_signature, de.decoded_json,
+                de.contract_address,
                 de.tx_hash, de.block_number
          FROM decoded_events de
          WHERE de.contract_address = $1

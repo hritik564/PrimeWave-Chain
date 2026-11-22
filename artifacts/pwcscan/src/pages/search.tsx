@@ -23,7 +23,10 @@ export default function SearchResults() {
       
       if (type === 'block') setLocation(buildNetworkPath(`/blocks/${resultData.number}`))
       else if (type === 'transaction') setLocation(buildNetworkPath(`/tx/${resultData.hash}`))
-      else if (type === 'address') setLocation(buildNetworkPath(`/address/${resultData.address}`))
+      else if (type === 'address') {
+        const route = resultData.is_contract ? 'contract' : 'address'
+        setLocation(buildNetworkPath(`/${route}/${resultData.address}`))
+      }
       else if (type === 'validator') setLocation(buildNetworkPath(`/validator/${resultData.validation_id}`))
     }
   }, [searchRes, setLocation, buildNetworkPath])

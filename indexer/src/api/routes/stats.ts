@@ -46,10 +46,16 @@ export default function statsRouter(config: IndexerConfig, engine: IndexerEngine
       const syncStatus = await engine.getSyncStatus().catch(() => ({
         latestIndexed: -1, chainHead: -1, isSynced: false
       }));
+      const hasIndexCoverage =
+        latestBlock !== null &&
+        syncStatus.latestIndexed >= 0 &&
+        syncStatus.isSynced;
+      const hasRewardVault = Boolean(config.contracts.rewardVault);
+      const hasFeeDistributor = Boolean(config.contracts.feeDistributor);
 
       // TPS (last 60 seconds of indexed blocks)
       let tps: number | null = null;
-      if (latestBlock) {
+      if (latestBlock && hasIndexCoverage) {
         const windowEnd   = latestBlock.timestamp_unix;
         const windowStart = windowEnd - 60;
         const tpsRes = await query<{ tx_count: string; block_count: string }>(
@@ -68,32 +74,32 @@ export default function statsRouter(config: IndexerConfig, engine: IndexerEngine
       res.json(ok({
         network: {
           chainId:             config.chainId,
-          currentBlock:        latestBlock?.number ?? 0,
-          latestBlockTimestamp: latestBlock?.timestamp_unix ?? 0,
-          isSynced:            syncStatus.isSynced,
+          currentBlock:        latestBlock?.number ?? null,
+          latestBlockTimestamp: latestBlock?.timestamp_unix ?? null,
+          isSynced:            hasIndexCoverage,
           chainHead:           syncStatus.chainHead,
           latestIndexed:       syncStatus.latestIndexed,
         },
         transactions: {
-          total: txCountRes.rows[0]?.count ?? '0',
-          inLatestBlock: latestBlock?.transaction_count ?? 0,
+          total: hasIndexCoverage ? txCountRes.rows[0]?.count ?? null : null,
+          inLatestBlock: latestBlock?.transaction_count ?? null,
           tps_60s: tps,
         },
         gas: {
-          gasUsedLatestBlock:  latestBlock?.gas_used ?? '0',
-          gasLimitLatestBlock: latestBlock?.gas_limit ?? '0',
+          gasUsedLatestBlock:  latestBlock?.gas_used ?? null,
+          gasLimitLatestBlock: latestBlock?.gas_limit ?? null,
         },
         validators: {
-          activeCount: activeValRes.rows[0]?.count ?? '0',
+          activeCount: hasIndexCoverage ? activeValRes.rows[0]?.count ?? null : null,
         },
         rewardVault: {
-          totalFunded:   rvStateRes.rows[0]?.total_funded   ?? '0',
-          totalEmitted:  rvStateRes.rows[0]?.total_emitted  ?? '0',
-          emissionRate:  rvStateRes.rows[0]?.emission_rate  ?? '0',
+          totalFunded:   hasRewardVault && hasIndexCoverage ? rvStateRes.rows[0]?.total_funded ?? null : null,
+          totalEmitted:  hasRewardVault && hasIndexCoverage ? rvStateRes.rows[0]?.total_emitted ?? null : null,
+          emissionRate:  hasRewardVault && hasIndexCoverage ? rvStateRes.rows[0]?.emission_rate ?? null : null,
         },
         fees: {
-          totalDistributed:  totalFeesRes.rows[0]?.total ?? '0',
-          totalToValidators: vfvRes.rows[0]?.total ?? '0',
+          totalDistributed:  hasFeeDistributor && hasIndexCoverage ? totalFeesRes.rows[0]?.total ?? null : null,
+          totalToValidators: hasFeeDistributor && hasIndexCoverage ? vfvRes.rows[0]?.total ?? null : null,
         },
       }));
     } catch (e) { next(e); }

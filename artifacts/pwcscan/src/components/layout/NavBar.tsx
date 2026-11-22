@@ -34,6 +34,7 @@ const NAV_LINKS = [
 
 function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
   const { networkId: selectedNetwork, network: currentNetwork, setNetwork } = useNetwork()
+  const { data: stats } = useStats()
   const networkOptions = (Object.keys(NETWORKS) as NetworkId[])
     .filter(isNetworkAvailable)
     .map((id) => NETWORKS[id])
@@ -56,7 +57,9 @@ function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
           </span>
           {!compact && currentNetwork.chainId && (
             <span className="hidden text-xs font-normal text-muted-foreground sm:inline">
-              Chain {currentNetwork.chainId}
+              {currentNetwork.id !== "mainnet" || stats
+                ? `Chain ${currentNetwork.chainId}`
+                : "Identity pending"}
             </span>
           )}
           {!compact && !currentNetwork.chainId && (
@@ -86,10 +89,18 @@ function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
                 {selectedNetwork === network.id && <Check className="h-4 w-4 text-primary" />}
               </span>
               <span className="text-xs text-muted-foreground">
-                {network.chainId ? `${network.description} · Chain ${network.chainId}` : network.description}
+                {network.id !== "mainnet" && network.chainId
+                  ? `${network.description} · Chain ${network.chainId}`
+                  : network.description}
               </span>
               <span className="text-[11px] text-muted-foreground">
-                {network.status === "configured" ? "Configured" : "Configuration pending"}
+                {network.status !== "configured"
+                  ? "Configuration pending"
+                  : network.id === "mainnet"
+                    ? selectedNetwork === "mainnet" && stats
+                      ? "Identity verified"
+                      : "Identity verification required"
+                    : "Configured"}
               </span>
             </span>
           </DropdownMenuItem>

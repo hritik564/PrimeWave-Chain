@@ -2,6 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useNetwork } from './network';
 import type { NetworkDefinition } from './network-config';
 import {
+  verifyNetworkIdentity,
+  type NetworkIdentity,
+} from './network-identity';
+import {
   isSearchQueryEnabled,
   parseSearchApiResponse,
   type SearchApiResponse,
@@ -37,13 +41,43 @@ export class NetworkDataMismatchError extends Error {
   }
 }
 
+export class NetworkIdentityMismatchError extends Error {
+  constructor(public network: NetworkDefinition, public reason: string) {
+    super(
+      reason === 'genesis-hash'
+        ? `Network identity mismatch for ${network.label}: the verified genesis hash does not match.`
+        : `Network identity for ${network.label} could not be verified.`,
+    );
+    this.name = 'NetworkIdentityMismatchError';
+  }
+}
+
 export function formatApiUrl(base: string, path: string): string {
   const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${normalizedBase}${normalizedPath}`;
 }
 
-export async function apiRequest<T>(
+const IDENTITY_CACHE_TTL_MS = 10_000;
+const identityCache = new Map<string, { expiresAt: number; promise: Promise<void> }>();
+
+function paginationParams(params?: { limit?: number; cursor?: number | string }) {
+  return {
+    ...(params?.limit === undefined ? {} : { limit: params.limit }),
+    ...(params?.cursor === undefined ? {} : { after: params.cursor }),
+  };
+}
+
+function identityCacheKey(network: NetworkDefinition): string {
+  return [
+    network.id,
+    network.indexerApiUrl,
+    network.chainId,
+    network.expectedGenesisHash ?? '',
+  ].join(':');
+}
+
+async function requestJson<T>(
   network: NetworkDefinition,
   path: string,
   params?: Record<string, string | number | boolean>,
@@ -84,11 +118,81 @@ export async function apiRequest<T>(
     if (err instanceof ApiError) throw err;
     throw new ApiError(
       503,
-      `Unable to reach the ${network.label} indexer at ${base}. Check that the indexer endpoint and TLS configuration are available.`,
+      `Unable to reach the ${network.label} indexer. Its endpoint or network connection may be unavailable.`,
     );
   } finally {
     window.clearTimeout(timeout);
   }
+}
+
+async function ensureNetworkIdentity(network: NetworkDefinition): Promise<void> {
+  const key = identityCacheKey(network);
+  const cached = identityCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.promise;
+  }
+
+  const promise = requestJson<ApiResponse<NetworkIdentity>>(network, '/identity')
+    .then((response) => {
+      const identity = response?.data;
+      if (
+        !identity ||
+        typeof identity.chainId !== 'number' ||
+        typeof identity.genesisHash !== 'string' ||
+        typeof identity.verified !== 'boolean'
+      ) {
+        throw new ApiError(502, 'The indexer returned invalid network identity data.');
+      }
+
+      const verification = verifyNetworkIdentity(network, identity);
+      if (!verification.verified) {
+        if (verification.reason === 'chain-id') {
+          throw new NetworkDataMismatchError(network, identity.chainId);
+        }
+        throw new NetworkIdentityMismatchError(
+          network,
+          verification.reason ?? 'server-unverified',
+        );
+      }
+    });
+
+  identityCache.set(key, {
+    expiresAt: Date.now() + IDENTITY_CACHE_TTL_MS,
+    promise,
+  });
+
+  try {
+    await promise;
+  } catch (error) {
+    if (identityCache.get(key)?.promise === promise) {
+      identityCache.delete(key);
+    }
+    throw error;
+  }
+}
+
+export async function apiRequest<T>(
+  network: NetworkDefinition,
+  path: string,
+  params?: Record<string, string | number | boolean>,
+): Promise<T> {
+  if (path !== '/identity') {
+    await ensureNetworkIdentity(network);
+  }
+  return requestJson<T>(network, path, params);
+}
+
+export function shouldRetryApiError(failureCount: number, error: unknown): boolean {
+  if (
+    error instanceof NetworkDataMismatchError ||
+    error instanceof NetworkIdentityMismatchError
+  ) {
+    return false;
+  }
+  if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+    return false;
+  }
+  return failureCount < 1;
 }
 
 // ========================
@@ -100,22 +204,29 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export interface PaginatedApiResponse<T> {
+export interface ApiPageResponse<T, Cursor extends number | string = number> extends ApiResponse<T> {
+  pagination: {
+    limit: number;
+    nextCursor: Cursor | null;
+  };
+}
+
+export interface PaginatedApiResponse<T, Cursor extends number | string = number> {
   success: boolean;
   data: T[];
   pagination: {
     limit: number;
-    nextCursor: number | null;
+    nextCursor: Cursor | null;
   };
 }
 
 export interface Stats {
-  network: { chainId: number; currentBlock: number; latestBlockTimestamp: number; isSynced: boolean; chainHead: number; latestIndexed: number };
-  transactions: { total: string; inLatestBlock: number; tps_60s: number | null };
-  gas: { gasUsedLatestBlock: string; gasLimitLatestBlock: string };
-  validators: { activeCount: string };
-  rewardVault: { totalFunded: string; totalEmitted: string; emissionRate: string };
-  fees: { totalDistributed: string; totalToValidators: string };
+  network: { chainId: number; currentBlock: number | null; latestBlockTimestamp: number | null; isSynced: boolean; chainHead: number; latestIndexed: number };
+  transactions: { total: string | null; inLatestBlock: number | null; tps_60s: number | null };
+  gas: { gasUsedLatestBlock: string | null; gasLimitLatestBlock: string | null };
+  validators: { activeCount: string | null };
+  rewardVault: { totalFunded: string | null; totalEmitted: string | null; emissionRate: string | null };
+  fees: { totalDistributed: string | null; totalToValidators: string | null };
 }
 
 export interface Block {
@@ -128,19 +239,21 @@ export interface Log { log_index: number; contract_address: string; topic0: stri
 export interface DecodedEvent { event_name: string; event_signature: string; decoded_json: Record<string, unknown>; contract_address: string; tx_hash?: string; block_number?: number; }
 
 export interface Transaction {
-  hash: string; block_number: number; block_hash: string; transaction_index: number;
+  hash: string; block_number: number; block_hash?: string; transaction_index: number;
+  timestamp_unix?: number | null;
   from_address: string; to_address: string | null; value: string; gas_limit: string;
-  gas_price: string | null; max_fee_per_gas: string | null; max_priority_fee: string | null;
-  nonce: number; input: string | null; chain_id: number; tx_type: number;
-  status: number; receipt_gas_used: string; effective_gas_price: string | null;
+  gas_price: string | null; max_fee_per_gas?: string | null; max_priority_fee?: string | null;
+  nonce?: number; input?: string | null; chain_id?: number | null; tx_type?: number | null;
+  status: number | null; receipt_gas_used: string | null; effective_gas_price: string | null;
   transaction_fee: string | null; created_contract: string | null;
-  logs: Log[]; decodedEvents: DecodedEvent[];
+  logs?: Log[]; decodedEvents?: DecodedEvent[];
 }
 
 export interface Address {
   address: string; first_seen_block: number; last_seen_block: number;
   tx_count: number; sent_count: number; received_count: number;
   is_contract: boolean; creation_tx: string | null; is_known_protocol: boolean; protocol_name: string | null;
+  native_balance_wei: string | null;
 }
 
 export interface Validator {
@@ -161,11 +274,13 @@ export interface StakingEvent {
 }
 
 export interface StakingPosition { validation_id: string; staker: string; amount: string; stake_block: number; is_returned: boolean; return_block: number | null; }
+export interface StakingAddressData { positions: StakingPosition[]; recentEvents: StakingEvent[]; }
 
-export interface RewardsOverview { latestState: RewardVaultState | null; totalClaimed: string; emissionRate: string; }
+export interface RewardsOverview { latestState: RewardVaultState | null; totalClaimed: string | null; emissionRate: string | null; }
 export interface RewardVaultState { block_number: number; total_funded: string; total_emitted: string; emission_rate: string; }
 
 export interface RewardEvent { id: number; tx_hash: string; block_number: number; event_name: string; recipient_id: string | null; amount: string | null; }
+export interface RewardsAddressData { available: boolean; totalClaimed: string | null; events: RewardEvent[]; }
 
 export interface FeesOverview {
   summary: { total_distributed: string; total_validator: string; total_treasury: string; total_burn: string; event_count: string } | null;
@@ -176,6 +291,8 @@ export interface FeeEvent { id: number; tx_hash: string; block_number: number; l
 export interface Contract {
   address: string; creation_tx: string | null; creation_block: number | null;
   is_verified: boolean; is_known_protocol: boolean; protocol_name: string | null; tx_count: number;
+  first_seen_block?: number;
+  last_seen_block?: number;
   recentEvents?: DecodedEvent[];
 }
 
@@ -200,10 +317,7 @@ export function useStats(refetchInterval?: number) {
       ? (query) =>
           query.state.error instanceof NetworkDataMismatchError ? false : refetchInterval
       : false,
-    retry: (failureCount, error) => {
-      if (error instanceof ApiError && error.status === 503) return false;
-      return failureCount < 2;
-    },
+    retry: shouldRetryApiError,
   });
 }
 
@@ -211,7 +325,11 @@ export function useBlocks(params?: { limit?: number; cursor?: number }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'blocks', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Block>>(network, '/blocks', params),
+    queryFn: () => apiRequest<PaginatedApiResponse<Block>>(
+      network,
+      '/blocks',
+      paginationParams(params),
+    ),
     enabled: isConfigured,
   });
 }
@@ -230,11 +348,18 @@ export function useBlock(numberOrHash: string | number) {
   });
 }
 
-export function useTransactions(params?: { limit?: number; cursor?: number }) {
+export function useTransactions(params?: { limit?: number; cursor?: string; block?: number }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'transactions', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>(network, '/transactions', params),
+    queryFn: () => apiRequest<PaginatedApiResponse<Transaction, string>>(
+      network,
+      '/transactions',
+      {
+        ...paginationParams(params),
+        ...(params?.block === undefined ? {} : { block: params.block }),
+      },
+    ),
     enabled: isConfigured,
   });
 }
@@ -257,20 +382,47 @@ export function useAddress(address: string) {
   });
 }
 
-export function useAddressTransactions(address: string, params?: { limit?: number; cursor?: number }) {
+export function useBlockTransactions(blockNumber: number | undefined, params?: { limit?: number; cursor?: string }) {
+  const { network, isConfigured } = useNetwork();
+  return useQuery({
+    queryKey: ['network', network.id, 'blockTransactions', blockNumber, params],
+    queryFn: () => apiRequest<PaginatedApiResponse<Transaction, string>>(
+      network,
+      '/transactions',
+      {
+        ...paginationParams(params),
+        block: blockNumber!,
+      },
+    ),
+    enabled: isConfigured && blockNumber !== undefined,
+  });
+}
+
+export function useAddressTransactions(address: string, params?: { limit?: number; cursor?: string }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'addressTxs', address, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Transaction>>(network, `/addresses/${address}/transactions`, params),
+    queryFn: () => apiRequest<PaginatedApiResponse<Transaction, string>>(
+      network,
+      `/addresses/${address}/transactions`,
+      paginationParams(params),
+    ),
     enabled: isConfigured && !!address,
   });
 }
 
-export function useValidators(params?: { status?: number }) {
+export function useValidators(params?: { status?: number; limit?: number; cursor?: string }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'validators', params],
-    queryFn: () => apiRequest<ApiResponse<Validator[]>>(network, '/validators', params).then(res => res.data),
+    queryFn: () => apiRequest<PaginatedApiResponse<Validator, string>>(
+      network,
+      '/validators',
+      {
+        ...paginationParams(params),
+        ...(params?.status === undefined ? {} : { status: params.status }),
+      },
+    ),
     enabled: isConfigured,
   });
 }
@@ -288,7 +440,11 @@ export function useValidatorEvents(id: string, params?: { limit?: number; cursor
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'validatorEvents', id, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<ValidatorEvent>>(network, `/validators/${id}/events`, params),
+    queryFn: () => apiRequest<PaginatedApiResponse<ValidatorEvent>>(
+      network,
+      `/validators/${id}/events`,
+      paginationParams(params),
+    ),
     enabled: isConfigured && !!id,
   });
 }
@@ -297,7 +453,11 @@ export function useStaking(params?: { limit?: number; cursor?: number }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'staking', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<StakingEvent>>(network, '/staking', params),
+    queryFn: () => apiRequest<PaginatedApiResponse<StakingEvent>>(
+      network,
+      '/staking',
+      paginationParams(params),
+    ),
     enabled: isConfigured,
   });
 }
@@ -306,7 +466,10 @@ export function useStakingByAddress(address: string) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'stakingAddress', address],
-    queryFn: () => apiRequest<ApiResponse<StakingPosition[]>>(network, `/staking/${address}`).then(res => res.data),
+    queryFn: () => apiRequest<ApiResponse<StakingAddressData>>(
+      network,
+      `/staking/${address}`,
+    ).then(res => res.data),
     enabled: isConfigured && !!address,
   });
 }
@@ -324,7 +487,11 @@ export function useRewardsByAddress(address: string, params?: { limit?: number; 
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'rewardsAddress', address, params],
-    queryFn: () => apiRequest<PaginatedApiResponse<RewardEvent>>(network, `/rewards/${address}`, params),
+    queryFn: () => apiRequest<ApiPageResponse<RewardsAddressData>>(
+      network,
+      `/rewards/${address}`,
+      paginationParams(params),
+    ),
     enabled: isConfigured && !!address,
   });
 }
@@ -333,17 +500,38 @@ export function useFees(params?: { limit?: number; cursor?: number }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'fees', params],
-    queryFn: () => apiRequest<ApiResponse<FeesOverview>>(network, '/fees', params).then(res => res.data),
+    queryFn: () => apiRequest<ApiPageResponse<FeesOverview>>(
+      network,
+      '/fees',
+      paginationParams(params),
+    ),
     enabled: isConfigured,
   });
 }
 
-export function useContracts(params?: { limit?: number; cursor?: number; known_only?: boolean }) {
+export function useContracts(params?: { limit?: number; cursor?: string; known_only?: boolean }) {
   const { network, isConfigured } = useNetwork();
   return useQuery({
     queryKey: ['network', network.id, 'contracts', params],
-    queryFn: () => apiRequest<PaginatedApiResponse<Contract>>(network, '/contracts', params),
+    queryFn: () => apiRequest<PaginatedApiResponse<Contract, string>>(
+      network,
+      '/contracts',
+      {
+        ...paginationParams(params),
+        known: params?.known_only ?? false,
+      },
+    ),
     enabled: isConfigured,
+  });
+}
+
+export function useContract(address: string) {
+  const { network, isConfigured } = useNetwork();
+  return useQuery({
+    queryKey: ['network', network.id, 'contract', address],
+    queryFn: () => apiRequest<ApiResponse<Contract>>(network, `/contracts/${address}`)
+      .then((response) => response.data),
+    enabled: isConfigured && !!address,
   });
 }
 

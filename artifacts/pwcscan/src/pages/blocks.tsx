@@ -1,6 +1,6 @@
-import { useState } from "react"
 import { NetworkLink } from "@/lib/network"
 import { useBlocks } from "@/lib/api"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { formatNumber, formatAge, formatGasPercent } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/pwcscan/error-state"
 import { Block } from "@/lib/api"
 
 export default function Blocks() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined)
+  const { cursor, hasPrevious, goPrevious, goNext } = useCursorPagination()
   const { data: res, isLoading, error, refetch } = useBlocks({ limit: 25, cursor })
 
   if (error) {
@@ -71,15 +71,10 @@ export default function Blocks() {
         isLoading={isLoading}
         keyExtractor={(b) => b.hash}
         pagination={{
-          hasPrev: false, // For simplicity in this demo, cursor only moves forward or we track history.
-          // In reality we'd keep a stack of cursors for 'prev'
+          hasPrev: hasPrevious,
           hasNext: !!res?.pagination?.nextCursor,
-          onPrev: () => setCursor(undefined), // Reset to top
-          onNext: () => {
-            if (res?.pagination?.nextCursor) {
-              setCursor(res.pagination.nextCursor)
-            }
-          },
+          onPrev: goPrevious,
+          onNext: () => goNext(res?.pagination?.nextCursor),
           label: "Showing latest blocks"
         }}
       />

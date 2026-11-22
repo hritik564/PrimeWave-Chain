@@ -1,8 +1,8 @@
-import { useState } from "react"
 import { NetworkLink } from "@/lib/network"
+import { useCursorPagination } from "@/hooks/use-cursor-pagination"
 import { Shield, ShieldAlert, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { useStaking, useStats } from "@/lib/api"
-import { formatPW, formatHash, formatEmissionRate } from "@/lib/format"
+import { formatPW, formatHash, formatEmissionRate, formatNumber } from "@/lib/format"
 import { DataTable } from "@/components/pwcscan/data-table"
 import { AddressDisplay } from "@/components/pwcscan/address-display"
 import { ErrorState } from "@/components/pwcscan/error-state"
@@ -11,7 +11,7 @@ import { StakingEvent } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
 
 export default function Staking() {
-  const [cursor, setCursor] = useState<number | undefined>(undefined)
+  const { cursor, hasPrevious, goPrevious, goNext } = useCursorPagination()
   const { data: stakingRes, isLoading, error, refetch } = useStaking({ limit: 25, cursor })
   const { data: statsRes } = useStats()
   
@@ -74,20 +74,20 @@ export default function Staking() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
           <MetricCard 
             title="Active Validators"
-            value={stats?.validators.activeCount || "-"}
+            value={stats ? formatNumber(stats.validators.activeCount) : "Unavailable"}
             icon={<Shield className="h-5 w-5" />}
           />
           <MetricCard 
             title="Total Staking Emitted"
-            value={stats ? formatPW(stats.rewardVault.totalEmitted) : "-"}
+            value={stats?.rewardVault.totalEmitted === null || !stats ? "Unavailable" : formatPW(stats.rewardVault.totalEmitted)}
           />
           <MetricCard 
             title="Emission Rate"
-            value={stats ? formatEmissionRate(stats.rewardVault.emissionRate) : "-"}
+            value={stats?.rewardVault.emissionRate === null || !stats ? "Unavailable" : formatEmissionRate(stats.rewardVault.emissionRate)}
           />
           <MetricCard 
             title="RewardVault Remaining"
-            value={stats ? formatPW(stats.rewardVault.totalFunded) : "-"}
+            value={stats?.rewardVault.totalFunded === null || !stats ? "Unavailable" : formatPW(stats.rewardVault.totalFunded)}
             icon={<ShieldAlert className="h-5 w-5" />}
           />
         </div>
@@ -104,12 +104,10 @@ export default function Staking() {
           keyExtractor={(evt) => `${evt.tx_hash}-${evt.id}`}
           className="border-0 shadow-none"
           pagination={{
-            hasPrev: false,
+            hasPrev: hasPrevious,
             hasNext: !!stakingRes?.pagination?.nextCursor,
-            onPrev: () => setCursor(undefined),
-            onNext: () => {
-              if (stakingRes?.pagination?.nextCursor) setCursor(stakingRes.pagination.nextCursor)
-            }
+            onPrev: goPrevious,
+            onNext: () => goNext(stakingRes?.pagination?.nextCursor),
           }}
         />
       </div>
