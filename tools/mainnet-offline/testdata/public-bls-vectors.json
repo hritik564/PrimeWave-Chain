@@ -1,0 +1,16 @@
+{
+  "testOnly": true,
+  "source": "AvalancheGo fdb2c1b9/genesis/genesis_local.json; public vectors only, never production identities",
+  "validators": [
+    {
+      "nodeId": "NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg",
+      "blsPublicKey": "0x900c9b119b5c82d781d4b49be78c3fc7ae65f2b435b7ed9e3a8b9a03e475edff86d8a64827fec8db23a6f236afbf127d",
+      "proofOfPossession": "0x8bfd6d4d2086b2b8115d8f72f94095fefe5a6c07876b2accf51a811adf520f389e74a3d2152a6d90b521e2be58ffe468043dc5ea68b4c44410eb67f8dc24f13ed4f194000764c0e922cd254a3588a4962b1cb4db7de4bb9cda9d9d4d6b03f3d2"
+    },
+    {
+      "nodeId": "NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ",
+      "blsPublicKey": "0xa058ff27a4c570664bfa28e34939368539a1340867951943d0f56fa8aac13bc09ff64f341acf8cc0cef74202c2d6f9c0",
+      "proofOfPossession": "0xac52195616344127df74d924e11701ca5e0867647ae36171d168fcf95d536e94061659b3edb924fffdb69dd5aa5cb2d703f8920c825c8f7b74dd0112c9c27814790bfcfa3a08e1d9358da1c54e1f6c0b4d9772432f79d7dceaa3a95c3a7e6adc"
+    }
+  ]
+}

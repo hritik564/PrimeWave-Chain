@@ -1,0 +1,60 @@
+{
+  "baseline": "ebc8da70950b2cd04108ad7ecf7fd0fbda8053f1",
+  "productionApproved": false,
+  "externalAudit": false,
+  "signing": false,
+  "broadcast": false,
+  "focusedTests": {
+    "managerAuthor": {
+      "summary": "5 tests passed, 0 failed, 0 skipped",
+      "logSha256": "761ac3603ee3ad343fcb67a583b9d9f3cdbaebc037e9cbd66414e09c7009441b"
+    },
+    "python": {
+      "summary": "Ran 13 tests",
+      "logSha256": "5bf704d6a53aa11c1f6f50fb3fc51ff163320afad0127d3e61ca37f2c382b6f0"
+    },
+    "go": {
+      "summary": "PASS",
+      "logSha256": "7c112747ace06aeb418a5327fe5f2dd74de076cde69183226f1ab0a99c6bd7e0",
+      "topLevelTestsPassed": 9
+    },
+    "restore": {
+      "summary": "Script ran successfully.",
+      "logSha256": "3a934c3e45f12e950ea9cb9a9ccb123272761bb956686f4ce260893f65c43b0e"
+    }
+  },
+  "exactImport": {
+    "testInput": "Explicit synthetic combined state plus test fork configuration; no approved production genesis supplied",
+    "status": "PASS_EXACT_LOCAL_VM_IMPORT",
+    "genesisFileSha256": "91bc956abb32d86bb4f81b477bcd1e2aa0d71b70bf0d60bc076d7c9238b90958",
+    "expectationsSha256": "792296c3f892ce7a4ae1d98a0ff4750f42b81f8ae19f296dc8006503424c4da5",
+    "avalancheGoCommit": "fdb2c1b9b02ef357b5867d5ababb6acc83837a01",
+    "subnetEvm": "v1.15.1",
+    "pluginProtocol": 46,
+    "vmBinarySha256": "2633078a34034db04cda4a89ab6565f24497398330f4b3a483b51f289fb1e84a",
+    "outputSha256": "4681b7c5daf035f548dfac95886876d8ae63405cd21ef1db00b33a13ca008750",
+    "productionApproved": false,
+    "signing": false,
+    "broadcast": false,
+    "consensusVerified": false,
+    "scope": "Exact-byte local plugin acceptance/state/getter checks only; not P-Chain or live consensus"
+  },
+  "nativeToolchain": {
+    "go": "1.26.8",
+    "avalancheGoModule": "v1.15.1",
+    "commit": "fdb2c1b9b02ef357b5867d5ababb6acc83837a01",
+    "sum": "h1:rHEc0OrOyyh6gHIs4KrKyDm/vw81J0Cc3FDwgCRklgg="
+  },
+  "limitations": [
+    "Actual owner-reviewed public input bundle and accepted Mainnet SubnetID absent; production exporter not executed against fabricated approvals",
+    "No actual Mainnet genesis VM acceptance claim",
+    "Public snapshot authenticity and semantic chain state remain independently verified external inputs",
+    "No signer integration executed; signature intake and broadcast disabled"
+  ],
+  "unchanged": [
+    "Production contracts/manifests/approval flags",
+    "Original artifact locks and prior security evidence",
+    "AWS configuration and historical evidence",
+    "main branch"
+  ]
+}
