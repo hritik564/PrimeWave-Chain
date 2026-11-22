@@ -211,7 +211,10 @@ def artifacts(m, r, aws):
     threshold = gov['threshold']
     require(len(signers) >= 3 and all((address(a) for a in signers)) and (len(set((a.lower() for a in signers))) == len(signers)), 'distinct production governance signers required')
     require(type(threshold) is int and 2 <= threshold <= len(signers) and (gov.get('timelockSeconds', 0) >= 172800), 'reviewed multisig and >=48h timelock required')
-    require(address(gov.get('owner')) and gov['owner'].lower() == e['proxyAdmin'].lower(), 'proxy governance owner differs')
+    timelock = e['genesisPublic']['contracts'].get('timelock')
+    require(address(gov.get('owner')) and gov['owner'].lower() == str(timelock).lower(), 'governance owner must be the reviewed protocol timelock')
+    require(e['proxyAdmin'].lower() != gov['owner'].lower(), 'ProxyAdmin contract and its governance owner are distinct roles')
+    require(review.get('proxyAdminOwner') == gov['owner'] and vm.get('proxyAdminOwner') == gov['owner'], 'actual ProxyAdmin ownership evidence must match governance timelock')
     subnet = e.get('subnetId')
     require(subnet and e['genesisPublic'].get('managerSubnetId') == subnet and review.get('subnetId') == subnet and vm.get('subnetId') == subnet, 'actual Subnet ID must bind final manager review and VM initialization evidence')
     require(review.get('managerInitializedAtGenesis') is True and vm.get('managerInitializedAtGenesis') is True, 'no publicly uninitialized genesis manager proxy permitted')

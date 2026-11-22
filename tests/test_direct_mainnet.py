@@ -48,9 +48,10 @@ class DirectMainnetTests(unittest.TestCase):
         self.r.update(genesis=self.write(candidate['genesis']),construction=self.write(construction),managerArtifact=self.write(artifact))
         registry=self.write([{'chainId':1}]);self.r['registry']=registry
         self.r['chainApproval']=self.write(dict(candidate=73571001,approvedChainId=73571001,ownerApproved=True,registrySha256=registry['sha256'],checkedAt=aws.now()))
-        review=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],constructionSha256=direct.sha(construction),managerArtifactSha256=e['managerArtifactSha256'],ownerReviewed=True,reference='SYNTHETIC-REVIEW',managerBootstrapReviewed=True,managerInitializationReviewed=True,genesisForksReviewed=True,uninitializedProxyCallable=False,bootstrapMode='owner-atomic-upgrade-initialize',governance={'signers':g.public['emergencySigners'],'threshold':3,'timelockSeconds':172800,'owner':e['proxyAdmin']},validatorWeights={'validator-1':1,'validator-2':1})
+        review=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],constructionSha256=direct.sha(construction),managerArtifactSha256=e['managerArtifactSha256'],ownerReviewed=True,reference='SYNTHETIC-REVIEW',managerBootstrapReviewed=True,managerInitializationReviewed=True,genesisForksReviewed=True,uninitializedProxyCallable=False,bootstrapMode='owner-atomic-upgrade-initialize',governance={'signers':g.public['emergencySigners'],'threshold':3,'timelockSeconds':172800,'owner':g.public['contracts']['timelock']},validatorWeights={'validator-1':1,'validator-2':1})
+        review['proxyAdminOwner']=review['governance']['owner']
         self.r['securityReview']=self.write(review)
-        self.r['vmCompatibility']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC-VM',avalancheGo='1.15.1',subnetEvm='1.15.1',pluginProtocol=46,handshakePassed=True,genesisAccepted=True,initializationTestsPassed=True))
+        self.r['vmCompatibility']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC-VM',avalancheGo='1.15.1',subnetEvm='1.15.1',pluginProtocol=46,handshakePassed=True,genesisAccepted=True,initializationTestsPassed=True,proxyAdminOwner=review['governance']['owner']))
         recovery=dict(accountId=self.m['accountId'],region=self.m['region'],procedureTestPassed=True,singleActiveIdentityFencingVerified=True,containsProductionKeys=False,reference='SYNTHETIC-RECOVERY')
         self.m['operations'].update(offHostRecoveryVerified=True,recoveryEvidenceSha256=direct.sha(recovery))
         self.r['recovery']=self.write(recovery)
@@ -191,6 +192,16 @@ class DirectMainnetTests(unittest.TestCase):
         old=copy.deepcopy(self.r['securityReview']);self.change('securityReview',{'uninitializedProxyCallable':True})
         self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED');self.r['securityReview']=old
         review=self.read(old);review['governance']['threshold']=1;self.r['securityReview']=self.write(review)
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+
+    def test_proxy_admin_contract_must_not_be_confused_with_its_owner(self):
+        self.chain_ready()
+        self.assertEqual(self.gate(operation='createChain')['status'],'PASS')
+        original=self.r['securityReview'];review=self.read(original)
+        review['governance']['owner']=self.e['proxyAdmin'];review['proxyAdminOwner']=self.e['proxyAdmin']
+        self.r['securityReview']=self.write(review)
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+        self.r['securityReview']=original;self.change('vmCompatibility',{'proxyAdminOwner':'0x'+'f'*40})
         self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
 
     def test_each_transaction_needs_own_approval_and_previous_acceptance(self):

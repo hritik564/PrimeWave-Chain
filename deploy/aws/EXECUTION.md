@@ -6,6 +6,9 @@ Fuji is optional: see OPTIONAL-FUJI.md. Never fabricate Fuji evidence or set
 rehearsalPassed to bypass a gate. Historical Netcup hosts remain inaccessible.
 Mumbai adapters remain supported; deployment.review.json is their review template.
 
+Owner policy proposals (all unapproved): `config/mainnet/decisions/README.md`.
+They do not replace any readiness evidence or transaction-specific approval.
+
 ## State and source of truth
 
 Use `sydney.existing-runtime.review.json` as the **new reconciliation proposal**:
