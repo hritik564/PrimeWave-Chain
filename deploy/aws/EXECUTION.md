@@ -6,6 +6,9 @@ Fuji is optional: see OPTIONAL-FUJI.md. Never fabricate Fuji evidence or set
 rehearsalPassed to bypass a gate. Historical Netcup hosts remain inaccessible.
 Mumbai adapters remain supported; deployment.review.json is their review template.
 
+Custody candidate implementation/export and tests: `docs/MAINNET-CUSTODY-READINESS.md`.
+Final artifacts require the pinned custody mode and actual VM custody role proof.
+
 Owner policy proposals (all unapproved): `config/mainnet/decisions/README.md`.
 They do not replace any readiness evidence or transaction-specific approval.
 

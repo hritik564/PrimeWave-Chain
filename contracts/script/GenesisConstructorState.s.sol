@@ -52,6 +52,12 @@ contract GenesisConstructorState is Script {
         copyConstructor(address(timelock), m.timelock);
         EmergencyMultisig emergency = new EmergencyMultisig(m.signers);
         copyConstructor(address(emergency), m.emergency);
+        buildCore(m);
+    }
+
+    /// @dev Shared core export; callers must first author the selected governance
+    /// and emergency state at their final public addresses.
+    function buildCore(PublicConfig memory m) internal {
         ValidatorFeeVault fees = new ValidatorFeeVault(m.registry);
         copyConstructor(address(fees), m.feeVault);
         FeeDistributor distributor = new FeeDistributor(payable(m.feeVault), payable(m.treasury), m.emergency);
@@ -95,10 +101,8 @@ contract GenesisConstructorState is Script {
         return vm.serializeString(key, "storage", storageJson);
     }
 
-    function run() external {
-        string memory raw = vm.readFile(vm.envString("GENESIS_PUBLIC_MANIFEST"));
+    function readPublicConfig(string memory raw) internal returns(PublicConfig memory m) {
         require(vm.parseJsonBool(raw, ".publicAddressesReviewed"), "genesis: public address review required");
-        PublicConfig memory m;
         m.genesisTimestamp = vm.parseJsonUint(raw, ".genesisTimestamp");
         m.timelock = vm.parseJsonAddress(raw, ".contracts.timelock");
         m.emergency = vm.parseJsonAddress(raw, ".contracts.emergency");
@@ -112,6 +116,11 @@ contract GenesisConstructorState is Script {
         for (uint256 i; i < 5; ++i) {
             m.signers[i] = vm.parseJsonAddress(raw, string.concat(".emergencySigners[", vm.toString(i), "]"));
         }
+    }
+
+    function run() external virtual {
+        string memory raw = vm.readFile(vm.envString("GENESIS_PUBLIC_MANIFEST"));
+        PublicConfig memory m=readPublicConfig(raw);
         build(m);
         address[6] memory targets = [m.timelock,m.emergency,m.feeVault,m.feeDistributor,m.registry,m.rewardVault];
         string memory out = "{}";

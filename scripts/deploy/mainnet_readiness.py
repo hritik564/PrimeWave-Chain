@@ -160,6 +160,8 @@ def pre_subnet(m, r, aws):
     require(type(gov.get('threshold')) is int and 2 <= gov['threshold'] <= len(signers) and gov.get('timelockSeconds', 0) >= 172800 and address(gov.get('owner')), 'reviewed multisig/timelock ownership required')
     weights = plan['validatorWeights']
     require(set(weights) == set(e['identities']) and all(type(v) is int and v > 0 for v in weights.values()), 'reviewed production validator weight plan required')
+    from check_decision_package import validate_weights
+    validate_weights(weights, plan.get('maximumChurnPercentage'), plan.get('churnPeriodSeconds'))
 
 
 def request_bound(value, m, r, operation, aws):
@@ -179,6 +181,7 @@ def artifacts(m, r, aws):
     e = m['environments']['mainnet']
     approved_chain(m, r, aws)
     require(e.get('genesisApproved') is True, 'exact final genesis approval required')
+    require(e['genesisPublic'].get('custody',{}).get('mode') == 'safe-1.4.1-oz-5.6.1', 'reviewed value-capable treasury custody export required')
     genesis, _ = read(r.get('genesis'), aws)
     construction, _ = read(r.get('construction'), aws)
     require(construction['public'] == e['genesisPublic'], 'public custody and constructor bundle mismatch')
@@ -199,6 +202,7 @@ def artifacts(m, r, aws):
     vm, _ = read(r.get('vmCompatibility'), aws)
     require(bound(vm, m) and vm.get('ownerReviewed') is True and vm.get('reference'), 'exact final genesis isolated VM evidence required')
     require(vm.get('avalancheGo') == '1.15.1' and vm.get('subnetEvm') == '1.15.1' and (vm.get('pluginProtocol') == 46), 'pinned node/VM compatibility required')
+    require(vm.get('custodyInitializedAtGenesis') is True and vm.get('custodyStateSha256') == sha(e['genesisPublic']['custody']['stateSha256']), 'actual final-genesis custody role/owner verification required')
     require(vm.get('handshakePassed') is True and vm.get('genesisAccepted') is True and (vm.get('initializationTestsPassed') is True), 'isolated final-genesis/manager initialization tests required')
     for flag in ('managerBootstrapReviewed', 'managerInitializationReviewed', 'genesisForksReviewed'):
         require(e.get(flag) is True and review.get(flag) is True, flag + ' required')
@@ -220,6 +224,8 @@ def artifacts(m, r, aws):
     require(review.get('managerInitializedAtGenesis') is True and vm.get('managerInitializedAtGenesis') is True, 'no publicly uninitialized genesis manager proxy permitted')
     weights = review['validatorWeights']
     require(set(weights) == set(e['identities']) and all((type(v) is int and v > 0 for v in weights.values())), 'explicit validator weights required')
+    from check_decision_package import validate_weights
+    validate_weights(weights, review.get('maximumChurnPercentage'), review.get('churnPeriodSeconds'))
 
 def recovery(m, r, aws):
     ops = m.get('operations', {})

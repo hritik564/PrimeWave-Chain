@@ -53,7 +53,15 @@ def materialize(public, exported, base):
     if set(a.lower() for role,a in addresses.items() if role!='rewards') & set(a.lower() for a in targets.values()):
         raise ValueError('Only rewards may overlap a protocol predeploy allocation')
     states={a.lower():json.loads(v) if isinstance(v,str) else v for a,v in exported.items()}
-    if set(states)!=set(a.lower() for a in targets.values()):
+    custody_targets={}
+    if public.get('custody'):
+        from custody_genesis import targets as custody_addresses
+        custody_targets=custody_addresses(public)
+        if set(a.lower() for a in custody_targets.values()) & set(a.lower() for a in targets.values()):raise ValueError('Custody/core contract overlap forbidden')
+    if len(states)!=len(exported):raise ValueError('Duplicate normalized constructor address')
+    for state in states.values():
+        if isinstance(state.get('storage'),str):state['storage']=json.loads(state['storage'])
+    if set(states)!=set(a.lower() for a in [*targets.values(),*custody_targets.values()]):
         raise ValueError('Constructor state roles/addresses differ')
     from chain_id import DENIED
     chain_id=base.get('config',{}).get('chainId')
@@ -74,6 +82,17 @@ def materialize(public, exported, base):
             raise ValueError('Constructor initialization or balance missing')
         state['balance']=hex(expected)
         genesis['alloc'][address.lower()]=state
+    if custody_targets:
+        from custody_genesis import validate as validate_custody
+        validate_custody(public,states)
+        for role,address in custody_targets.items():
+            address=address.lower();state=copy.deepcopy(states[address])
+            expected=15000000*UNIT if role=='treasuryTimelock' else 0
+            if int(state.get('balance','0x0'),0)!=expected:raise ValueError('Custody must preserve exact treasury allocation')
+            if role=='treasuryTimelock':
+                if int(genesis['alloc'][address]['balance'],0)!=expected:raise ValueError('Treasury seed was lost')
+            elif address in genesis['alloc']:raise ValueError('Custody address collides with allocation')
+            state['balance']=hex(expected);genesis['alloc'][address]=state
     layout=json.loads((Path(__file__).resolve().parents[2]/'config/mainnet/reward-vault-layout.json').read_text())
     source=Path(__file__).resolve().parents[2]/'contracts/src/RewardVault.sol'
     if hashlib.sha256(source.read_bytes()).hexdigest()!=layout['sourceSha256']:

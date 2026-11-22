@@ -1,0 +1,71 @@
+{
+  "version": "1.4.1",
+  "source": "https://registry.npmjs.org/@safe-global/safe-contracts/-/safe-contracts-1.4.1.tgz",
+  "sha512": "fP1jewywSwsIniM04NsqPyVRFKPMAuirC3ftA/TA4X3Zc5EnwQp/UCJUU2PL/37/z/jMo8UUaJ+pnFNWmMU7dQ==",
+  "artifacts": {
+    "Safe": {
+      "path": "contracts/vendor/safe-1.4.1/Safe.json",
+      "sha256": "c36a5e99bc3f25c2d75ac5f7920b679200b3ce617c0d26e674b1321dbc6b0bdf",
+      "runtimeSha256": "79756c276443953adde61bbc2bfa134c03b35cf45181dab9d4f9503df22f45c8"
+    },
+    "SafeProxy": {
+      "path": "contracts/vendor/safe-1.4.1/SafeProxy.json",
+      "sha256": "b05eaeaf7278097e52a9e9b38410de2a812c23fa3622373473e73eaa19646ecd",
+      "runtimeSha256": "a8a0fbd3cdf49e751346664e01b529a58322a814cf8df8d85deb20e63bd6415e"
+    },
+    "PrimeWaveCustodyTimelock": {
+      "sourcePath": "contracts/src/PrimeWaveCustodyTimelock.sol",
+      "sourceSha256": "b5aa80aee2fa777ed1fb256abe8ce817a9f00fc95c665a71cc3b0a5110738ed5",
+      "runtimeSha256": "33426b4c24f13826b740298ed6e36d385de6bd2bb934d81b4e8334832126b52d"
+    },
+    "PauseOnlyEmergencyMultisig": {
+      "sourcePath": "contracts/src/PauseOnlyEmergencyMultisig.sol",
+      "sourceSha256": "fea553c8b538ac64e408bf7f32bbfae17a2709d49d19c8ccacebc1d34fa1f84a",
+      "runtimeSha256": "c235ea13f0697e46d5177c9797b189ee522efc62eb73edb0e485c79cc86c5708"
+    },
+    "TimelockOnlySafeGuard": {
+      "sourcePath": "contracts/src/TimelockOnlySafeGuard.sol",
+      "sourceSha256": "eee9fe121c22ac308d397de4bd5536832f8e943f8315b71a2244e8def27c03f2",
+      "runtimeSha256": "1f49b583f037d73beea9ef0a1d08ea9ed83d88b3111caa124644541bb21b2803"
+    }
+  },
+  "compiler": "0.8.30",
+  "optimizerRuns": 200,
+  "viaIR": true,
+  "evmVersion": "shanghai",
+  "ownerApproved": false,
+  "openzeppelinVersion": "5.6.1",
+  "openzeppelinSolidityTreeSha256": "0fac56c05c615de68cdf80ea50a2a9f60b7e2711b4d59cbd8463b73829f6894f",
+  "emergencyBaseSourceSha256": "e8fe0f43a8c4172f54e9abcec719d18026c4f790d1dbd88a32f747d2b18623a6",
+  "compilerSettings": {
+    "remappings": [
+      "@openzeppelin/contracts-upgradeable/=contracts/lib/openzeppelin-contracts-upgradeable-v561/contracts/",
+      "@openzeppelin/contracts-upgradeable@5.1.0/=contracts/lib/openzeppelin-contracts-upgradeable/contracts/",
+      "@openzeppelin/contracts/=contracts/lib/openzeppelin-contracts-v561/contracts/",
+      "@openzeppelin/contracts@5.1.0/=contracts/lib/openzeppelin-contracts/contracts/",
+      "@subnet-evm/=contracts/lib/icm-contracts/avalanche/subnet-evm/",
+      "@utilities/=contracts/lib/icm-contracts/avalanche/utilities/",
+      "ds-test/=contracts/lib/ds-test/src/",
+      "forge-std/=contracts/lib/forge-std/src/",
+      "icm-contracts/=contracts/lib/icm-contracts/",
+      "openzeppelin-contracts-upgradeable-v561/=contracts/lib/openzeppelin-contracts-upgradeable-v561/",
+      "openzeppelin-contracts-upgradeable/=contracts/lib/openzeppelin-contracts-upgradeable/",
+      "openzeppelin-contracts-v561/=contracts/lib/openzeppelin-contracts-v561/",
+      "openzeppelin-contracts/=contracts/lib/openzeppelin-contracts/",
+      "validator-manager/=contracts/lib/icm-contracts/avalanche/validator-manager/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "metadata": {
+      "bytecodeHash": "ipfs"
+    },
+    "compilationTarget": {
+      "contracts/src/PrimeWaveCustodyTimelock.sol": "PrimeWaveCustodyTimelock"
+    },
+    "evmVersion": "shanghai",
+    "libraries": {},
+    "viaIR": true
+  }
+}

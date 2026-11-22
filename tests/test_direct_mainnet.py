@@ -40,6 +40,8 @@ class DirectMainnetTests(unittest.TestCase):
             op=dict({k:h[k] for k in ('instanceId','dataVolumeId','filesystemUuid')},observedAt=aws.now(),publicIdentity=e['identities'][h['name']],certificateSha256=e['identities'][h['name']]['stakingCertificateSha256'],identityFilesPrivate=True,productionOnly=True,alertDeliveryVerified=True,alertEventId='SYNTHETIC-ALERT')
             self.r['hostEvidence'][h['name']]={'cloud':self.write(c),'local':self.write(l),'operations':self.write(op)}
         g=genesis_fixture.GenesisCandidateTests();g.setUp()
+        custody=json.loads((fixture.ROOT/'tests/fixtures/custody-genesis.fixture.json').read_text())
+        g.public=custody['publicManifest'];g.states=custody['accounts'];g.base=custody['base']
         for a in ('0x'+'a'*40,'0x'+'b'*40):g.public['managerPredeploys'][a]={'balance':'0x0','code':'0x6000','storage':{}}
         candidate=g.build()
         e.update(evmChainId=73571001,chainIdApproved=True,genesisApproved=True,genesisSha256=candidate['genesisSha256'],genesisPublic=g.public,managerProxy=g.public['managerAddress'],managerImplementation='0x'+'a'*40,managerLibrary='0x'+'b'*40,proxyAdmin='0x'+'c'*40,managerBootstrapReviewed=True,managerInitializationReviewed=True,genesisForksReviewed=True)
@@ -48,16 +50,16 @@ class DirectMainnetTests(unittest.TestCase):
         self.r.update(genesis=self.write(candidate['genesis']),construction=self.write(construction),managerArtifact=self.write(artifact))
         registry=self.write([{'chainId':1}]);self.r['registry']=registry
         self.r['chainApproval']=self.write(dict(candidate=73571001,approvedChainId=73571001,ownerApproved=True,registrySha256=registry['sha256'],checkedAt=aws.now()))
-        review=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],constructionSha256=direct.sha(construction),managerArtifactSha256=e['managerArtifactSha256'],ownerReviewed=True,reference='SYNTHETIC-REVIEW',managerBootstrapReviewed=True,managerInitializationReviewed=True,genesisForksReviewed=True,uninitializedProxyCallable=False,bootstrapMode='owner-atomic-upgrade-initialize',governance={'signers':g.public['emergencySigners'],'threshold':3,'timelockSeconds':172800,'owner':g.public['contracts']['timelock']},validatorWeights={'validator-1':1,'validator-2':1})
+        review=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],constructionSha256=direct.sha(construction),managerArtifactSha256=e['managerArtifactSha256'],ownerReviewed=True,reference='SYNTHETIC-REVIEW',managerBootstrapReviewed=True,managerInitializationReviewed=True,genesisForksReviewed=True,uninitializedProxyCallable=False,bootstrapMode='owner-atomic-upgrade-initialize',governance={'signers':g.public['emergencySigners'],'threshold':3,'timelockSeconds':172800,'owner':g.public['contracts']['timelock']},validatorWeights={'validator-1':1000,'validator-2':1000},maximumChurnPercentage=20,churnPeriodSeconds=3600)
         review['proxyAdminOwner']=review['governance']['owner']
         self.r['securityReview']=self.write(review)
-        self.r['vmCompatibility']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC-VM',avalancheGo='1.15.1',subnetEvm='1.15.1',pluginProtocol=46,handshakePassed=True,genesisAccepted=True,initializationTestsPassed=True,proxyAdminOwner=review['governance']['owner']))
+        self.r['vmCompatibility']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC-VM',avalancheGo='1.15.1',subnetEvm='1.15.1',pluginProtocol=46,handshakePassed=True,genesisAccepted=True,initializationTestsPassed=True,proxyAdminOwner=review['governance']['owner'],custodyInitializedAtGenesis=True,custodyStateSha256=direct.sha(e['genesisPublic']['custody']['stateSha256'])))
         recovery=dict(accountId=self.m['accountId'],region=self.m['region'],procedureTestPassed=True,singleActiveIdentityFencingVerified=True,containsProductionKeys=False,reference='SYNTHETIC-RECOVERY')
         self.m['operations'].update(offHostRecoveryVerified=True,recoveryEvidenceSha256=direct.sha(recovery))
         self.r['recovery']=self.write(recovery)
         self.r['incidentResponse']=self.write(dict(ownerApproved=True,reference='SYNTHETIC',twoValidatorHaltAccepted=True,stopCriteria='SYNTHETIC',escalationContact='SYNTHETIC',rollbackProcedure='SYNTHETIC',noDatabaseReset=True,noDuplicateIdentity=True))
         self.r['commissioningPlan']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC',maximumTransfers=2,maximumDurationSeconds=600,maximumNativePW='1',maximumGasPW='1',gasSourceRole='treasury',productionRiskAccepted=True,haltOnMismatch=True,haltOnResourcePressure=True,alertDeliveryRequired=True,recoveryRequiredBeforePublicAccess=True))
-        pre=dict(networkId=1,chainId=e['evmChainId'],ownerReviewed=True,reference='SYNTHETIC-PRE-SUBNET',allocationPolicy='C00',nativeSupplyPW=100000000,feeSplitBps=self.m['feeSplitBps'],bootstrapMode='subnet-bound-genesis',createSubnetOnly=True,custodyVerified=True,fundingPlanReviewed=True,uninitializedPublicProxyForbidden=True,finalArtifactsRequiredBeforeCreateChain=True,governance=review['governance'],validatorWeights=review['validatorWeights'])
+        pre=dict(networkId=1,chainId=e['evmChainId'],ownerReviewed=True,reference='SYNTHETIC-PRE-SUBNET',allocationPolicy='C00',nativeSupplyPW=100000000,feeSplitBps=self.m['feeSplitBps'],bootstrapMode='subnet-bound-genesis',createSubnetOnly=True,custodyVerified=True,fundingPlanReviewed=True,uninitializedPublicProxyForbidden=True,finalArtifactsRequiredBeforeCreateChain=True,governance=review['governance'],validatorWeights=review['validatorWeights'],maximumChurnPercentage=20,churnPeriodSeconds=3600)
         self.r['preSubnetReview']=self.write(pre)
         for operation in direct.OPERATIONS:
             request=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],operation=operation,transactionCount=1,reviewed=True,reference='SYNTHETIC',parameters={'TEST_ONLY':True},signerAlias='pw-mainnet-SYNTHETIC',maximumFeeAVAX='0.1',maximumTotalSpendAVAX='1')
@@ -204,6 +206,15 @@ class DirectMainnetTests(unittest.TestCase):
         self.r['securityReview']=original;self.change('vmCompatibility',{'proxyAdminOwner':'0x'+'f'*40})
         self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
 
+    def test_final_custody_vm_role_proof_remains_mandatory(self):
+        self.chain_ready()
+        self.assertEqual(self.gate(operation='createChain')['status'],'PASS')
+        original=self.r['vmCompatibility']
+        for changes in ({'custodyInitializedAtGenesis':False},{'custodyStateSha256':'wrong'}):
+            self.change('vmCompatibility',changes)
+            self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+            self.r['vmCompatibility']=original
+
     def test_each_transaction_needs_own_approval_and_previous_acceptance(self):
         self.chain_ready();item=self.r['transactions']['createChain'];approved=copy.deepcopy(item['approval'])
         item['approval']=copy.deepcopy(self.r['transactions']['createSubnet']['approval'])
@@ -235,7 +246,7 @@ class DirectMainnetTests(unittest.TestCase):
         receipts=[receipt,fee_receipt]
         nodes={}
         for h in self.m['hosts']:
-            nodes[h['name']]=dict(instanceId=h['instanceId'],nodeId=self.e['identities'][h['name']]['nodeId'],running=True,pChainHealthy=True,pChainSynced=True,registrationActive=True,weight=1,startAcceptedHeight=1,endAcceptedHeight=2,alertDelivered=True,monitoringHealthy=True,cpuMeanPercent=20,cpuP95Percent=30,memoryPeakPercent=40,diskPeakUsedPercent=20,iopsPeakPercentOfProvisioned=20,oomKills=0,nodeRestarts=0,swapInBytes=0,swapOutBytes=0,minimumNetworkMbps=30,confirmationP95Ms=2000,genesisBlockHash=self.e['genesisBlockHash'],acceptedBlockHeight=2,acceptedBlockHash='0x'+'2'*64,receiptSetSha256=direct.sha(receipts),receipts=copy.deepcopy(receipts))
+            nodes[h['name']]=dict(instanceId=h['instanceId'],nodeId=self.e['identities'][h['name']]['nodeId'],running=True,pChainHealthy=True,pChainSynced=True,registrationActive=True,weight=1000,startAcceptedHeight=1,endAcceptedHeight=2,alertDelivered=True,monitoringHealthy=True,cpuMeanPercent=20,cpuP95Percent=30,memoryPeakPercent=40,diskPeakUsedPercent=20,iopsPeakPercentOfProvisioned=20,oomKills=0,nodeRestarts=0,swapInBytes=0,swapOutBytes=0,minimumNetworkMbps=30,confirmationP95Ms=2000,genesisBlockHash=self.e['genesisBlockHash'],acceptedBlockHeight=2,acceptedBlockHash='0x'+'2'*64,receiptSetSha256=direct.sha(receipts),receipts=copy.deepcopy(receipts))
         value=dict(networkId=1,chainId=self.e['evmChainId'],genesisSha256=self.e['genesisSha256'],blockchainId=self.e['blockchainId'],genesisBlockHash=self.e['genesisBlockHash'],observedAt=aws.now(),validators=nodes,durationSeconds=300,
             nativeTransfers=[dict(receipt,valueWei=10,bothNodesMatch=True,beforeBlock=1,afterBlock=2,senderBefore=100000,senderAfter=78990,recipientBefore=0,recipientAfter=10)],
             feeAccounting=dict(distributableWei=100,receiptStatus=1,transactionHash=fee_receipt['transactionHash'],bothNodesMatch=True,validatorDeltaWei=70,treasuryDeltaWei=20,burnDeltaWei=10,destinationsVerified=True,concurrentGasReconciled=True),

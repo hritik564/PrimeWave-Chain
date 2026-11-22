@@ -9,7 +9,10 @@ pragma solidity 0.8.30;
 //   3-of-5 multisig. Only authorized signers may approve proposals.
 //   A proposal executes when >= THRESHOLD approvals are collected.
 //
-// SCOPE (exhaustive — cannot be broadened without redeployment):
+// LEGACY BASE WARNING: execute() is generic and does NOT enforce the
+// intended target/selector scope below. Use the separately reviewed
+// PauseOnlyEmergencyMultisig candidate for enforced production isolation.
+// SCOPE (historical design intent, not enforced by this base):
 //   The Emergency Multisig may ONLY call pause() and unpause() on
 //   registered protocol contracts. Any other call will revert at
 //   the target (target contracts restrict their pause functions to
@@ -210,7 +213,7 @@ contract EmergencyMultisig {
         address target,
         bytes calldata data,
         uint256 _nonce
-    ) external {
+    ) public virtual {
         bytes32 proposalId = _proposalId(target, data, _nonce);
 
         require(proposer[proposalId] != address(0), "EMS: proposal does not exist");

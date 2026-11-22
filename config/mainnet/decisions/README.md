@@ -8,6 +8,11 @@ all production signer/contract addresses and NodeIDs are unresolved/null. Nothin
 is copied into deployment approvals. Economics and historical AWS records remain
 unchanged. PWUSD remains frozen.
 
+Treasury custody source candidate is now implemented; see
+[MAINNET-CUSTODY-READINESS](../../../docs/MAINNET-CUSTODY-READINESS.md). The
+limitations below describe the original legacy contracts, not the new unapproved
+Safe/OZ custody exporter. Its new policy adapters still require independent review.
+
 ## Chain ID recommendation and offline collision evidence
 
 Retain **73571001** as the candidate, pending owner selection. It is an EVM Chain

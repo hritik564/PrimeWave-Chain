@@ -212,7 +212,7 @@
     },
     {
       "path": "contracts/src/EmergencyMultisig.sol",
-      "sha256": "f5db8c96a8dfd8075e391923cf3930fb6ef3cb09c7039d34f5ad41d7e14336e2"
+      "sha256": "e8fe0f43a8c4172f54e9abcec719d18026c4f790d1dbd88a32f747d2b18623a6"
     },
     {
       "path": "contracts/src/FeeDistributor.sol",

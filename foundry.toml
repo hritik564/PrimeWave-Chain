@@ -18,7 +18,7 @@
 solc = "0.8.30"
 
 # Allow scripts to write contract addresses to local-data/ (used by DevDeploy.s.sol)
-fs_permissions = [{ access = "write", path = "local-data/" }, { access = "read-write", path = "genesis-build/" }]
+fs_permissions = [{ access = "write", path = "local-data/" }, { access = "read-write", path = "genesis-build/" }, { access = "read", path = "contracts/vendor/safe-1.4.1/" }]
 
 # EVM target — Shanghai (required by icm-services / OZ v5.6.1)
 evm_version = "shanghai"
