@@ -7,6 +7,15 @@ This package grants no approval to create identities, access AWS, fund accounts,
 sign, broadcast, start nodes or deploy. Contracts and production approval flags
 are unchanged by the handoff. No live addresses or keys are supplied.
 
+## Combined integration addendum
+
+The original baseline inventory below is retained unchanged. See
+[combined integration](COMBINED-GENESIS-INTEGRATION.md) for the collision-free
+17-account synthetic graph, actual nonce/child-account export, independent Safe
+1.4.1 rebuild and new tests. This resolves R06 for synthetic integration and the
+selected Safe build-provenance gap; R01 final production VM/state proof remains
+open. No original lock or approval was replaced.
+
 ## 1. Exact scope and provenance
 
 `scope-evidence.json` is the machine-readable scope: SHA256 of every scoped local

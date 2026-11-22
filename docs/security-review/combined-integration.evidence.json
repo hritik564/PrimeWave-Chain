@@ -1,0 +1,206 @@
+{
+  "baseline": "a4d3a2242214be10d3baa9d7ab420de07891a36c",
+  "collisionAssessment": {
+    "codeSignerOrOrdinaryAllocationOverlaps": 0,
+    "conflictingFixedAddressRoles": [
+      {
+        "address": "0x000000000000000000000000000000000000b010",
+        "baselineRoles": [
+          "ValidatorMessages",
+          "Safe singleton"
+        ],
+        "resolution": "Preserve Safe; new synthetic ValidatorMessages E100"
+      }
+    ],
+    "missingIntegration": [
+      "Old separate manager test proxy was not the registry B007 pointer",
+      "Generated ProxyAdmin account absent from custody-only export",
+      "Proxy account nonce2 must replace hardcoded nonce1"
+    ],
+    "uniqueCodeAccounts": 17,
+    "uniqueSyntheticSignerAddresses": 15
+  },
+  "combined": {
+    "accounts": {
+      "0x000000000000000000000000000000000000b001": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "33426b4c24f13826b740298ed6e36d385de6bd2bb934d81b4e8334832126b52d",
+        "stateSha256": "6842510741b0bac4ac7e37d9f0272d36e5b7b00af61fafc9f989b4d9c7c2013b",
+        "storageSlots": 5
+      },
+      "0x000000000000000000000000000000000000b002": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "c235ea13f0697e46d5177c9797b189ee522efc62eb73edb0e485c79cc86c5708",
+        "stateSha256": "8f191b2231991b6f95a8bee22761eb6dd67fff62f6ad0b886954078aa41346ea",
+        "storageSlots": 9
+      },
+      "0x000000000000000000000000000000000000b003": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "2e90d07105da2d614a9d9eb8cef1491015870e5588210010113bcfea5d4c75ec",
+        "stateSha256": "b3d46d92f47a84f3c3b8870cbb4873f05066352ecf4703ce0e81a17e4d5d2dc8",
+        "storageSlots": 2
+      },
+      "0x000000000000000000000000000000000000b004": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "12187d3a6911463e72869deabd7f99e8e561a4e5677cb88fcbae8ad1c3e50b67",
+        "stateSha256": "ea531ed7987d3f9897b3b1f5d0f1fe578828c163dcbc3268867f9eba54c4704f",
+        "storageSlots": 1
+      },
+      "0x000000000000000000000000000000000000b005": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "f34e45a95fadd8f098ca23860ee9d3922062f2eb504da725af980170cfb67d2e",
+        "stateSha256": "bbcaf6bdb5d16969a1feb1060daa07d22f398f6c85ccd9852e7460a0944b1310",
+        "storageSlots": 0
+      },
+      "0x000000000000000000000000000000000000b006": {
+        "balance": "15000000000000000000000000",
+        "nonce": "0x1",
+        "runtimeSha256": "1a529b59f73415890b23e68b8a72a1e124e432cd28c398b98fc622394b95be89",
+        "stateSha256": "981e88b5238743e5053f81ac1828e06eeff9f93d68940e8c8872f357723c4274",
+        "storageSlots": 5
+      },
+      "0x000000000000000000000000000000000000b007": {
+        "balance": "0",
+        "nonce": "0x0000000000000002",
+        "runtimeSha256": "4c2acbdbccc96e747569e991d6ae7cd33bd81304e599c18f245fd8c19883019f",
+        "stateSha256": "ef2457ebfb836e1c278da3ff8e174569d451414c3741a1ed3b6c1eed2eb31f87",
+        "storageSlots": 6
+      },
+      "0x000000000000000000000000000000000000b008": {
+        "balance": "15000000000000000000000000",
+        "nonce": "0x1",
+        "runtimeSha256": "33426b4c24f13826b740298ed6e36d385de6bd2bb934d81b4e8334832126b52d",
+        "stateSha256": "d8135fd2a8c197100a4b0daf0fbc5d3819ec02f9ada72b24f727adcaece8ac3f",
+        "storageSlots": 5
+      },
+      "0x000000000000000000000000000000000000b009": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "a8a0fbd3cdf49e751346664e01b529a58322a814cf8df8d85deb20e63bd6415e",
+        "stateSha256": "9b1b06cf23e97df3d5adf0a573c37683f515a4c26cc391d954734781262353c9",
+        "storageSlots": 11
+      },
+      "0x000000000000000000000000000000000000b010": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "79756c276443953adde61bbc2bfa134c03b35cf45181dab9d4f9503df22f45c8",
+        "stateSha256": "616d32f4c76a5f7aa2e65701a87851b166f1f5658bdcb007c3cc8ce21a098e06",
+        "storageSlots": 1
+      },
+      "0x000000000000000000000000000000000000b011": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "a8a0fbd3cdf49e751346664e01b529a58322a814cf8df8d85deb20e63bd6415e",
+        "stateSha256": "bb09dda7a7b4a9255a2ede35813839f04fe89cf472f51d10f95921f6bb5d253b",
+        "storageSlots": 11
+      },
+      "0x000000000000000000000000000000000000b012": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "1f49b583f037d73beea9ef0a1d08ea9ed83d88b3111caa124644541bb21b2803",
+        "stateSha256": "3db6dd3e61c19f4c4acb779fde15a3a42bca197d281893c9e6df69ae5bd50590",
+        "storageSlots": 2
+      },
+      "0x000000000000000000000000000000000000b013": {
+        "balance": "0",
+        "nonce": "0x1",
+        "runtimeSha256": "1f49b583f037d73beea9ef0a1d08ea9ed83d88b3111caa124644541bb21b2803",
+        "stateSha256": "d21d6a7bb38d185d78d2d096fd00c4bc7278bc3abfe34d86b4803999e5833f4c",
+        "storageSlots": 2
+      },
+      "0x000000000000000000000000000000000000e100": {
+        "balance": "0",
+        "nonce": "0x0000000000000001",
+        "runtimeSha256": "ccf26a4a651a834b4ec8b5550fd957e8a427f26846e519aed592ad89c7a99ffd",
+        "stateSha256": "a630c8777c5f2314d3a3aaf5811060aaa4428eb655298eca7bc39f6bf5bbae05",
+        "storageSlots": 0
+      },
+      "0x000000000000000000000000000000000000e101": {
+        "balance": "0",
+        "nonce": "0x0000000000000001",
+        "runtimeSha256": "06ce44b520274cd1af8be45f954f733385d947be9faa5f16f308e8f9ed807f69",
+        "stateSha256": "a0a16c6c547c4c62099a8865266502f26268681a0e1e45cf276e8b7666928cae",
+        "storageSlots": 1
+      },
+      "0x000000000000000000000000000000000000e102": {
+        "balance": "0",
+        "nonce": "0x0000000000000001",
+        "runtimeSha256": "13123f06b224a19149785d4e30dc70fc24ee78d69308892b1bb35aee70d07b6a",
+        "stateSha256": "df060b4216a91a1620385bda1eaac720a041e16ee4cab91f16dfa8c6b1dae08a",
+        "storageSlots": 1
+      },
+      "0x06e614cf6f9fef1f37f083e0a5abc5b4b4fd67cc": {
+        "balance": "0",
+        "nonce": "0x0000000000000001",
+        "runtimeSha256": "11246b7a69dd835f1beb56222651fbe97fa55d095f12ec1d47920bc2f985ab81",
+        "stateSha256": "950f5cb61d7ce591764ad39741cac34be1a5690212fddfcfac5462d8764fed4d",
+        "storageSlots": 1
+      }
+    },
+    "allocationAccounts": 22,
+    "genesisSha256": "df2d7c6d8931e764b4f9e28026b865d4e42e9175a8abe2859a10548d95a7a0b6",
+    "nativeSupplyWei": "100000000000000000000000000",
+    "reason": "Real P-Chain conversion proof required; mocked conversion tested separately",
+    "validatorSetInitializedAtGenesis": false
+  },
+  "executionApproved": false,
+  "existingArtifactHashesUnchanged": true,
+  "externalAudit": false,
+  "historicalAwsEvidenceHashesUnchanged": 15,
+  "notExecuted": [
+    "No node startup or final Subnet-EVM genesis import",
+    "No real signatures, identities, P-Chain conversion, consensus or production execution"
+  ],
+  "openBlockers": [
+    "Independent security review and owner decisions",
+    "Actual approved subnet-bound production artifacts, public addresses and final VM proof",
+    "Separate approvals for every signing/spending/deployment operation"
+  ],
+  "productionApproved": false,
+  "sourceEvidenceSha256": {
+    "docs/security-review/COMBINED-GENESIS-INTEGRATION.md": "3131f52b45e23a33f681e39c3c105a770187799c6046fcb33bd2d987e5b621d9",
+    "docs/security-review/FINAL-GENESIS-VM-VALIDATION.md": "03b19d9783aa9e6cf991be41f3683149872c3c8d0a83a9917f8830c25f9ecbb4",
+    "docs/security-review/combined-synthetic-genesis.candidate.json": "c7472ac6c540426460d7aecb8e00a985a6bc5b4fedebc2b59a4dc70f378ff8b9",
+    "docs/security-review/safe-build-reproduction.json": "434154879b66f1ece47eaa7bd5eb340e0d0ce5db134173adfd7be0bab7ac30ec",
+    "scripts/mainnet/combined_genesis.py": "5e458a779bdf36910310b526099ff074f25bb608ea84330ab86e2864e32fc179",
+    "scripts/mainnet/run_combined_genesis_tests.py": "25cdf95584d9a1a8bb4aa1e8957f5164ca46cc960d1d5c54254c7454304c5f58",
+    "scripts/mainnet/verify_safe_rebuild.py": "55bde3ffb41bf6d671d81c1a3dab23a42cfeb528e13df113d0d23269417108b6",
+    "tests/combined-genesis/CombinedGenesis.t.sol": "081c7e29ace668e3cb57a85885f5a001ea9bd5de321f74109dda3bcc649895c1",
+    "tests/fixtures/combined-genesis.fixture.json": "19d6f546c4d75cf73707687bfab1de54b5027cbc74517bb2aa2bb44c9b3df63a",
+    "tests/test_combined_genesis.py": "ec48aa3d5a6606f3b39239bb10b10a47ae05958a172935eecec2c93db42757fb"
+  },
+  "syntheticTestOnly": true,
+  "tests": [
+    {
+      "logSha256": "0b200bcc02f4cf24bc652dac6e8f4e4aa0cff0023df72cb43c0bf56c20edbd44",
+      "suite": "default Solidity",
+      "summary": "782 tests passed, 0 failed, 0 skipped"
+    },
+    {
+      "logSha256": "69444486257e2c1fdba4975ca915411f998278242c5661165eddf1587500e622",
+      "suite": "pinned manager",
+      "summary": "18 tests passed, 0 failed, 0 skipped"
+    },
+    {
+      "logSha256": "b5e239a9b47f5109b28e1e483fbe89534ccf4bee252b2327f507b17330ccac28",
+      "suite": "combined Solidity",
+      "summary": "17 tests passed, 0 failed, 0 skipped"
+    },
+    {
+      "logSha256": "1afa21ccbb5f84d14ce7700e8fba32222566fe4382722b76f3237e218fcda550",
+      "suite": "Python",
+      "summary": "Ran 180 tests"
+    },
+    {
+      "logSha256": "5719f41fc788efe7e39b41f73864b0b74cc5fcd3be9b130f0daa99e2d2b3f962",
+      "passed": 8,
+      "suite": "offline configuration renders"
+    }
+  ],
+  "typeChecks": "3 new Python modules pass mypy"
+}
