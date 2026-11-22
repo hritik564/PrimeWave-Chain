@@ -18,9 +18,11 @@ config_task=next(t for t in play['tasks'] if t.get('name')=='Render private admi
 source=config_task['ansible.builtin.copy']['content']
 assertions=next(t for t in play['pre_tasks'] if t.get('name')=='Enforce supported small-pilot host profile')['ansible.builtin.assert']['that']
 env=Environment(undefined=StrictUndefined,trim_blocks=True)
-for profile,network in product(aws.PROFILE_IDS,('fuji','mainnet')):
+for profile,network,region in product(aws.PROFILE_IDS,('fuji','mainnet'),aws.SUPPORTED_REGIONS):
     case=fixtures.AwsPilotTests();case.setUp()
     manifest=aws.select_profile(case.m,profile)
+    manifest['region']=region
+    for n,h in enumerate(manifest['hosts']):h.update(region=region,availabilityZone=region+('a' if n==0 else 'b'))
     manifest['automation'].update(provisionApproved=True,transferBucketReviewed=True,ssmTransferBucket='FIXTURE',ssmKmsKeyArn='FIXTURE')
     selected=aws.selected_profile(manifest)
     inventory=aws.inventory(manifest,network)['all']['children']['primewave_pilot']
@@ -42,4 +44,4 @@ for profile,network in product(aws.PROFILE_IDS,('fuji','mainnet')):
     assert not env.compile_expression(cpu)(**v,ansible_facts=facts)
     facts['processor_vcpus']+=1;facts['memtotal_mb']-=1
     assert not env.compile_expression(ram)(**v,ansible_facts=facts)
-    print('PASS',profile,network,'shared Ansible CPU/RAM boundaries, rendered partial-sync config and systemd mount guard; no AWS connection')
+    print('PASS',profile,network,region,'shared Ansible CPU/RAM boundaries, rendered partial-sync config and systemd mount guard; no AWS connection')

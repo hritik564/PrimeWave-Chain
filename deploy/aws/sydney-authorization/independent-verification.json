@@ -1,0 +1,40 @@
+{
+  "observedAtUtc": "2026-11-22T03:29:27.574780+00:00",
+  "status": "PASS",
+  "securityGroup": {
+    "id": "sg-049c9c0df433a5184",
+    "vpcId": "vpc-0eed3e8882d808fb2",
+    "tags": {
+      "Project": "PrimeWave",
+      "Environment": "Pilot"
+    },
+    "ingress": "TCP9651 from0.0.0.0/0 only",
+    "egress": "IPv4 all only",
+    "ipv6Ingress": false,
+    "selfGroupIngress": false
+  },
+  "role": {
+    "name": "PrimeWavePilotValidatorSSMRole",
+    "arn": "arn:aws:iam::340379122975:role/PrimeWavePilotValidatorSSMRole",
+    "trust": "ec2.amazonaws.com only; sts:AssumeRole",
+    "attachedPolicies": [
+      "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+    ],
+    "inlinePolicies": [],
+    "permissionsBoundary": null,
+    "tags": {
+      "Project": "PrimeWave",
+      "Environment": "Pilot"
+    }
+  },
+  "profile": {
+    "name": "PrimeWavePilotValidatorSSMProfile",
+    "arn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+    "roleArn": "arn:aws:iam::340379122975:role/PrimeWavePilotValidatorSSMRole",
+    "tags": {
+      "Project": "PrimeWave",
+      "Environment": "Pilot"
+    }
+  },
+  "method": "Independent DescribeSecurityGroups/GetRole/ListAttachedRolePolicies/ListRolePolicies/GetInstanceProfile/ListInstanceProfileTags; not inferred from create responses"
+}

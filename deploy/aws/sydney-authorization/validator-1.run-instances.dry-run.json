@@ -1,0 +1,135 @@
+{
+  "DryRun": true,
+  "ImageId": "ami-048c1a9eb63a67eed",
+  "InstanceType": "m6a.xlarge",
+  "MinCount": 1,
+  "MaxCount": 1,
+  "Placement": {
+    "AvailabilityZone": "ap-southeast-2a",
+    "Tenancy": "default"
+  },
+  "NetworkInterfaces": [
+    {
+      "DeviceIndex": 0,
+      "SubnetId": "subnet-071c0e1ccdc807435",
+      "Groups": [
+        "sg-049c9c0df433a5184"
+      ],
+      "AssociatePublicIpAddress": true,
+      "DeleteOnTermination": true
+    }
+  ],
+  "IamInstanceProfile": {
+    "Arn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile"
+  },
+  "BlockDeviceMappings": [
+    {
+      "DeviceName": "/dev/sda1",
+      "Ebs": {
+        "VolumeType": "gp3",
+        "VolumeSize": 32,
+        "Encrypted": true,
+        "KmsKeyId": "alias/aws/ebs",
+        "Iops": 3000,
+        "Throughput": 125,
+        "DeleteOnTermination": true
+      }
+    },
+    {
+      "DeviceName": "/dev/sdf",
+      "Ebs": {
+        "VolumeType": "gp3",
+        "VolumeSize": 150,
+        "Encrypted": true,
+        "KmsKeyId": "alias/aws/ebs",
+        "Iops": 3000,
+        "Throughput": 125,
+        "DeleteOnTermination": false
+      }
+    }
+  ],
+  "MetadataOptions": {
+    "HttpTokens": "required",
+    "HttpEndpoint": "enabled",
+    "HttpPutResponseHopLimit": 1,
+    "InstanceMetadataTags": "disabled"
+  },
+  "EbsOptimized": true,
+  "Monitoring": {
+    "Enabled": false
+  },
+  "DisableApiTermination": true,
+  "InstanceInitiatedShutdownBehavior": "stop",
+  "CapacityReservationSpecification": {
+    "CapacityReservationPreference": "none"
+  },
+  "TagSpecifications": [
+    {
+      "ResourceType": "instance",
+      "Tags": [
+        {
+          "Key": "Name",
+          "Value": "primewave-pilot-validator-1"
+        },
+        {
+          "Key": "Project",
+          "Value": "PrimeWave"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Pilot"
+        },
+        {
+          "Key": "Role",
+          "Value": "Validator"
+        },
+        {
+          "Key": "ValidatorIndex",
+          "Value": "1"
+        }
+      ]
+    },
+    {
+      "ResourceType": "volume",
+      "Tags": [
+        {
+          "Key": "Project",
+          "Value": "PrimeWave"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Pilot"
+        },
+        {
+          "Key": "Role",
+          "Value": "Validator"
+        },
+        {
+          "Key": "ValidatorIndex",
+          "Value": "1"
+        }
+      ]
+    },
+    {
+      "ResourceType": "network-interface",
+      "Tags": [
+        {
+          "Key": "Project",
+          "Value": "PrimeWave"
+        },
+        {
+          "Key": "Environment",
+          "Value": "Pilot"
+        },
+        {
+          "Key": "Role",
+          "Value": "Validator"
+        },
+        {
+          "Key": "ValidatorIndex",
+          "Value": "1"
+        }
+      ]
+    }
+  ]
+}

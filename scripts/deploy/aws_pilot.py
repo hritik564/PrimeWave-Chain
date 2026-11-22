@@ -24,6 +24,7 @@ import preflight
 import chain_id
 rpc_spec=importlib.util.spec_from_file_location('primewave_rpc',ROOT/'scripts/check-evm-rpc.py')
 rpc_module=importlib.util.module_from_spec(rpc_spec);rpc_spec.loader.exec_module(rpc_module)
+SUPPORTED_REGIONS=('ap-south-1','ap-southeast-2')
 PROFILE_IDS=('aws-m6a-large-low-throughput','aws-m6a-xlarge-headroom')
 
 
@@ -132,7 +133,7 @@ def manifest_errors(m):
     errors=[]
     def need(ok,message):
         if not ok:errors.append(message)
-    need(m.get('provider')=='aws' and m.get('region')=='ap-south-1','AWS Mumbai ap-south-1 required')
+    need(m.get('provider')=='aws' and m.get('region') in SUPPORTED_REGIONS,'Explicit supported AWS region required (Mumbai or Sydney)')
     need(re.fullmatch(r'\d{12}',m.get('accountId') or '') is not None,'Explicit AWS account ID required')
     need(isinstance(m.get('operatorProfile'),str) and bool(m['operatorProfile']),'Explicit operator AWS profile required; no default credentials selection')
     target=m.get('target',{})
@@ -144,7 +145,7 @@ def manifest_errors(m):
     for h in hosts:
         prefix=h.get('name','host')+': '
         need(re.fullmatch(r'i-[0-9a-f]{17}',h.get('instanceId') or '') is not None,prefix+'instance ID required')
-        need(h.get('region')==m.get('region') and re.fullmatch(r'ap-south-1[a-z]',h.get('availabilityZone') or '') is not None,prefix+'Mumbai AZ required')
+        need(h.get('region')==m.get('region') and re.fullmatch(re.escape(m.get('region') or '')+r'[a-z]',h.get('availabilityZone') or '') is not None,prefix+'AZ must belong to selected region')
         for key,global_ip in [('privateIp',False),('publicIp',True)]:
             try:
                 ip=ipaddress.ip_address(h[key])

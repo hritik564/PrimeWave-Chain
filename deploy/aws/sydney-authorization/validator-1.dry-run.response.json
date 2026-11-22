@@ -1,0 +1,12 @@
+{
+  "atUtc": "2026-11-22T03:31:15.453884+00:00",
+  "az": "ap-southeast-2a",
+  "status": "AUTHORIZATION_SUCCESS_ONLY",
+  "exitCode": 254,
+  "awsErrorCode": "DryRunOperation",
+  "stdout": "",
+  "stderr": "aws: [ERROR]: An error occurred (DryRunOperation) when calling the RunInstances operation (reached max retries: 0): Request would have succeeded, but DryRun flag is set.",
+  "requestFile": "validator-1.run-instances.dry-run.json",
+  "sdkMaxAttempts": 1,
+  "actualLaunch": false
+}
