@@ -322,5 +322,41 @@
     "rootVolumeGiB": 32,
     "spendingApprovalReference": null,
     "launchPayloadsSha256": null
+  },
+  "hostLaunchApprovals": {
+    "validator-1": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": {
+        "host": "validator-1",
+        "accountId": "340379122975",
+        "region": "ap-southeast-2",
+        "instanceType": "m6a.xlarge",
+        "securityGroupIds": [
+          "sg-049c9c0df433a5184"
+        ],
+        "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+        "requestSha256": "d585f3f6eb699f4c02def92de290533d5fb9588e56332420217d3e023c1fbce4"
+      }
+    },
+    "validator-2": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": {
+        "host": "validator-2",
+        "accountId": "340379122975",
+        "region": "ap-southeast-2",
+        "instanceType": "m6a.xlarge",
+        "securityGroupIds": [
+          "sg-049c9c0df433a5184"
+        ],
+        "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+        "requestSha256": "7011ea2d7885584e48371283f1d828699db7d68a8a5eb52609d1bc674964f2f3"
+      }
+    }
   }
 }
