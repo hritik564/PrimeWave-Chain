@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "status": "OWNER_DECISION_REQUIRED",
+  "ownerApproved": false,
+  "fundingApproved": false,
+  "executionApproved": false,
+  "selectedOption": null,
+  "payerPublicAddress": null,
+  "sourceAllocation": null,
+  "sourceCustodianPublicAddress": null,
+  "nativePwBudgetWei": null,
+  "expiresAt": null,
+  "chainIdApproved": false,
+  "chainId": null,
+  "transactionApprovalReference": null,
+  "constraints": [
+    "Exactly 100000000 PW and all C00 allocation amounts remain unchanged",
+    "No native mint, extra genesis allocation or automatic funding",
+    "Safe refunds remain disabled; external sender pays native PW gas",
+    "No governance, Safe owner, timelock or emergency role granted to payer",
+    "Public metadata only; no keys, signatures or funding operation in this record",
+    "Every funding and subsequent transaction needs separate exact transaction approval",
+    "AVAX P-Chain fees require a separate AVAX payer and budget; PW is not AVAX",
+    "Remaining payer funds need an explicitly authorized reconciliation/return procedure"
+  ],
+  "alternatives": [
+    {
+      "id": "existing-c00-non-treasury-custodian",
+      "description": "A custodian of an existing approved C00 allocation pays initial EVM gas directly, or explicitly transfers a capped PW gas budget to a dedicated operator payer",
+      "requiredAuthority": ["Owner approves use consistent with that allocation purpose", "Source custodian approves and signs any transfer", "Owner approves payer, exact amounts, destination, chain and transaction scope"],
+      "limitations": "Only viable if existing recipient can authorize/pay a transaction without another unfunded dependency. Do not assume team/liquidity/presale/rewards funds are unrestricted or available",
+      "approved": false
+    },
+    {
+      "id": "existing-funded-pw-sponsor",
+      "description": "A separately authorized already-funded PW holder submits Safe execution transactions as external relayer, optionally all initial governance operations",
+      "requiredAuthority": ["Sponsor consents to capped native PW spending", "Owner approves relayer scope and all governance payloads", "Safe quorum separately authorizes each Safe transaction"],
+      "limitations": "No existing sponsor or balance is asserted. Sponsor cannot approve Safe payloads or gain governance authority merely by paying gas. No automatic reimbursement",
+      "approved": false
+    },
+    {
+      "id": "later-treasury-timelocked-replenishment",
+      "description": "After an external payer has bootstrapped scheduling/execution, treasury quorum may schedule a capped native PW gas-budget disbursement after at least 48 hours",
+      "requiredAuthority": ["Treasury Safe 3-of-5 schedule/execute", "Owner approves budget, recipient, scope and audit trail", "External payer funds the initial transactions and waits for actual inner success"],
+      "limitations": "Cannot solve the first unfunded transaction circularity. Uses existing treasury funds, never a new allocation. Not Safe refund bypass or instant treasury withdrawal",
+      "approved": false
+    }
+  ],
+  "rejectedAssumptions": ["Treasury can pay its first external transaction itself", "Emergency controller can withdraw bootstrap gas", "Owner approval alone creates PW funds", "Unallocated genesis gas reserve is available", "Safe gas refunds may be enabled for convenience"]
+}

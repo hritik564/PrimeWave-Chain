@@ -1,0 +1,60 @@
+{
+  "externalAudit": false,
+  "productionApproved": false,
+  "executionApproved": false,
+  "currentChecks": [
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_custody_genesis.py'",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_direct_mainnet.py'",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "python3 scripts/mainnet/verify_custody_artifacts.py",
+      "result": "OFFLINE_HASHES_VERIFIED"
+    },
+    {
+      "command": "python3 docs/security-review/reproduce_evidence.py",
+      "result": "PASS: exact inventory and synthetic candidate comparison"
+    }
+  ],
+  "currentTestLogSha256": "12194369abe6bb59ddf06ccafb51ca0520133402251dc5762745d785ef9b8c38",
+  "priorResults": [
+    {
+      "suite": "Solidity full baseline",
+      "baseline": "06851936f51a723d666357c6fc45a168bb748054",
+      "logSha256": "b9a4ec329c1512b61f1eedd2f7fe881537adf6256775cddc35c0d26d8d1817b8",
+      "observedSummary": "782 tests passed, 0 failed, 0 skipped",
+      "rerunDuringHandoff": false,
+      "limitation": "Prior local run, not independently witnessed or a production proof; log digest is provenance, not proof of execution"
+    },
+    {
+      "suite": "Pinned manager baseline",
+      "baseline": "06851936f51a723d666357c6fc45a168bb748054",
+      "logSha256": "1355683d6f4a0b48aab6dabab62f1344cc84f9147e5dcfc9e4f1527cbc78e430",
+      "observedSummary": "18 tests passed, 0 failed, 0 skipped",
+      "rerunDuringHandoff": false,
+      "limitation": "Prior local run, not independently witnessed or a production proof; log digest is provenance, not proof of execution"
+    },
+    {
+      "suite": "Python full baseline",
+      "baseline": "06851936f51a723d666357c6fc45a168bb748054",
+      "logSha256": "bd87c5a128e24d37da1d18369875fb0f5b52d7fefba7ad6139af3b96bd8bc3be",
+      "observedSummary": "Ran 171 tests",
+      "rerunDuringHandoff": false,
+      "limitation": "Prior local run, not independently witnessed or a production proof; log digest is provenance, not proof of execution"
+    }
+  ],
+  "notExecuted": [
+    "Forge suites not rerun during documentation handoff",
+    "No nodes, final-genesis VM acceptance, real signatures, P-Chain, Warp authentication or consensus",
+    "No AWS calls or mutations"
+  ],
+  "immutableEvidence": "All 15 historical AWS evidence hashes and production AWS manifests must remain unchanged"
+}
