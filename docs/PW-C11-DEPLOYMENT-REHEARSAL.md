@@ -8,7 +8,7 @@
 
 ## Purpose
 
-The rehearsal validates the complete production deployment procedure using local Foundry (Anvil) or Fuji testnet — without touching mainnet. It MUST be run at least once before the production ceremony.
+The rehearsal validates the complete production deployment procedure using local Foundry (Anvil) or Fuji testnet — without touching mainnet. This historical guide is optional under the owner-approved DIRECT_MAINNET strategy; it is not a mandatory Fuji prerequisite. The authoritative current procedure is [AWS Sydney execution](../deploy/aws/EXECUTION.md). Existing offline tests and production security gates remain mandatory.
 
 **Objective:** Confirm that `IntegrationC11.s.sol` runs green (0 FAIL) end-to-end.
 

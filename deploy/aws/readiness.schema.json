@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PrimeWave direct Mainnet readiness envelope (structural only)",
+  "description": "Null planning values are structurally permitted but blocked by executable readiness. Evidence authenticity/provenance must be verified by operator and owner. No signing or mutation.",
+  "type": "object",
+  "required": [
+    "schema",
+    "deploymentStrategy",
+    "mainnetReadiness"
+  ],
+  "properties": {
+    "schema": {
+      "const": "primewave-aws-deployment-v1"
+    },
+    "deploymentStrategy": {
+      "const": "DIRECT_MAINNET"
+    },
+    "mainnetReadiness": {
+      "type": "object",
+      "required": [
+        "hostEvidence",
+        "transactions",
+        "finalAcceptance",
+        "chainApproval",
+        "registry",
+        "genesis",
+        "construction",
+        "securityReview",
+        "managerArtifact",
+        "vmCompatibility",
+        "recovery",
+        "incidentResponse",
+        "commissioningPlan",
+        "executionEvidence",
+        "postEvidence",
+        "productionRecovery"
+      ],
+      "properties": {
+        "chainApproval": {
+          "$ref": "#/$defs/evidence"
+        },
+        "registry": {
+          "$ref": "#/$defs/evidence"
+        },
+        "genesis": {
+          "$ref": "#/$defs/evidence"
+        },
+        "construction": {
+          "$ref": "#/$defs/evidence"
+        },
+        "securityReview": {
+          "$ref": "#/$defs/evidence"
+        },
+        "managerArtifact": {
+          "$ref": "#/$defs/evidence"
+        },
+        "vmCompatibility": {
+          "$ref": "#/$defs/evidence"
+        },
+        "recovery": {
+          "$ref": "#/$defs/evidence"
+        },
+        "incidentResponse": {
+          "$ref": "#/$defs/evidence"
+        },
+        "commissioningPlan": {
+          "$ref": "#/$defs/evidence"
+        },
+        "executionEvidence": {
+          "$ref": "#/$defs/evidence"
+        },
+        "postEvidence": {
+          "$ref": "#/$defs/evidence"
+        },
+        "hostEvidence": {
+          "type": "object",
+          "required": [
+            "validator-1",
+            "validator-2"
+          ],
+          "properties": {
+            "validator-1": {
+              "type": "object",
+              "required": [
+                "cloud",
+                "local",
+                "operations"
+              ],
+              "properties": {
+                "cloud": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "local": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "operations": {
+                  "$ref": "#/$defs/evidence"
+                }
+              },
+              "additionalProperties": false
+            },
+            "validator-2": {
+              "type": "object",
+              "required": [
+                "cloud",
+                "local",
+                "operations"
+              ],
+              "properties": {
+                "cloud": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "local": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "operations": {
+                  "$ref": "#/$defs/evidence"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "transactions": {
+          "type": "object",
+          "required": [
+            "createSubnet",
+            "createChain",
+            "convertSubnet",
+            "initializeManager",
+            "activateValidators",
+            "nativeTransfer",
+            "feeDistribution",
+            "recoveryDrill"
+          ],
+          "properties": {
+            "createSubnet": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "createChain": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "convertSubnet": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "initializeManager": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "activateValidators": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "nativeTransfer": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "feeDistribution": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            },
+            "recoveryDrill": {
+              "type": "object",
+              "required": [
+                "request",
+                "approval"
+              ],
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/evidence"
+                },
+                "approval": {
+                  "$ref": "#/$defs/approval"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "finalAcceptance": {
+          "$ref": "#/$defs/approval"
+        },
+        "productionRecovery": {
+          "$ref": "#/$defs/evidence"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "required": [
+        "approved",
+        "reference",
+        "issuedAt",
+        "expiresAt",
+        "binding"
+      ],
+      "properties": {
+        "approved": {
+          "type": "boolean"
+        },
+        "reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issuedAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expiresAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "binding": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

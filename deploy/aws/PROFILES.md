@@ -33,8 +33,10 @@ evidence, not a claim that the table explicitly certifies24.04.
 identify two m6a.large vCPUs as one physical core with two SMT threads. The
 Avalanche table does not establish SMT-thread equivalence. Thus the smaller
 profile must not be described as unconditionally meeting two physical cores:
-it requires measured Fuji performance and explicit owner acceptance of that
-interpretation/risk. Xlarge offers two physical cores and more RAM headroom,
+it requires explicit owner acceptance of that
+interpretation/risk, host measurements before creation and actual bounded Mainnet
+performance evidence for post-launch acceptance. Optional Fuji evidence never
+substitutes for production observations. Xlarge offers two physical cores and more RAM headroom,
 but still does not make a two-validator pilot resilient.
 
 Upstream requires P-Chain tracking and recommends partial Primary Network sync
@@ -49,7 +51,9 @@ for an L1. The operator still has to validate P-Chain and own-chain behavior.
 
 ## Exact selection procedure (local only)
 
-The canonical manifest retains xlarge as the existing higher-headroom selection.
+The authoritative Sydney DIRECT_MAINNET reconciliation proposal is
+`sydney.existing-runtime.review.json`; it retains xlarge. The Mumbai review
+template and both hardware profiles remain supported.
 The two JSON files under `deploy/aws/profiles/` supply CPU/RAM acceptance to both
 preflight and shared Ansible; never lower those thresholds manually.
 
@@ -62,17 +66,17 @@ python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json
 For xlarge use `--select-profile aws-m6a-xlarge-headroom` and a different output
 file. Never redirect over the input manifest. Selection preserves public
 identity/volume/chain metadata, resets provisioning/launch/transaction consents
-and rehearsal acceptance, and grants no permission to resize or replace hosts.
+and rehearsal acceptance, revokes host-specific/operation approvals, and grants no permission to resize or replace hosts.
 It preserves an already verified account fact. Fill actual public inputs in the
 selected output; use that **same file** for inventory, cloud collection, both
 host gates and subsequent review. Do not mix evidence between profiles.
 
 After separately authorized provisioning, use the commands in `EXECUTION.md`
 with `--manifest deploy-output/aws-small.review.json`. Local collection now
-requires `--environment fuji` (or `mainnet`) to inspect the actual selected unit:
+requires `--environment mainnet` (or optional `fuji`) to inspect the actual selected unit:
 
 ```bash
-sudo python3 /opt/primewave/source/scripts/deploy/aws_pilot.py --manifest /opt/primewave/source/deploy/aws/deployment.review.json --host validator-1 --environment fuji --collect-local
+sudo python3 /opt/primewave/source/scripts/deploy/aws_pilot.py --manifest /opt/primewave/source/deploy/aws/deployment.review.json --host validator-1 --environment mainnet --collect-local
 ```
 
 Repeat for validator-2. The host gate validates the evidence's profile and
@@ -82,40 +86,40 @@ IOPS/125MiBps, measured QD32 random4KiB reads >=2700IOPS and <=10ms mean latency
 SSM Online, IMDSv2, no SSH/public administrative RPC, loopback metrics, time sync,
 alerts and all prior storage/security/recovery gates. No storage check was reduced.
 
-## Production acceptance for the smaller profile
+## DIRECT_MAINNET measurements and commissioning
 
-A host PASS establishes its hardware/config only. Smaller-profile mainnet review
-additionally requires `smallProfileProduction.ownerApproved=true`, explicit
-`physicalCoreExceptionAccepted=true`, and SHA256-bound public Fuji metrics via
-`workloadEvidenceFile` / `workloadEvidenceSha256`. No production approval is set.
+PRE_MAINNET_LAUNCH revalidates raw cloud/local evidence on both hosts using the
+unchanged selected-profile CPU/RAM/topology and storage/UUID/serial thresholds,
+SSM/private RPC, networking, time synchronization and monitoring safeguards.
+Operational evidence must record a delivered alert event and actual public
+identity/certificate/permission checks. No TPS or production receipt exists yet;
+none is marked passed. Xlarge is the selected pilot profile. No mandatory Fuji
+workload evidence is required for this stage.
 
-Required evidence JSON: schema `primewave-small-profile-workload-v1`, selected
-`deploymentProfile`, `environment="fuji"`, `observedAt` within24h, actual Fuji
-`chainId` and `genesisSha256`, and exactly two `hosts` records. Each record binds
-`name`, `instanceId`, `dataVolumeId`, `filesystemUuid`, `availabilityZone` to the
-manifest and supplies **actual measured** fields below. Test fixtures are not
-evidence. The utility only validates metrics; it never sends traffic.
-Percentages are host-normalized0–100, not per-process CPU percentages that can
-exceed100 on multiple vCPUs. Accepted TPS must agree with count/duration within1%.
+POST_MAINNET_ACCEPTANCE requires bounded production commissioning under separate
+native-transfer and fee-call approvals: advancing/matching blocks, both-node raw
+receipts, fixed-block balances, gas and70/20/10 accounting. Per-host limits remain
+CPU mean<70%,p95<90%;peak RAM<80%;disk/IOPS<80%;zero OOM/restarts/swap;network
+>=25Mbps;p95 confirmation<=5000ms. Real alert delivery and controlled recovery
+are mandatory. Receipt/status mismatches, consensus stalls, fencing/mount errors
+or pressure require immediate operator intervention under the incident plan;
+checks never automatically stop or resize AWS resources.
 
-| Required field(s), per host | Acceptance (project policy, not an upstream SLA) |
-|---|---|
-| `durationSeconds`, `acceptedTps` | >=3600s at >=5 and <10 accepted TPS |
-| `acceptedTransactions`, `submittedTransactions`, `failedReceipts` | >=18000 accepted; equal submitted; zero failures |
-| `representativeContractCalls` | true; include approved native transfers and fee-accounting calls |
-| `cpuMeanPercent`, `cpuP95Percent` | >=0 and <70%; >=0 and <90% |
-| `memoryPeakPercent` | >=0 and <80% of actual usable memory |
-| `oomKills`, `nodeRestarts`, `swapInBytes`, `swapOutBytes` | all zero |
-| `diskPeakUsedPercent`, `iopsPeakPercentOfProvisioned` | each >=0 and <80% |
-| `minimumNetworkMbps`, `confirmationP95Ms` | >=25Mbps; >0 and <=5000ms |
-| `startAcceptedHeight`, `endAcceptedHeight` | accepted height advances on each node |
-| `alertDeliveryVerified` | true; actually test delivery to the approved destination |
+Choosing DIRECT_MAINNET accepts the loss of public-test-network practice before
+irreversible production creation. The explicit commissioning/incident plan must
+acknowledge that risk and set native amount, gas, duration and transfer-count
+ceilings (<=10 smoke transfers,<=1h batch). It grants no transaction authority.
 
-The workload must use separately approved disposable Fuji wallets and bounded
-test-only funding; running it needs separate traffic/fee authorization. No load
-test was executed here. Require both fresh host PASS reports, matching chain
-progress/receipts, and the existing stopped-node backup/fenced recovery drill.
-Actual owner-supplied evidence is absent; the smaller profile is **not approved**.
+The smaller profile additionally requires ownerApproved and
+physicalCoreExceptionAccepted before creation. Its previous60min5TPS performance
+criteria are **not lowered**: actual selected-profile **Mainnet** metrics remain
+mandatory at post acceptance, using the existing small-profile workload format
+with environment=mainnet and the real ChainID/genesis. Evidence fields and numeric
+checks in small_workload_errors remain unchanged. Such a sustained workload needs
+its own separately approved funding/traffic plan, distinct from the small smoke
+batch; until supplied the smaller profile remains blocked for final acceptance.
+Fuji-formatted workload evidence is optional and cannot satisfy Mainnet acceptance.
+No measured host/network workload results were produced by this software change.
 
 Monitoring must page on lost chain progress/peers, failed health checks, process
 restarts/OOM, unsafe disk growth and resource pressure. Upstream warning/critical

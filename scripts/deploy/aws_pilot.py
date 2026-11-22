@@ -20,9 +20,11 @@ import urllib.request
 
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'scripts/mainnet'))
+sys.path.insert(0,str(ROOT/'scripts/deploy'))
 import preflight
 import chain_id
 rpc_spec=importlib.util.spec_from_file_location('primewave_rpc',ROOT/'scripts/check-evm-rpc.py')
+if rpc_spec is None or rpc_spec.loader is None:raise RuntimeError('RPC verifier module unavailable')
 rpc_module=importlib.util.module_from_spec(rpc_spec);rpc_spec.loader.exec_module(rpc_module)
 SUPPORTED_REGIONS=('ap-south-1','ap-southeast-2')
 PROFILE_IDS=('aws-m6a-large-low-throughput','aws-m6a-xlarge-headroom')
@@ -43,6 +45,10 @@ def select_profile(m,name):
     result['automation']['provisionApproved']=False
     result['awsLaunchApprovals']={'accountVerified':m.get('awsLaunchApprovals',{}).get('accountVerified') is True,'ec2LaunchAuthorized':False}
     result['smallProfileProduction']={'ownerApproved':False,'physicalCoreExceptionAccepted':False,'workloadEvidenceFile':None,'workloadEvidenceSha256':None}
+    for approval in result.get('hostLaunchApprovals',{}).values():approval['approved']=False
+    readiness=result.get('mainnetReadiness',{})
+    for tx in readiness.get('transactions',{}).values():tx.get('approval',{})['approved']=False
+    if 'finalAcceptance' in readiness:readiness['finalAcceptance']['approved']=False
     for e in result['environments'].values():
         e['approvals']={k:False for k in e['approvals']}
         e['rehearsalPassed']=False;e['rehearsalEvidenceSha256']=None
@@ -64,8 +70,8 @@ def service_config_matches(unit,path):
     return len(argv)==1 and shlex.split(argv[0].strip())==['/opt/primewave/releases/v1.15.1/avalanchego','--config-file='+str(path)]
 
 
-def small_workload_errors(m):
-    """Validate owner-supplied public Fuji metrics; never generates traffic."""
+def small_workload_errors(m,environment='fuji'):
+    """Validate actual selected-environment public metrics; never generates traffic."""
     if not selected_profile(m)['requiresSmallProfileProductionAcceptance']:return []
     errors=[];review=m.get('smallProfileProduction',{})
     if review.get('ownerApproved') is not True:errors.append('smaller profile production risk acceptance missing')
@@ -77,11 +83,11 @@ def small_workload_errors(m):
         raw=path.read_bytes()
         if hashlib.sha256(raw).hexdigest()!=review.get('workloadEvidenceSha256'):raise ValueError('workload evidence digest mismatch')
         evidence=json.loads(raw);public_only(evidence)
-        if evidence.get('schema')!='primewave-small-profile-workload-v1' or evidence.get('deploymentProfile')!=m['deploymentProfile'] or evidence.get('environment')!='fuji' or not fresh(evidence.get('observedAt')):
-            raise ValueError('fresh <=24h selected-profile Fuji workload evidence required')
-        fuji=m['environments']['fuji']
+        if evidence.get('schema')!='primewave-small-profile-workload-v1' or evidence.get('deploymentProfile')!=m['deploymentProfile'] or evidence.get('environment')!=environment or not fresh(evidence.get('observedAt')):
+            raise ValueError('fresh <=24h selected-profile environment-bound workload evidence required')
+        fuji=m['environments'][environment]
         if type(fuji.get('evmChainId')) is not int or fuji['evmChainId'] in chain_id.DENIED or evidence.get('chainId')!=fuji['evmChainId'] or not fuji.get('genesisSha256') or evidence.get('genesisSha256')!=fuji['genesisSha256']:
-            raise ValueError('actual Fuji Chain ID/genesis binding required')
+            raise ValueError('actual selected environment Chain ID/genesis binding required')
         rows=evidence.get('hosts',[])
         if len(rows)!=2 or {r.get('name') for r in rows}!={'validator-1','validator-2'}:raise ValueError('both benchmark host records required')
         for row in rows:
@@ -189,13 +195,15 @@ def collect_cloud(m,name):
     found=[i for r in instances for i in r['Instances']]
     if len(found)!=1:raise ValueError('Exactly one existing instance required')
     instance=found[0]
-    volume=aws(m,'ec2','describe-volumes','--volume-ids',h['dataVolumeId'])['Volumes']
+    all_volumes=aws(m,'ec2','describe-volumes','--volume-ids',h['dataVolumeId'],h['rootVolumeId'])['Volumes']
+    volume=[v for v in all_volumes if v['VolumeId']==h['dataVolumeId']]
+    root_volume=[v for v in all_volumes if v['VolumeId']==h['rootVolumeId']]
     groups=aws(m,'ec2','describe-security-groups','--group-ids',*[g['GroupId'] for g in instance['SecurityGroups']])['SecurityGroups']
     managed=aws(m,'ssm','describe-instance-information','--filters','Key=InstanceIds,Values='+h['instanceId'])['InstanceInformationList']
     # Discard tags/user data and any unrelated API fields.
     keys=('InstanceId','InstanceType','Architecture','CpuOptions','Placement','State','PublicIpAddress','PrivateIpAddress','SecurityGroups','IamInstanceProfile','BlockDeviceMappings','MetadataOptions','RootDeviceName')
     volume_keys=('VolumeId','Encrypted','VolumeType','Size','Iops','Throughput','AvailabilityZone','Attachments','State')
-    return dict(observedAt=now(),accountId=account,region=m['region'],host=name,instance={k:instance.get(k) for k in keys},volumes=[{k:v.get(k) for k in volume_keys} for v in volume],securityGroups=[{'GroupId':g['GroupId'],'IpPermissions':g['IpPermissions']} for g in groups],ssm=[{k:i.get(k) for k in ('InstanceId','PingStatus','PlatformName','PlatformVersion','AgentVersion')} for i in managed])
+    return dict(observedAt=now(),accountId=account,region=m['region'],host=name,instance={k:instance.get(k) for k in keys},volumes=[{k:v.get(k) for k in volume_keys} for v in volume],rootVolumes=[{k:v.get(k) for k in volume_keys} for v in root_volume],securityGroups=[{'GroupId':g['GroupId'],'IpPermissions':g['IpPermissions']} for g in groups],ssm=[{k:i.get(k) for k in ('InstanceId','PingStatus','PlatformName','PlatformVersion','AgentVersion')} for i in managed])
 
 
 def collect_local(m,name,environment):
@@ -301,7 +309,11 @@ def inventory(m,environment):
     return {'all':{'children':{'primewave_pilot':{'hosts':nodes,'vars':variables}}}}
 
 
-def ceremony_gate(m,environment):
+def ceremony_gate(m,environment,stage='PRE_MAINNET_LAUNCH',operation='createSubnet'):
+    if environment=='mainnet':
+        from mainnet_readiness import readiness
+        from types import SimpleNamespace
+        return readiness(m,stage,operation,SimpleNamespace(**globals()))
     errors=manifest_errors(m);e=m['environments'][environment]
     def need(ok,message):
         if not ok:errors.append(message)
@@ -327,11 +339,6 @@ def ceremony_gate(m,environment):
         p=env.get('genesisPublic',{})
         return {a.lower() for a in [*p.get('allocationAddresses',{}).values(),*p.get('contracts',{}).values(),p.get('governanceProposer'),*p.get('emergencySigners',[]),env.get('managerProxy'),env.get('proxyAdmin')] if isinstance(a,str)}
     need(not custody(e)&custody(m['environments']['mainnet' if environment=='fuji' else 'fuji']),'Fuji and Mainnet custody/governance public addresses must be disjoint; test keys never become production custody')
-    if environment=='mainnet':
-        errors.extend(small_workload_errors(m))
-        fuji=m['environments']['fuji']
-        need(fuji.get('rehearsalPassed') is True and re.fullmatch('[0-9a-f]{64}',fuji.get('rehearsalEvidenceSha256') or '') is not None,'successful Fuji transaction/fee/recovery evidence required before mainnet')
-        need(e.get('approvals',{}).get('launch') is True,'separate mainnet launch/signing approval required')
     # This review never emits an executable broadcast; final gate also requires
     # fresh PASS host reports and actual chain registry/genesis/artifact validation.
     return dict(status='BLOCKED' if errors else 'REVIEW_COMPLETE',environment=environment,blockers=errors,quota=quota_report(m),broadcastReady=False,signing=False,reason='Fresh host PASS reports, registry/genesis/artifact validation and operator ceremony approval remain mandatory')
@@ -351,6 +358,8 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--manifest',type=Path,required=True);p.add_argument('--host',choices=['validator-1','validator-2'])
     p.add_argument('--environment',choices=['fuji','mainnet'])
+    p.add_argument('--stage',choices=['PRE_MAINNET_LAUNCH','POST_MAINNET_ACCEPTANCE'],default='PRE_MAINNET_LAUNCH')
+    p.add_argument('--operation',choices=['createSubnet','createChain','convertSubnet','initializeManager','activateValidators','nativeTransfer','feeDistribution','recoveryDrill'],default='createSubnet')
     mode=p.add_mutually_exclusive_group(required=True)
     for flag in ('collect-cloud','collect-local','preflight','inventory','readiness','rpc-check'):mode.add_argument('--'+flag,action='store_true')
     mode.add_argument('--select-profile',choices=PROFILE_IDS)
@@ -370,7 +379,7 @@ if __name__=='__main__':
             result=host_gate(m,a.host,json.loads(a.cloud_facts.read_text()),json.loads(a.host_facts.read_text()))
         elif a.inventory:result=inventory(m,a.environment)
         elif a.rpc_check:result=rpc_check(m,a.host,a.environment)
-        else:result=ceremony_gate(m,a.environment)
+        else:result=ceremony_gate(m,a.environment,a.stage,a.operation)
         print(json.dumps(result,indent=2))
         if result.get('status') in ('FAIL','BLOCKED'):raise SystemExit(1)
     except (ValueError,KeyError,TypeError,OSError,subprocess.SubprocessError) as error:

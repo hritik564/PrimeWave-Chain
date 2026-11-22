@@ -1,204 +1,144 @@
-# AWS Mumbai execution handoff
+# Sydney DIRECT_MAINNET execution handoff
 
-Select an explicit profile using `PROFILES.md`. The canonical manifest retains
-xlarge; the quota-compatible large option is a separate reviewed selection.
-Historical Netcup servers are inaccessible and must not be used.
+Authoritative for the selected AWS Sydney pilot. DIRECT_MAINNET is the approved
+strategy, not authorization to spend, provision, sign, broadcast or start nodes.
+Fuji is optional: see OPTIONAL-FUJI.md. Never fabricate Fuji evidence or set
+rehearsalPassed to bypass a gate. Historical Netcup hosts remain inaccessible.
+Mumbai adapters remain supported; deployment.review.json is their review template.
 
-Source-only preparation. No instance/session/node/key creation, fee payment or
-transaction broadcast was performed. One public manifest is authoritative:
-`deploy/aws/deployment.review.json`. Null values and false approval flags are
-intentional blockers. Never put credentials, private keys or mnemonics in it.
-AWS selection does not authorize spending, IAM/resource changes or signing.
+## State and source of truth
 
-## Host and administration requirements
+Use `sydney.existing-runtime.review.json` as the **new reconciliation proposal**:
+it copies public Validator1 IDs and the stopped observation from the unchanged
+launch/controlled-stop evidence. It records the observed stop at2026-11-22
+09:28:35 IST, not a fresh AWS verification. Filesystem UUID, mount and production
+identity are intentionally unresolved. Its instance/volume/launch record blocks
+initial relaunch of Validator1. No historical approval or idempotency record is
+reset. `sydney.deployment.review.json` remains the original initial-launch review
+layout; never use it to replace or relaunch the existing Validator1. Fresh
+read-only AWS verification is mandatory before any separately approved action.
 
-Two existing owner-approved instances of the selected AWS profile, Ubuntu 24.04 x86-64, in distinct
-Mumbai AZs. Use a **dedicated 150GiB encrypted gp3 data EBS per node**, separate
-from an owner-sized OS root volume. Root volume cost/layout needs explicit
-approval. Data attachment must have `DeleteOnTermination=false`. Mount by the
-actual UUID in `/etc/fstab` without `nofail`/`noauto`. No formatter, disk reset,
-mount fallback or instance-launch logic is supplied. Keep the agreed service
-UID/GID across replacements; the playbook refuses retained ownership mismatch.
-Set each host's `dataLifecycle` explicitly: `new` only for an authorized first
-start, `existing` for a retained-data replacement. A managed missing DB is never
-recreated; existing mode also requires nonempty DB metadata. Before first start,
-record the separately approved identity's public fields in the manifest and
-refresh its storage binding. Null/different expected identity fields refuse startup.
-Lifecycle refers to the selected environment's runtime; reusing a host for first
-mainnet startup never permits overwriting or adopting its separate Fuji database.
+`mainnetReadiness` references public JSON evidence by absolute path and raw-file
+SHA256. `readiness.schema.json` documents the envelope; the executable validators
+also check contents, cross-file bindings and accounting. A PASS means validated
+supplied evidence, not proof that arbitrary operator JSON is authentic. Collect
+real API observations, retain source provenance and obtain exact owner reviews;
+synthetic test fixtures are never deployment evidence. Do not publish secrets.
 
-Only inbound TCP 9651 is accepted across the union of attached security groups.
-No inbound 22, 9650 or 9100, including private ranges; disable SSH service/socket.
-RPC and metrics bind loopback. SSM Agent must be Online, IMDSv2 required, and
-the instance role must allow SSM. Outbound connectivity must support public
-Avalanche peers, DNS, time sync, HTTPS package/binary downloads and AWS SSM/S3.
-Use reviewed outbound internet routing or appropriate VPC endpoints; endpoint
-presence alone does not provide Avalanche peer connectivity.
+## Ordered operations — no implicit approvals
 
-Controller: AWS CLIv2 with an explicit owner SSO/MFA profile, Session Manager
-plugin, Python, `ansible-core==2.19.4`, `boto3>=1.38.23`, `botocore>=1.38.23`, and:
+1. Read-only verify account340379122975/profile primewave-sydney/region
+   ap-southeast-2, existing Validator1 stopped instance/volume IDs and retained
+   attachments. Preserve both volumes. Do not reissue an initial launch.
+2. Prepare Validator2 independently with aws_launch_prepare.py --host validator-2.
+   Its approval stays false. Obtain a separate expiring request-bound spending
+   approval before its one EC2 launch. Successful dry runs reserve no capacity.
+3. Obtain a separate **start-existing-Validator1** approval before any EC2 restart.
+   Preserve volumes and launch record; do not generate a new instance/identity.
+4. Obtain separate host-provisioning approval. Review SSM transfer bucket/KMS,
+   stable service UID/GID, auditing, logs, monitoring/alert destination, OS-root
+   layout, storage-growth and incident response. Use common Ansible via the AWS
+   adapter; no duplicate implementation or SSH ingress. An inventory export
+   keeps create_identities=false and start_node=false.
+5. Configure/validate Ubuntu24.04 x86-64, SSM-only administration, publicTCP9651
+   only, private127.0.0.1:9650 RPC, loopback metrics, IMDSv2, time sync and actual
+   service-selected partial-sync-primary-network=true/sybil protection. Data EBS
+   must be encrypted retained>=150GiB gp3,3000IOPS/125MiBps, separate32GiB root.
+   Mount actual UUID without nofail/noauto; match local NVMe serial to reviewed
+   EBS ID; never format/adopt reused data or fall back to a root filesystem.
+6. Under separate production identity/custody authorization create and secure
+   production-only identities; export public NodeID/BLS/PoP/certificate digest.
+   Verify public certificate hash and private-file permissions without including
+   key contents in evidence. Bind public identity/instance/volume/UUID records.
+   Configure identity fencing and test encrypted off-host recovery procedures
+   before production. Never reuse demo/Fuji keys or run duplicate identities.
+7. Finalize approved distinct Chain ID (73571001 is only a candidate), fresh
+   <=24h registry snapshot/decision, C00 constructor-state genesis and manager
+   artifacts. No post-genesis mint; exactly100M PW;70/20/10 fees unchanged.
+   Rewards seed RewardVault exactly15M once with initialized funding counters;
+   no extra funding EOA allocation or post-launch double funding. Review exact
+   bytecode/storage, initialized governance, proxy/library/admin, ownership
+   thresholds, weights, timelock and protected bootstrap. Require isolated pinned
+   v1.15.1/protocol46 tests of the **actual final genesis**, not historical fixture
+   results. Neither local VM testing nor an optional Fuji run signs Mainnet.
+8. Review every operation's parameters, production signer alias, AVAX budget,
+   fee/total-spend ceilings, custody and incident response. Each operation has its
+   own expiring approval bound to the canonical reviewed request digest. No
+   blanket approvals, raw keys, all-in-one CLI or timeout retries with new IDs.
+9. Complete PRE_MAINNET_LAUNCH for the selected operation. Initial createSubnet
+   does not require future on-chain receipts or post-launch acceptance. If using
+   subnet-bound genesis, the actual accepted SubnetID is a later binding: finalize
+   and reapprove genesis/requests before CreateChain. Alternatively review a
+   tested owner-controlled atomic upgrade+initialize bootstrap. Never expose a
+   publicly callable uninitialized proxy or invent a future SubnetID.
+10. After exact CreateSubnetTx approval, sign/broadcast only that transaction;
+    reconcile acceptance and retain SubnetID. Rebind/review final artifacts and
+    CreateChainTx request to that actual ID. After independent CreateChainTx
+    approval, submit it and retain BlockchainID/VMID/receipt. Each step pauses on
+    errors or unknown outcomes to reconcile accepted state; never recreate a chain.
+11. Independently approve ConvertSubnetToL1Tx with actual manager chain/address,
+    two production NodeIDs/BLS PoPs/weights, balances and return owners. Preserve
+    accepted conversion data. Independently approve the reviewed manager/proxy
+    initialization and initializeValidatorSet using actual conversion Warp data
+    and owner-operated aggregator; verify ownership and registrations/weights.
+    Each transaction within a logical stage requires its own reviewed request and
+    approval; do not combine multiple irreversible transactions in one authorization.
+    The readiness operation record covers one request, not a blanket stage grant.
+12. Under separate host-start/activation permissions start existing nodes using
+    preserved storage binding/identities. Verify P-Chain health/sync, expected
+    validator registration/weights, advancing accepted blocks, genesis/chain IDs
+    and matching hashes. Public-network node start and validator activation are
+    independently authorized operations, not consequences of EC2 health.
+13. Separately authorize bounded native PW commissioning and FeeDistributor calls
+    under exact amount/gas ceilings and existing C00 allocation spending authority.
+    At most10 smoke transfers and<=1h per reviewed commissioning batch; no grant
+    or post-genesis mint. Compare fixed-block balances, actual receipts on both
+    nodes, sender=value+gas decrease, recipient increase, accepted hashes and
+    70/20/10 event/cumulative-accounting deltas including concurrent call gas.
+14. Separately authorize a controlled production recovery/restoration drill.
+    Preserve identity/DB/registration and fence the old host; same-AZ EBS reattach
+    or separately authorized consistent encrypted restore across AZs. With two
+    validators either outage halts consensus: a non-resilient pilot, not HA.
+15. POST_MAINNET_ACCEPTANCE requires genuine production observations, both-node
+    receipts, registration/weights, P-Chain sync, advancing/matching blocks,
+    successful native/gas/fee accounting, operational alerts and actual recovery.
+    Obtain digest-bound final acceptance approval **before public access**.
+    PWUSD remains frozen. No public access or PWUSD authorization is implied.
 
-```bash
-ansible-galaxy collection install -r deploy/aws/requirements.yml
+## Offline readiness commands
+
+```sh
+python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/sydney.existing-runtime.review.json --environment mainnet --readiness --stage PRE_MAINNET_LAUNCH --operation createSubnet
+python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/sydney.existing-runtime.review.json --environment mainnet --readiness --stage POST_MAINNET_ACCEPTANCE
 ```
 
-The `amazon.aws:12.0.0` SSM connection requires a reviewed S3 transfer bucket
-reachable by controller and instances, controller Get/Put/List/Delete permissions,
-and the chosen KMS permissions. Use a dedicated private encrypted bucket,
-versioning disabled/suspended and temporary-object cleanup/lifecycle reviewed.
-Only public source/manifest/module inputs go through this bucket; never keys or
-backup archives. IAM/account/session/audit configuration remains owner work.
-Standard shell-session logging and CloudTrail must be configured. Port-forwarded
-traffic is not recorded by Session Manager: retain application receipts instead.
+Both intentionally return BLOCKED today. No signing/broadcast/AWS mutation is
+implemented in these checks. For each later operation use --operation with its
+own approval; accepted prior-operation receipts and actual subnet/chain bindings
+are checked only when that operation needs them. The schema lists each supported
+operation; to perform multiple transactions in one logical stage, pause and
+rebind/review the next individual request. Native transfers/fee calls also require
+running consensus/manager ownership evidence before execution.
 
-## Provisioning is separate from starting or key creation
+After authorized provisioning, collect raw cloud/local facts using the existing
+--collect-cloud and --collect-local --environment mainnet modes for each host;
+run --preflight with those files. Read-only cloud collection now includes actual
+root-volume metadata as well as retained data. Operational identity/alert evidence
+is separately captured under approved host access: actual public certificate
+hash/private-file mode checks, production identity metadata, verified alert event
+ID and measurement time bound to instance/volume/UUID. No credentials or private
+key contents are permitted. A precomputed PASS flag never replaces raw evidence.
 
-Fill actual account/profile, instance IDs, AZs, endpoints, root/data volume IDs,
-mount UUIDs/paths, service UID/GID, SSM transfer bucket/KMS and operation fields.
-Set `automation.provisionApproved` only after explicit owner authorization for
-existing-host configuration. The renderer always sets `create_identities=false`
-and `start_node=false`, irrespective of transaction approval flags.
+## Administration and recovery safeguards
 
-```bash
-set -euo pipefail
-mkdir -p deploy-output
-python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --environment fuji --inventory > deploy-output/aws-fuji.inventory.json
-# ONLY after separate existing-host provisioning approval:
-ansible-playbook -i deploy-output/aws-fuji.inventory.json deploy/aws/pilot.yml
-```
-
-Both AWS and Netcup import `deploy/common/validator.yml`; no second validator
-implementation exists. It installs pinned verified binaries, private RPC,
-monitoring/time sync, recovery tooling and a service with persistent mount,
-UUID/EBS-serial and binary guards. It cannot create a subnet/blockchain or start
-a node by default. Approved provisioning creates a dedicated public 256MiB
-benchmark file outside DB/identity directories. Point `host.benchmarkFile` at
-that actual file before collecting evidence. Missing benchmark evidence FAILS.
-
-## Read-only host preflight
-
-For each `validator-1` and `validator-2`, collect cloud evidence on the controller:
-
-```bash
-python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --host validator-1 --collect-cloud > deploy-output/validator-1.cloud.json
-```
-
-This calls only STS GetCallerIdentity, EC2 DescribeInstances/Volumes/SecurityGroups
-and SSM DescribeInstanceInformation. Account mismatch stops further calls. No AWS
-API is called when manifest inputs are incomplete. Do not send credentials here.
-
-Inside an owner-opened Session Manager shell on the matching instance:
-
-```bash
-sudo python3 /opt/primewave/source/scripts/deploy/aws_pilot.py --manifest /opt/primewave/source/deploy/aws/deployment.review.json --host validator-1 --environment fuji --collect-local
-```
-
-Save only its public JSON output as `deploy-output/validator-1.host.json` on the
-controller. Repeat for validator-2. The collector verifies the actual environment unit/config uses partial P-Chain sync, and reads public IMDSv2 identity,
-mount/NVMe metadata, effective listeners/firewall and services. fio uses only a
-dedicated existing benchmark: readonly, no file creation, QD32 random4KiB reads.
-It never reads a private key or blockchain database file.
-
-**Single PASS/FAIL command per host** (substitute validator-2 consistently):
-
-```bash
-python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --host validator-1 --preflight --cloud-facts deploy-output/validator-1.cloud.json --host-facts deploy-output/validator-1.host.json
-```
-
-Exit0/PASS requires matching account/instance/AZ/IMDS identity, separate AZs,
-SSM Online, Ubuntu 24.04/x86-64, selected-profile CPU/RAM and actual physical topology, encrypted retained
->=150GiB gp3 with >=3000 provisioned IOPS/125MiBps, exact local EBS serial/UUID,
->=140GiB usable filesystem total (overhead allowed), >=100GiB free, measured
->=2700 read IOPS and <=10ms mean latency, default-deny firewall, no SSH/public
-RPC, time sync, monitoring, alert destination and reviewed operational plans.
-2700 IOPS is the project's90% acceptance floor against gp3's3000 baseline, not
-an AWS performance guarantee. Unknown/missing/stale (>24h) evidence FAILS/exit 1.
-PASS covers the host only: actual inbound9651 reachability must additionally be
-probed externally after an explicitly approved node start. No identity, funding,
-consensus or launch authorization follows from host PASS.
-
-## Temporary Fuji rehearsal, then production ceremony
-
-1. Complete both host preflights. Owner authorizes **Fuji-only** identity creation
-   and startup separately. The pinned fresh-identity tool is already compiled
-   by CI; run only under the approved operator's custody. Store Fuji identity/DB
-   beneath `primewave/fuji-rehearsal`, never `pw-demo-04` or production directories.
-   Owner records public NodeID, BLS public key/PoP and certificate SHA only.
-2. Select/approve a collision-checked Fuji EVM ID distinct from development73571
-   and the production candidate73571001. Use fresh disposable Fuji governance,
-   custody and transaction wallets. Do not require or generate production keys
-   to rehearse. Owner obtains faucet test AVAX on the Fuji P-Chain and approves
-   exact creation fees, both validator initial balances, renewal/fee runway and
-   change/refund ownership. A controller can share one validator host; validators
-   and an owner-operated local signature aggregator must remain reachable through
-   explicit loopback SSM tunnels. No paid/public aggregator fallback is authorized.
-3. With approved host-start only, synchronize public Fuji P-Chain (network 5),
-   check health/P-chain bootstrap and public 9651 peers. Mainnet later uses network 1,
-   fresh production-only TLS/BLS identities and fresh approved custody addresses.
-   Never run the two environments simultaneously on a shared 9651 listener.
-4. **Staged signing approvals:** owner first approves CreateSubnetTx parameters,
-   P-chain control owners/thresholds, fee/change budget and signer. Record accepted
-   receipt/SubnetID. Bind the reviewed manager initialization to that actual ID;
-   finalize constructor-executed proxy/library/manager and C00 genesis state.
-   A publicly callable uninitialized manager proxy is forbidden. If choosing an
-   owner-controlled atomic upgrade+initialize bootstrap instead, review and test
-   that exact artifact first; merely setting a review flag is insufficient.
-5. Owner approves the exact final genesis hash and CreateChainTx/VM parameters,
-   then signs/broadcasts CreateChainTx. Preserve the receipt, BlockchainID and VMID.
-   Install the existing plugin/chain configuration under those actual IDs. Do not
-   rerun creation commands after a timeout: inspect saved transaction status first.
-6. Owner approves ConvertSubnetToL1Tx containing the actual manager chain/address,
-   two fresh public NodeIDs/BLS PoPs, weights, validation balances and return owners.
-   Preserve accepted conversion receipt/data. Initialize/activate the manager
-   through reviewed ownership and verify `initializeValidatorSet` with the actual
-   conversion Warp message using the local aggregator. Do not treat a CLI exit 0
-   as proof of ownership or validator-set correctness. The existing all-in-one
-   create-l1 argv is review-only; do not use it to bypass the staged subnet-binding
-   or protected-bootstrap requirement.
-7. Verify both nodes' expected identities, registration/weights and peers, health,
-   advancing accepted blocks and matching genesis/block/receipt hashes. Open each
-   RPC using `AWS-StartPortForwardingSession` to remote 9650 and the manifest's local
-   tunnel port; no inbound RPC/SSH. Reuse the four-method verifier:
-   `python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --host validator-1 --environment fuji --rpc-check`
-   (repeat validator-2; later use `--environment mainnet`). It requires an explicit
-   non-demo Chain ID and actual BlockchainID, always calls loopback, never signs.
-8. Owner authorizes a bounded native PW smoke transfer between the manifest's
-   disposable wallets, funded by an approved spend from an existing C00 allocation
-   (no additional genesis grant). Record amount/gas ceiling before signing. Check
-   status 1, canonical accepted receipt on both nodes and balances at fixed blocks:
-   sender decrease = value + gasUsed*effectiveGasPrice; recipient increase = value.
-9. Separately approve permissionless `FeeDistributor.distribute()` transaction and
-   its gas budget. Verify event/cumulative-accounting deltas: validators=floor(A*70%),
-   treasury=floor(A*20%), burn=A-minus-both; sum exactlyA. Verify actual destination
-   contracts/custody and resulting balances; account for this call's own gas fees
-   arriving after execution and any other concurrent transactions. Check vault
-   funding/counters/no NativeMinter and that no extra PW allocation was introduced.
-10. Approve a maintenance/recovery drill. With two validators, stopping either
-    halts the chain: this is an accepted non-resilient pilot, not HA. Stop one cleanly,
-    preserve the EBS/identity/DB and an encrypted off-host backup, fence the old host,
-    then restore/reattach to a replacement in the **same AZ**. Across AZs or later
-    Netcup migration use an authorized consistent snapshot/restore or encrypted
-    stopped-node backup; EBS cannot simply move between AZs. Preserve UID/GID and
-    NodeID/BLS/certificate/DB/registration; never run two active copies of one identity.
-    Missing/wrong mount must fail startup, not initialize a replacement database.
-11. Retain Fuji transaction/fee/identity/recovery evidence with its SHA256. Owner
-    approves teardown of the temporary rehearsal and separately authorizes each
-    production preparation/signing stage. Recheck registry evidence within 24h,
-    repeat steps 3–10 on mainnet with entirely separate production identities and
-    custody. Final production launch approval is separate. PWUSD remains frozen
-    until PrimeWave Mainnet is live and all acceptance evidence is approved.
-
-Read-only review summaries (never execute or authorize transactions):
-
-```bash
-python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --environment fuji --readiness
-python3 scripts/deploy/aws_pilot.py --manifest deploy/aws/deployment.review.json --environment mainnet --readiness
-```
-
-## Official operational references
-
-- [Session Manager: no inbound management ports; port-forward logging limitation](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
-- [Session and port-forward commands](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-sessions-start.html)
-- [SSM outbound/endpoints requirements](https://docs.aws.amazon.com/systems-manager/latest/userguide/setup-create-vpc.html)
-- [Ansible SSM connection and S3 transfer requirements](https://docs.ansible.com/projects/ansible/latest/collections/amazon/aws/aws_ssm_connection.html)
-- [gp3 provisioned baseline](https://docs.aws.amazon.com/ebs/latest/userguide/general-purpose.html)
+Controller: explicit AWS CLI profile, Session Manager plugin, Python3.13,
+ansible-core2.19.4, amazon.aws12.0.0, boto3/botocore>=1.38.23. Review a dedicated
+private encrypted S3 transfer bucket and controller KMS/S3 privileges; the node
+role stays SSM-core-only. Never transfer keys/backups through Ansible's SSM bucket.
+Review temporary-object cleanup, audit/CloudTrail and shell-session logging.
+Port-forwarded traffic is not recorded by SSM: retain application receipts.
+Retained data requires stable service UID/GID and UUID/serial guards. New/existing
+runtime lifecycle remains explicit; missing managed DB metadata must refuse
+startup, never initialize a replacement blockchain. Fuji/demo and Mainnet runtime
+roots/identities/custody are isolated. A recovery procedure test before creation
+is distinct from the controlled actual-network recovery required for acceptance.

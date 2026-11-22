@@ -309,5 +309,203 @@
     "workloadEvidenceFile": null,
     "workloadEvidenceSha256": null
   },
-  "historicalNetcupAccessible": false
+  "historicalNetcupAccessible": false,
+  "deploymentStrategy": "DIRECT_MAINNET",
+  "mainnetReadiness": {
+    "hostEvidence": {
+      "validator-1": {
+        "cloud": {
+          "path": null,
+          "sha256": null
+        },
+        "local": {
+          "path": null,
+          "sha256": null
+        },
+        "operations": {
+          "path": null,
+          "sha256": null
+        }
+      },
+      "validator-2": {
+        "cloud": {
+          "path": null,
+          "sha256": null
+        },
+        "local": {
+          "path": null,
+          "sha256": null
+        },
+        "operations": {
+          "path": null,
+          "sha256": null
+        }
+      }
+    },
+    "chainApproval": {
+      "path": null,
+      "sha256": null
+    },
+    "registry": {
+      "path": null,
+      "sha256": null
+    },
+    "genesis": {
+      "path": null,
+      "sha256": null
+    },
+    "construction": {
+      "path": null,
+      "sha256": null
+    },
+    "securityReview": {
+      "path": null,
+      "sha256": null
+    },
+    "managerArtifact": {
+      "path": null,
+      "sha256": null
+    },
+    "recovery": {
+      "path": null,
+      "sha256": null
+    },
+    "incidentResponse": {
+      "path": null,
+      "sha256": null
+    },
+    "commissioningPlan": {
+      "path": null,
+      "sha256": null
+    },
+    "executionEvidence": {
+      "path": null,
+      "sha256": null
+    },
+    "postEvidence": {
+      "path": null,
+      "sha256": null
+    },
+    "transactions": {
+      "createSubnet": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "createChain": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "convertSubnet": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "initializeManager": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "activateValidators": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "nativeTransfer": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "feeDistribution": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "recoveryDrill": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      }
+    },
+    "finalAcceptance": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": null
+    },
+    "vmCompatibility": {
+      "path": null,
+      "sha256": null
+    },
+    "productionRecovery": {
+      "path": null,
+      "sha256": null
+    }
+  }
 }

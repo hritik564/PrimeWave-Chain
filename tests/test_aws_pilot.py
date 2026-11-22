@@ -102,10 +102,11 @@ class AwsPilotTests(unittest.TestCase):
         self.m['privateKey']='not-even-a-real-key'
         with self.assertRaisesRegex(ValueError,'credentials forbidden'):aws.manifest_errors(self.m)
 
-    def test_mainnet_is_blocked_until_real_fuji_evidence_and_approvals(self):
+    def test_mainnet_is_blocked_by_actual_missing_evidence_not_fuji(self):
         result=aws.ceremony_gate(self.m,'mainnet')
         self.assertEqual(result['status'],'BLOCKED');self.assertFalse(result['broadcastReady'])
-        self.assertTrue(any('Fuji transaction' in x for x in result['blockers']))
+        self.assertTrue(any('host validator-1' in x for x in result['blockers']))
+        self.assertFalse(any('Fuji transaction' in x for x in result['blockers']))
 
     def test_fuji_cannot_reuse_mainnet_public_identity(self):
         for env in self.m['environments'].values():

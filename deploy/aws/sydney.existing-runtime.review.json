@@ -1,0 +1,577 @@
+{
+  "schema": "primewave-aws-deployment-v1",
+  "provider": "aws",
+  "region": "ap-southeast-2",
+  "accountId": "340379122975",
+  "operatorProfile": "primewave-sydney",
+  "expectedValidators": 2,
+  "pilotRiskAccepted": true,
+  "allocationPolicy": "C00",
+  "nativeSupplyPW": 100000000,
+  "nativeMinterEnabled": false,
+  "feeSplitBps": {
+    "validators": 7000,
+    "treasury": 2000,
+    "burn": 1000
+  },
+  "pwusdDeploymentApproved": false,
+  "target": {
+    "instanceType": "m6a.xlarge",
+    "os": "Ubuntu",
+    "osVersion": "24.04",
+    "architecture": "x86_64",
+    "dataVolumeGiB": 150,
+    "volumeType": "gp3",
+    "encrypted": true,
+    "deleteOnTermination": false,
+    "publicP2pTcpPort": 9651,
+    "administration": "ssm",
+    "publicSsh": false,
+    "publicValidatorRpc": false,
+    "trafficProfile": "under-10-tps-pruned",
+    "minimumFreeGiB": 100,
+    "minimumReadIops": 2700,
+    "maximumReadLatencyMs": 10,
+    "benchmark": "read-only4KiB randread,libaio,QD32,10s;90% of3000 gp3 baseline is project acceptance floor, not an AWS guarantee"
+  },
+  "automation": {
+    "collection": "amazon.aws:12.0.0",
+    "ssmTransferBucket": null,
+    "ssmKmsKeyArn": null,
+    "transferBucketReviewed": false,
+    "identityToolBinary": null,
+    "provisionApproved": false
+  },
+  "operations": {
+    "offHostRecoveryVerified": false,
+    "recoveryEvidenceSha256": null,
+    "alertDestination": null,
+    "monitoringApproved": false,
+    "storageGrowthPlanApproved": false,
+    "sessionAuditApproved": false,
+    "rootVolumePlanApproved": false
+  },
+  "hosts": [
+    {
+      "name": "validator-1",
+      "instanceId": "i-0d2a9cee4dc9d9134",
+      "region": "ap-southeast-2",
+      "availabilityZone": "ap-southeast-2a",
+      "privateIp": "172.31.14.178",
+      "publicIp": null,
+      "privateEndpoint": {
+        "rpcBind": "127.0.0.1",
+        "rpcPort": 9650,
+        "ssmTargetInstanceId": "i-0d2a9cee4dc9d9134",
+        "operatorTunnelPort": null
+      },
+      "publicP2pEndpoint": null,
+      "dataVolumeId": "vol-0aab1844ff6cfab37",
+      "filesystemUuid": null,
+      "persistentMount": null,
+      "benchmarkFile": null,
+      "rootVolumeId": "vol-0c4f4e8b2968f1929",
+      "securityGroupIds": [
+        "sg-049c9c0df433a5184"
+      ],
+      "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+      "dataLifecycle": null,
+      "subnetId": "subnet-071c0e1ccdc807435",
+      "launchRecord": {
+        "status": "stopped",
+        "clientToken": "3a4d7c7ce9ef1ffa374b60ee0edc00d30dc905ed06621c7787b56da316629380",
+        "launchTime": "2026-11-22T03:50:56+00:00",
+        "approvalReference": "OWNER-VALIDATOR-1-LAUNCH-54cf211b-4c87-42af-b578-4e45f0999fd2",
+        "authorizationDeadline": "2026-11-23T03:50:56+00:00",
+        "stoppedConfirmedAt": "2026-11-22T03:58:35.161217+00:00",
+        "previousPublicIp": "3.27.153.98"
+      }
+    },
+    {
+      "name": "validator-2",
+      "instanceId": null,
+      "region": "ap-southeast-2",
+      "availabilityZone": "ap-southeast-2b",
+      "privateIp": null,
+      "publicIp": null,
+      "privateEndpoint": {
+        "rpcBind": "127.0.0.1",
+        "rpcPort": 9650,
+        "ssmTargetInstanceId": null,
+        "operatorTunnelPort": null
+      },
+      "publicP2pEndpoint": null,
+      "dataVolumeId": null,
+      "filesystemUuid": null,
+      "persistentMount": null,
+      "benchmarkFile": null,
+      "rootVolumeId": null,
+      "securityGroupIds": [
+        "sg-049c9c0df433a5184"
+      ],
+      "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+      "dataLifecycle": null,
+      "subnetId": "subnet-07b2637693bf19a0f"
+    }
+  ],
+  "environments": {
+    "fuji": {
+      "avalancheNetworkId": 5,
+      "purpose": "fuji-rehearsal",
+      "evmChainId": null,
+      "chainIdCandidate": null,
+      "chainIdApproved": false,
+      "registryEvidence": null,
+      "genesisSha256": null,
+      "genesisApproved": false,
+      "genesisPublic": {
+        "publicAddressesReviewed": false,
+        "custodyProposalApproved": false,
+        "allocationAddresses": {
+          "liquidity": null,
+          "treasury": null,
+          "team": null,
+          "rewards": null,
+          "presale1": null,
+          "presale2": null,
+          "presale3": null
+        },
+        "contracts": {
+          "timelock": null,
+          "emergency": null,
+          "feeVault": null,
+          "feeDistributor": null,
+          "registry": null,
+          "rewardVault": null
+        },
+        "managerAddress": null,
+        "managerPredeploys": {},
+        "governanceProposer": null,
+        "emergencySigners": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "genesisTimestamp": null
+      },
+      "managerProxy": null,
+      "managerImplementation": null,
+      "managerLibrary": null,
+      "proxyAdmin": null,
+      "managerArtifactSha256": null,
+      "managerBootstrapReviewed": false,
+      "managerInitializationReviewed": false,
+      "genesisForksReviewed": false,
+      "signerKeystoreAlias": null,
+      "pChainFundingAddress": null,
+      "pChainBudgetAVAX": null,
+      "validatorBalanceAVAX": null,
+      "pwGasSourceRole": null,
+      "signatureAggregatorUrl": null,
+      "subnetId": null,
+      "blockchainId": null,
+      "vmId": null,
+      "identities": {
+        "validator-1": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        },
+        "validator-2": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        }
+      },
+      "approvals": {
+        "identityCreation": false,
+        "hostStart": false,
+        "funding": false,
+        "pChainTransactions": false,
+        "evmInitialization": false,
+        "nativeTransfers": false,
+        "feeAccounting": false,
+        "recoveryDrill": false,
+        "launch": false
+      },
+      "rehearsalPassed": false,
+      "rehearsalEvidenceSha256": null,
+      "nativeTransfer": {
+        "sender": null,
+        "recipient": null,
+        "amountWei": null,
+        "maximumGasCostWei": null
+      },
+      "genesisBlockHash": null
+    },
+    "mainnet": {
+      "avalancheNetworkId": 1,
+      "purpose": "mainnet-pilot",
+      "evmChainId": null,
+      "chainIdCandidate": 73571001,
+      "chainIdApproved": false,
+      "registryEvidence": null,
+      "genesisSha256": null,
+      "genesisApproved": false,
+      "genesisPublic": {
+        "publicAddressesReviewed": false,
+        "custodyProposalApproved": false,
+        "allocationAddresses": {
+          "liquidity": null,
+          "treasury": null,
+          "team": null,
+          "rewards": null,
+          "presale1": null,
+          "presale2": null,
+          "presale3": null
+        },
+        "contracts": {
+          "timelock": null,
+          "emergency": null,
+          "feeVault": null,
+          "feeDistributor": null,
+          "registry": null,
+          "rewardVault": null
+        },
+        "managerAddress": null,
+        "managerPredeploys": {},
+        "governanceProposer": null,
+        "emergencySigners": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "genesisTimestamp": null
+      },
+      "managerProxy": null,
+      "managerImplementation": null,
+      "managerLibrary": null,
+      "proxyAdmin": null,
+      "managerArtifactSha256": null,
+      "managerBootstrapReviewed": false,
+      "managerInitializationReviewed": false,
+      "genesisForksReviewed": false,
+      "signerKeystoreAlias": null,
+      "pChainFundingAddress": null,
+      "pChainBudgetAVAX": null,
+      "validatorBalanceAVAX": null,
+      "pwGasSourceRole": null,
+      "signatureAggregatorUrl": null,
+      "subnetId": null,
+      "blockchainId": null,
+      "vmId": null,
+      "identities": {
+        "validator-1": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        },
+        "validator-2": {
+          "nodeId": null,
+          "blsPublicKey": null,
+          "proofOfPossession": null,
+          "stakingCertificateSha256": null
+        }
+      },
+      "approvals": {
+        "identityCreation": false,
+        "hostStart": false,
+        "funding": false,
+        "pChainTransactions": false,
+        "evmInitialization": false,
+        "nativeTransfers": false,
+        "feeAccounting": false,
+        "recoveryDrill": false,
+        "launch": false
+      },
+      "rehearsalPassed": false,
+      "rehearsalEvidenceSha256": null,
+      "nativeTransfer": {
+        "sender": null,
+        "recipient": null,
+        "amountWei": null,
+        "maximumGasCostWei": null
+      },
+      "genesisBlockHash": null
+    }
+  },
+  "serviceIdentity": {
+    "uid": null,
+    "gid": null
+  },
+  "deploymentProfile": "aws-m6a-xlarge-headroom",
+  "quotaEvidence": {
+    "source": "Saved Sydney EC2 Service Quotas verification; recheck before launch",
+    "standardOnDemandVcpus": 8,
+    "usedVcpus": 0,
+    "accountId": "340379122975",
+    "checkedAt": "2026-11-22"
+  },
+  "awsLaunchApprovals": {
+    "accountVerified": true,
+    "ec2LaunchAuthorized": false
+  },
+  "smallProfileProduction": {
+    "ownerApproved": false,
+    "physicalCoreExceptionAccepted": false,
+    "workloadEvidenceFile": null,
+    "workloadEvidenceSha256": null
+  },
+  "historicalNetcupAccessible": false,
+  "ec2Preparation": {
+    "vpcId": "vpc-0eed3e8882d808fb2",
+    "amiId": "ami-048c1a9eb63a67eed",
+    "rootVolumeGiB": 32,
+    "spendingApprovalReference": null,
+    "launchPayloadsSha256": null
+  },
+  "hostLaunchApprovals": {
+    "validator-1": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": {
+        "host": "validator-1",
+        "accountId": "340379122975",
+        "region": "ap-southeast-2",
+        "instanceType": "m6a.xlarge",
+        "securityGroupIds": [
+          "sg-049c9c0df433a5184"
+        ],
+        "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+        "requestSha256": "d585f3f6eb699f4c02def92de290533d5fb9588e56332420217d3e023c1fbce4"
+      }
+    },
+    "validator-2": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": {
+        "host": "validator-2",
+        "accountId": "340379122975",
+        "region": "ap-southeast-2",
+        "instanceType": "m6a.xlarge",
+        "securityGroupIds": [
+          "sg-049c9c0df433a5184"
+        ],
+        "instanceProfileArn": "arn:aws:iam::340379122975:instance-profile/PrimeWavePilotValidatorSSMProfile",
+        "requestSha256": "7011ea2d7885584e48371283f1d828699db7d68a8a5eb52609d1bc674964f2f3"
+      }
+    }
+  },
+  "deploymentStrategy": "DIRECT_MAINNET",
+  "mainnetReadiness": {
+    "hostEvidence": {
+      "validator-1": {
+        "cloud": {
+          "path": null,
+          "sha256": null
+        },
+        "local": {
+          "path": null,
+          "sha256": null
+        },
+        "operations": {
+          "path": null,
+          "sha256": null
+        }
+      },
+      "validator-2": {
+        "cloud": {
+          "path": null,
+          "sha256": null
+        },
+        "local": {
+          "path": null,
+          "sha256": null
+        },
+        "operations": {
+          "path": null,
+          "sha256": null
+        }
+      }
+    },
+    "chainApproval": {
+      "path": null,
+      "sha256": null
+    },
+    "registry": {
+      "path": null,
+      "sha256": null
+    },
+    "genesis": {
+      "path": null,
+      "sha256": null
+    },
+    "construction": {
+      "path": null,
+      "sha256": null
+    },
+    "securityReview": {
+      "path": null,
+      "sha256": null
+    },
+    "managerArtifact": {
+      "path": null,
+      "sha256": null
+    },
+    "recovery": {
+      "path": null,
+      "sha256": null
+    },
+    "incidentResponse": {
+      "path": null,
+      "sha256": null
+    },
+    "commissioningPlan": {
+      "path": null,
+      "sha256": null
+    },
+    "executionEvidence": {
+      "path": null,
+      "sha256": null
+    },
+    "postEvidence": {
+      "path": null,
+      "sha256": null
+    },
+    "transactions": {
+      "createSubnet": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "createChain": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "convertSubnet": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "initializeManager": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "activateValidators": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "nativeTransfer": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "feeDistribution": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      },
+      "recoveryDrill": {
+        "request": {
+          "path": null,
+          "sha256": null
+        },
+        "approval": {
+          "approved": false,
+          "reference": null,
+          "issuedAt": null,
+          "expiresAt": null,
+          "binding": null
+        }
+      }
+    },
+    "finalAcceptance": {
+      "approved": false,
+      "reference": null,
+      "issuedAt": null,
+      "expiresAt": null,
+      "binding": null
+    },
+    "vmCompatibility": {
+      "path": null,
+      "sha256": null
+    },
+    "productionRecovery": {
+      "path": null,
+      "sha256": null
+    }
+  },
+  "infrastructureEvidence": {
+    "status": "PUBLIC_EVIDENCE_RECONCILIATION_ONLY",
+    "observedAt": "2026-11-22T03:58:35.161217+00:00",
+    "validator1State": "stopped",
+    "requiresFreshCloudReadBeforeAnyOperation": true,
+    "launchSha256": "d585f3f6eb699f4c02def92de290533d5fb9588e56332420217d3e023c1fbce4",
+    "stopEvidenceSha256": "fa37a14d4543222000fbfefba7cd77d025ab0f4c36c84eb97ada7dffd7d45f8d"
+  }
+}

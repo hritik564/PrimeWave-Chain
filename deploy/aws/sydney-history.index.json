@@ -1,0 +1,20 @@
+{
+  "scope": "Immutable hashes of existing local public launch/stop evidence; files not rewritten; local evidence may not be present on another checkout",
+  "files": {
+    "deploy/aws/sydney-validator-1-launch/prelaunch.json": "45b5543262ca9cea0becaf3a18574d5570d695a4fbead9d35cc590ddde24a151",
+    "deploy/aws/sydney-validator-1-launch/deployment.actual.local.json": "c53551c16ee4629de08ba6d26e35e31933fc764ce76f1b93c99a1c66443f1ec6",
+    "deploy/aws/sydney-validator-1-launch/REPORT.md": "7960ed2a81d5c5927ff7d51f225d5e7ebf048805ffc3b0029b46a2755d691b79",
+    "deploy/aws/sydney-validator-1-launch/health.json": "07b2f78f904dc52e53cfdc7489497ada9618f31e97fec1af8cea56a9816c265d",
+    "deploy/aws/sydney-validator-1-launch/STOP-PROCEDURE.md": "6d33e888aa169d0cbf0bb545a5ef9bd81763ff454ddc06185e90a2cbe7ab9b50",
+    "deploy/aws/sydney-validator-1-launch/launch-response.json": "744ed9ec95a0d6674ef8634455490257c7413bb85663a9b1367f66faaa80017a",
+    "deploy/aws/sydney-validator-1-launch/initial-readonly-validation.json": "c9f747914ff5b88e03b03179ca0cbc92bf0c893f7838b9f0e0c54d66251caf8e",
+    "deploy/aws/sydney-validator-1-launch/request-evidence.json": "3588859081aa636d3665202b71cd7ae5b86a4bb587f2455f6f382c58d4e1df38",
+    "deploy/aws/sydney-validator-1-launch/ec2-status.json": "a125e8dcf3f9f4cc245e42d5e423587849aa2150c4233d2adfaea76ab5955284",
+    "deploy/aws/sydney-validator-1-launch/execution.json": "9c3f802022b921c4a2b088805f7059cf73cab8242a5bf2bc21c40d74e660ab50",
+    "deploy/aws/sydney-validator-1-launch/controlled-stop/precheck.json": "5b5ed78eeafad8dc3018321aa5e169b6e04751d76cf961c0c1c91bd3ae88e1f9",
+    "deploy/aws/sydney-validator-1-launch/controlled-stop/REPORT.md": "31a89db22424c53a79c6451cce5260bf416ce22b598c407966f70726796e1127",
+    "deploy/aws/sydney-validator-1-launch/controlled-stop/postcheck.json": "fa37a14d4543222000fbfefba7cd77d025ab0f4c36c84eb97ada7dffd7d45f8d",
+    "deploy/aws/sydney-validator-1-launch/controlled-stop/stop-response.json": "871760dc88a996320fff11db5fece56c2694eb66b4ea04c0c7652cc83e02e48d",
+    "deploy/aws/sydney-validator-1-launch/controlled-stop/execution.json": "7a71d9312a2aba4942d4e69eb5aae35dca11572543c5d47648ad381c90c78ba4"
+  }
+}
