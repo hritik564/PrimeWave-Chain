@@ -104,10 +104,14 @@ def readiness(m, stage, operation, aws):
     if stage == 'POST_MAINNET_ACCEPTANCE':
         check('production acceptance', lambda: post_acceptance(m, r, aws))
     else:
-        check('chain/genesis/artifacts', lambda: artifacts(m, r, aws))
+        if operation == 'createSubnet':
+            check('pre-Subnet custody/governance plan', lambda: pre_subnet(m, r, aws))
+        else:
+            check('chain/genesis/artifacts', lambda: artifacts(m, r, aws))
         check('off-host recovery and incident procedures', lambda: recovery(m, r, aws))
-        check('bounded commissioning plan', lambda: commissioning(m, r, aws))
-        check('transaction plans', lambda: transaction_plans(m, r, aws))
+        if operation != 'createSubnet':
+            check('bounded commissioning plan', lambda: commissioning(m, r, aws))
+        check('transaction plans', lambda: transaction_plans(m, r, aws, operation))
         check('selected operation ' + str(operation), lambda: operation_check(m, r, operation, aws))
     return dict(status='BLOCKED' if errors else 'PASS', stage=stage, operation=operation, strategy=m.get('deploymentStrategy'), blockers=errors, readOnly=True, signing=False, broadcastReady=False, awsMutations=False, manifestSha256=sha(m), scope='OFFLINE_EVIDENCE_REVIEW_ONLY; not signing, broadcasting, host start or public access authorization')
 
@@ -130,15 +134,50 @@ def identities(m, e):
         return {x.lower() for x in [*p.get('allocationAddresses', {}).values(), *p.get('contracts', {}).values(), p.get('governanceProposer'), *p.get('emergencySigners', []), env.get('proxyAdmin')] if isinstance(x, str)}
     require(not custody(e) & custody(m.get('environments', {}).get('fuji', {})), 'test custody cannot authorize Mainnet')
 
-def artifacts(m, r, aws):
+def approved_chain(m, r, aws):
     import chain_id
-    import genesis_candidate
     e = m['environments']['mainnet']
     require(e.get('chainIdApproved') is True, 'Chain ID approval required')
     decision, _ = read(r.get('chainApproval'), aws)
     _, registry = read(r.get('registry'), aws)
     require(chain_id.approved(decision, registry) == e.get('evmChainId'), 'fresh exact Chain ID collision review required')
     require(e['evmChainId'] != m.get('environments', {}).get('fuji', {}).get('evmChainId'), 'Mainnet and optional Fuji Chain IDs must differ')
+
+def pre_subnet(m, r, aws):
+    """No final genesis, SubnetID or EVM deployment exists at this boundary."""
+    approved_chain(m, r, aws)
+    plan, _ = read(r.get('preSubnetReview'), aws)
+    e = m['environments']['mainnet']
+    require(plan.get('networkId') == 1 and plan.get('chainId') == e['evmChainId'], 'Mainnet/Chain ID pre-Subnet review binding required')
+    require(plan.get('ownerReviewed') is True and plan.get('reference'), 'reviewed pre-Subnet custody/governance plan required')
+    require(plan.get('allocationPolicy') == m['allocationPolicy'] and plan.get('nativeSupplyPW') == m['nativeSupplyPW'] and plan.get('feeSplitBps') == m['feeSplitBps'], 'pre-Subnet locked economic policy mismatch')
+    require(plan.get('bootstrapMode') in ('subnet-bound-genesis', 'owner-atomic-upgrade-initialize'), 'reviewed protected manager bootstrap policy required')
+    for flag in ('createSubnetOnly', 'custodyVerified', 'fundingPlanReviewed', 'uninitializedPublicProxyForbidden', 'finalArtifactsRequiredBeforeCreateChain'):
+        require(plan.get(flag) is True, 'pre-Subnet protection required: ' + flag)
+    gov = plan['governance']
+    signers = gov['signers']
+    require(len(signers) >= 3 and all(address(a) for a in signers) and len(set(a.lower() for a in signers)) == len(signers), 'distinct production governance signers required')
+    require(type(gov.get('threshold')) is int and 2 <= gov['threshold'] <= len(signers) and gov.get('timelockSeconds', 0) >= 172800 and address(gov.get('owner')), 'reviewed multisig/timelock ownership required')
+    weights = plan['validatorWeights']
+    require(set(weights) == set(e['identities']) and all(type(v) is int and v > 0 for v in weights.values()), 'reviewed production validator weight plan required')
+
+
+def request_bound(value, m, r, operation, aws):
+    if value.get('operation') != operation:
+        return False
+    if operation != 'createSubnet':
+        return bound(value, m)
+    plan, _ = read(r.get('preSubnetReview'), aws)
+    return (type(value.get('networkId')) is int and value['networkId'] == 1
+            and value.get('chainId') == m['environments']['mainnet']['evmChainId']
+            and value.get('genesisSha256') is None
+            and value.get('preSubnetReviewSha256') == sha(plan))
+
+
+def artifacts(m, r, aws):
+    import genesis_candidate
+    e = m['environments']['mainnet']
+    approved_chain(m, r, aws)
     require(e.get('genesisApproved') is True, 'exact final genesis approval required')
     genesis, _ = read(r.get('genesis'), aws)
     construction, _ = read(r.get('construction'), aws)
@@ -173,6 +212,9 @@ def artifacts(m, r, aws):
     require(len(signers) >= 3 and all((address(a) for a in signers)) and (len(set((a.lower() for a in signers))) == len(signers)), 'distinct production governance signers required')
     require(type(threshold) is int and 2 <= threshold <= len(signers) and (gov.get('timelockSeconds', 0) >= 172800), 'reviewed multisig and >=48h timelock required')
     require(address(gov.get('owner')) and gov['owner'].lower() == e['proxyAdmin'].lower(), 'proxy governance owner differs')
+    subnet = e.get('subnetId')
+    require(subnet and e['genesisPublic'].get('managerSubnetId') == subnet and review.get('subnetId') == subnet and vm.get('subnetId') == subnet, 'actual Subnet ID must bind final manager review and VM initialization evidence')
+    require(review.get('managerInitializedAtGenesis') is True and vm.get('managerInitializedAtGenesis') is True, 'no publicly uninitialized genesis manager proxy permitted')
     weights = review['validatorWeights']
     require(set(weights) == set(e['identities']) and all((type(v) is int and v > 0 for v in weights.values())), 'explicit validator weights required')
 
@@ -202,18 +244,22 @@ def commissioning(m, r, aws):
         risk = m.get('smallProfileProduction', {})
         require(risk.get('ownerApproved') is True and risk.get('physicalCoreExceptionAccepted') is True, 'small-profile physical-core risk acceptance required')
 
-def transaction_plans(m, r, aws):
+def transaction_plans(m, r, aws, selected=None):
     e = m['environments']['mainnet']
-    require(positive(e.get('pChainBudgetAVAX')) and positive(e.get('validatorBalanceAVAX')), 'explicit Mainnet funding/validator AVAX budgets required')
+    require(positive(e.get('pChainBudgetAVAX')), 'explicit Mainnet funding AVAX budget required')
+    if selected != 'createSubnet':
+        require(positive(e.get('validatorBalanceAVAX')), 'explicit validator AVAX budget required')
     require(re.fullmatch('P-avax1[0-9a-z]{30,90}', e.get('pChainFundingAddress') or ''), 'production P-Chain funding address required')
-    require(e.get('signerKeystoreAlias') and e.get('pwGasSourceRole') and e.get('signatureAggregatorUrl'), 'production signer/gas source/local aggregator required')
-    from urllib.parse import urlsplit
-    aggregator = urlsplit(e['signatureAggregatorUrl'])
-    require(aggregator.scheme == 'http' and aggregator.hostname == '127.0.0.1' and aggregator.port and (not aggregator.username) and (not aggregator.password), 'private operator aggregator required')
-    for operation in OPERATIONS:
+    require(re.fullmatch('pw-mainnet-[A-Za-z0-9_-]+', e.get('signerKeystoreAlias') or ''), 'production funding signer alias required')
+    if selected != 'createSubnet':
+        require(e.get('pwGasSourceRole') and e.get('signatureAggregatorUrl'), 'production gas source/local aggregator required')
+        from urllib.parse import urlsplit
+        aggregator = urlsplit(e['signatureAggregatorUrl'])
+        require(aggregator.scheme == 'http' and aggregator.hostname == '127.0.0.1' and aggregator.port and not aggregator.username and not aggregator.password, 'private operator aggregator required')
+    for operation in ((selected,) if selected else OPERATIONS):
         item = r.get('transactions', {}).get(operation, {})
         value, _ = read(item.get('request'), aws)
-        require(value.get('transactionCount') == 1 and bound(value, m) and (value.get('operation') == operation), 'exact network/operation transaction plan required: ' + operation)
+        require(type(value.get('transactionCount')) is int and value['transactionCount'] == 1 and request_bound(value, m, r, operation, aws), 'exact network/operation transaction plan required: ' + operation)
         require(value.get('reviewed') is True and value.get('reference') and value.get('parameters'), 'reviewed parameters required: ' + operation)
         require(re.fullmatch('pw-mainnet-[A-Za-z0-9_-]+', value.get('signerAlias') or ''), 'production signer alias required')
         require(positive(value.get('maximumFeeAVAX')) and positive(value.get('maximumTotalSpendAVAX')), 'explicit AVAX fee/total-spend ceilings required')
@@ -223,6 +269,7 @@ def operation_check(m, r, operation, aws):
     require(operation in OPERATIONS, 'explicit supported Mainnet operation required')
     item = r.get('transactions', {}).get(operation, {})
     value, _ = read(item.get('request'), aws)
+    require(request_bound(value, m, r, operation, aws), 'selected operation evidence binding mismatch')
     binding = dict(operation=operation, networkId=1, accountId=m['accountId'], region=m['region'], requestSha256=sha(value))
     require(approval_ok(item.get('approval'), binding, aws), 'separate exact operation/signer/budget owner approval required')
     if operation in ('convertSubnet', 'initializeManager', 'activateValidators'):
@@ -238,6 +285,9 @@ def operation_check(m, r, operation, aws):
             require(record.get('requestSha256') == sha(request) and record.get('accepted') is True and record.get('transactionId'), 'accepted prior operation receipt required: ' + previous)
         if operation in ('createChain', 'convertSubnet', 'initializeManager', 'activateValidators', 'nativeTransfer', 'feeDistribution', 'recoveryDrill'):
             require(value['parameters'].get('subnetId') == m['environments']['mainnet'].get('subnetId') and value['parameters'].get('subnetId'), 'selected request must bind actual Subnet ID')
+            require(evidence.get('subnetId') == value['parameters']['subnetId'], 'accepted predecessor evidence must bind actual Subnet ID')
+            if operation == 'createChain':
+                require(evidence['operations']['createSubnet'].get('subnetId') == value['parameters']['subnetId'], 'accepted CreateSubnet receipt must identify the selected Subnet ID')
         if operation in ('convertSubnet', 'initializeManager', 'activateValidators', 'nativeTransfer', 'feeDistribution', 'recoveryDrill'):
             require(value['parameters'].get('blockchainId') == m['environments']['mainnet'].get('blockchainId') and value['parameters'].get('blockchainId'), 'selected request must bind actual Blockchain ID')
             require(evidence.get('subnetId') == m['environments']['mainnet'].get('subnetId') and evidence.get('subnetId'), 'actual subnet binding required')

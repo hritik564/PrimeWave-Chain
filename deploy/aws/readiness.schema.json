@@ -33,7 +33,8 @@
         "commissioningPlan",
         "executionEvidence",
         "postEvidence",
-        "productionRecovery"
+        "productionRecovery",
+        "preSubnetReview"
       ],
       "properties": {
         "chainApproval": {
@@ -270,6 +271,9 @@
           "$ref": "#/$defs/approval"
         },
         "productionRecovery": {
+          "$ref": "#/$defs/evidence"
+        },
+        "preSubnetReview": {
           "$ref": "#/$defs/evidence"
         }
       },

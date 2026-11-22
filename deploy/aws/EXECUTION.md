@@ -66,9 +66,25 @@ synthetic test fixtures are never deployment evidence. Do not publish secrets.
    own expiring approval bound to the canonical reviewed request digest. No
    blanket approvals, raw keys, all-in-one CLI or timeout retries with new IDs.
 9. Complete PRE_MAINNET_LAUNCH for the selected operation. Initial createSubnet
-   does not require future on-chain receipts or post-launch acceptance. If using
+   uses a separate digest-bound preSubnetReview, NOT final genesis/manager/VM
+   artifacts, a final commissioning bundle, future IDs/receipts or later requests.
+   It still requires fresh host/storage/identity/alert evidence, production custody,
+   approved ChainID, tested recovery/incident procedures and its own funding,
+   signer, fee ceiling and expiring request-specific approval. preSubnetReview
+   records Mainnet/ChainID, C00 supply/fee policy, governance signers/threshold/
+   timelock/owner, proposed weights and protected bootstrap policy. It must affirm
+   createSubnetOnly, custodyVerified, fundingPlanReviewed,
+   uninitializedPublicProxyForbidden and finalArtifactsRequiredBeforeCreateChain.
+   Its reviewed bootstrapMode is subnet-bound-genesis or
+   owner-atomic-upgrade-initialize; this policy does not approve any EVM operation.
+   The CreateSubnet request has genesisSha256=null and binds the canonical
+   preSubnetReviewSha256 instead. No approval carries forward to CreateChain. If using
    subnet-bound genesis, the actual accepted SubnetID is a later binding: finalize
-   and reapprove genesis/requests before CreateChain. Alternatively review a
+   and reapprove genesis/requests before CreateChain. Final constructor public
+   metadata must record managerSubnetId; the securityReview and vmCompatibility
+   files must bind that actual subnetId, prove managerInitializedAtGenesis=true
+   (base settings/owner/proxy initialization, NOT future validator-set activation),
+   and retain all existing bytecode/bootstrap/governance security checks. Alternatively review a
    tested owner-controlled atomic upgrade+initialize bootstrap. Never expose a
    publicly callable uninitialized proxy or invent a future SubnetID.
 10. After exact CreateSubnetTx approval, sign/broadcast only that transaction;
@@ -79,7 +95,7 @@ synthetic test fixtures are never deployment evidence. Do not publish secrets.
 11. Independently approve ConvertSubnetToL1Tx with actual manager chain/address,
     two production NodeIDs/BLS PoPs/weights, balances and return owners. Preserve
     accepted conversion data. Independently approve the reviewed manager/proxy
-    initialization and initializeValidatorSet using actual conversion Warp data
+    activation and initializeValidatorSet using actual conversion Warp data
     and owner-operated aggregator; verify ownership and registrations/weights.
     Each transaction within a logical stage requires its own reviewed request and
     approval; do not combine multiple irreversible transactions in one authorization.
@@ -142,3 +158,25 @@ runtime lifecycle remains explicit; missing managed DB metadata must refuse
 startup, never initialize a replacement blockchain. Fuji/demo and Mainnet runtime
 roots/identities/custody are isolated. A recovery procedure test before creation
 is distinct from the controlled actual-network recovery required for acceptance.
+
+## Corrected readiness dependency boundary
+
+CreateSubnet requires only its own reviewed request and pre-Subnet plan, alongside
+shared host/identity/custody, registry, governance and recovery safeguards. It does
+not require genesisApproved, a final genesis hash, manager runtime/proxy files,
+final VM initialization evidence, a future SubnetID/BlockchainID or commissioning
+receipts. That PASS never approves deployment or initialization of a contract.
+
+Accepted CreateSubnet -> final subnet-bound constructor/genesis/manager/VM review
+-> separately approved CreateChain -> accepted chain/IDs -> separately approved
+conversion -> accepted conversion/Warp data -> separately approved validator-set
+initialization -> activation and bounded commissioning under separate approvals.
+
+Before CreateChain, the accepted CreateSubnet record must identify the actual
+SubnetID and original request hash. The selected request, manifest, constructor
+public managerSubnetId, manager security review and VM initialization evidence
+must agree. Uninitialized publicly callable manager proxies are still rejected;
+manager base initialization must already be in the approved genesis state. Final
+validator-set initialization remains after conversion, never fabricated before it.
+All later applicable operations retain the final-artifact gate. Missing evidence
+stays BLOCKED; no old AWS approval or historical launch/stop record is rewritten.

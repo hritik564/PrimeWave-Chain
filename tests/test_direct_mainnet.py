@@ -56,8 +56,12 @@ class DirectMainnetTests(unittest.TestCase):
         self.r['recovery']=self.write(recovery)
         self.r['incidentResponse']=self.write(dict(ownerApproved=True,reference='SYNTHETIC',twoValidatorHaltAccepted=True,stopCriteria='SYNTHETIC',escalationContact='SYNTHETIC',rollbackProcedure='SYNTHETIC',noDatabaseReset=True,noDuplicateIdentity=True))
         self.r['commissioningPlan']=self.write(dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],ownerReviewed=True,reference='SYNTHETIC',maximumTransfers=2,maximumDurationSeconds=600,maximumNativePW='1',maximumGasPW='1',gasSourceRole='treasury',productionRiskAccepted=True,haltOnMismatch=True,haltOnResourcePressure=True,alertDeliveryRequired=True,recoveryRequiredBeforePublicAccess=True))
+        pre=dict(networkId=1,chainId=e['evmChainId'],ownerReviewed=True,reference='SYNTHETIC-PRE-SUBNET',allocationPolicy='C00',nativeSupplyPW=100000000,feeSplitBps=self.m['feeSplitBps'],bootstrapMode='subnet-bound-genesis',createSubnetOnly=True,custodyVerified=True,fundingPlanReviewed=True,uninitializedPublicProxyForbidden=True,finalArtifactsRequiredBeforeCreateChain=True,governance=review['governance'],validatorWeights=review['validatorWeights'])
+        self.r['preSubnetReview']=self.write(pre)
         for operation in direct.OPERATIONS:
             request=dict(networkId=1,chainId=e['evmChainId'],genesisSha256=e['genesisSha256'],operation=operation,transactionCount=1,reviewed=True,reference='SYNTHETIC',parameters={'TEST_ONLY':True},signerAlias='pw-mainnet-SYNTHETIC',maximumFeeAVAX='0.1',maximumTotalSpendAVAX='1')
+            if operation=='createSubnet':
+                request['genesisSha256']=None;request['preSubnetReviewSha256']=direct.sha(pre)
             self.r['transactions'][operation]['request']=self.write(request)
         request=self.read(self.r['transactions']['createSubnet']['request'])
         self.r['transactions']['createSubnet']['approval']=self.approve(dict(operation='createSubnet',networkId=1,accountId=self.m['accountId'],region=self.m['region'],requestSha256=direct.sha(request)))
@@ -74,12 +78,92 @@ class DirectMainnetTests(unittest.TestCase):
     def gate(self,stage='PRE_MAINNET_LAUNCH',operation='createSubnet'):
         return aws.ceremony_gate(self.m,'mainnet',stage,operation)
 
+    def chain_ready(self):
+        subnet='SYNTHETIC-SUBNET'
+        self.e['subnetId']=subnet
+        self.e['genesisPublic']['managerSubnetId']=subnet
+        construction=self.read(self.r['construction']);construction['public']=copy.deepcopy(self.e['genesisPublic'])
+        self.r['construction']=self.write(construction)
+        self.change('securityReview',dict(subnetId=subnet,managerInitializedAtGenesis=True,constructionSha256=direct.sha(construction)))
+        self.change('vmCompatibility',dict(subnetId=subnet,managerInitializedAtGenesis=True))
+        item=self.r['transactions']['createChain'];req=self.read(item['request']);req['parameters']['subnetId']=subnet;item['request']=self.write(req)
+        item['approval']=self.approve(dict(operation='createChain',networkId=1,accountId=self.m['accountId'],region=self.m['region'],requestSha256=direct.sha(req)))
+        self.r['executionEvidence']=self.write(dict(networkId=1,chainId=self.e['evmChainId'],genesisSha256=self.e['genesisSha256'],subnetId=subnet,operations={'createSubnet':{'requestSha256':direct.sha(self.read(self.r['transactions']['createSubnet']['request'])),'accepted':True,'transactionId':'SYNTHETIC','subnetId':subnet}}))
+
     def test_pre_pass_without_fuji_or_future_receipts(self):
         self.assertFalse(self.m['environments']['fuji']['rehearsalPassed'])
         result=self.gate();self.assertEqual(result['status'],'PASS',result['blockers'])
         self.assertFalse(result['signing']);self.assertFalse(result['broadcastReady']);self.assertFalse(result['awsMutations'])
         self.assertIsNone(self.e['blockchainId']);self.assertIsNone(self.r['postEvidence']['path'])
         self.assertFalse(self.e['approvals']['nativeTransfers'])
+
+    def test_create_subnet_does_not_read_unavailable_future_artifacts(self):
+        self.e.update(subnetId=None,blockchainId=None,genesisSha256=None,genesisApproved=False,
+            managerArtifactSha256=None,managerProxy=None,managerImplementation=None,managerLibrary=None,
+            proxyAdmin=None,managerBootstrapReviewed=False,managerInitializationReviewed=False,
+            genesisForksReviewed=False,signatureAggregatorUrl=None,validatorBalanceAVAX=None,pwGasSourceRole=None)
+        for key in ('genesis','construction','securityReview','managerArtifact','vmCompatibility',
+                    'commissioningPlan','executionEvidence','postEvidence','productionRecovery'):
+            self.r[key]={'path':None,'sha256':None}
+        for op in direct.OPERATIONS:
+            if op!='createSubnet':self.r['transactions'][op]['request']={'path':None,'sha256':None}
+        result=self.gate()
+        self.assertEqual(result['status'],'PASS',result['blockers'])
+        self.assertFalse(result['signing']);self.assertFalse(result['broadcastReady'])
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+
+    def test_later_genesis_finalization_does_not_rebind_subnet_approval(self):
+        request=self.r['transactions']['createSubnet']['request']
+        approval=copy.deepcopy(self.r['transactions']['createSubnet']['approval'])
+        self.e['genesisSha256']='f'*64
+        self.e['genesisApproved']=False
+        self.assertEqual(self.gate()['status'],'PASS')
+        self.assertEqual(self.r['transactions']['createSubnet']['request'],request)
+        self.assertEqual(self.r['transactions']['createSubnet']['approval'],approval)
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+
+    def test_create_chain_requires_final_artifacts_and_subnet_initialization(self):
+        self.chain_ready()
+        self.assertEqual(self.gate(operation='createChain')['status'],'PASS')
+        original=copy.deepcopy(self.e)
+        for flag in ('genesisApproved','managerBootstrapReviewed','managerInitializationReviewed'):
+            self.e[flag]=False
+            self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED',flag)
+            self.e[flag]=original[flag]
+        for key in ('genesis','construction','managerArtifact','securityReview','vmCompatibility'):
+            ref=self.r[key];self.r[key]={'path':None,'sha256':None}
+            self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED',key);self.r[key]=ref
+        for key,change in [('securityReview',{'managerInitializedAtGenesis':False}),
+                           ('vmCompatibility',{'subnetId':'WRONG'}),
+                           ('securityReview',{'subnetId':'WRONG'})]:
+            old=self.r[key];self.change(key,change)
+            self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED');self.r[key]=old
+
+    def test_accepted_subnet_id_cannot_be_changed_or_inferred(self):
+        self.chain_ready();old=self.r['executionEvidence']
+        for field in ('subnetId','receiptSubnetId','accepted'):
+            evidence=self.read(old)
+            if field=='subnetId':evidence['subnetId']='WRONG'
+            elif field=='receiptSubnetId':evidence['operations']['createSubnet']['subnetId']='WRONG'
+            else:evidence['operations']['createSubnet']['accepted']=False
+            self.r['executionEvidence']=self.write(evidence)
+            self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED',field)
+        self.r['executionEvidence']=old
+        self.e['genesisPublic']['managerSubnetId']='WRONG'
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
+
+    def test_pre_subnet_policy_cannot_waive_proxy_or_custody_security(self):
+        plan_ref=self.r['preSubnetReview'];original_request=copy.deepcopy(self.r['transactions']['createSubnet'])
+        for field in ('custodyVerified','fundingPlanReviewed','uninitializedPublicProxyForbidden','finalArtifactsRequiredBeforeCreateChain'):
+            plan=self.read(plan_ref);plan[field]=False;self.r['preSubnetReview']=self.write(plan)
+            # Even separately reapproving this transaction cannot waive the gate.
+            request=self.read(original_request['request']);request['preSubnetReviewSha256']=direct.sha(plan)
+            item=self.r['transactions']['createSubnet'];item['request']=self.write(request)
+            item['approval']=self.approve(dict(operation='createSubnet',networkId=1,accountId=self.m['accountId'],region=self.m['region'],requestSha256=direct.sha(request)))
+            self.assertEqual(self.gate()['status'],'BLOCKED',field)
+        self.r['preSubnetReview']=plan_ref;self.r['transactions']['createSubnet']=original_request
+        self.e['genesisPublic']['custodyProposalApproved']=False
+        self.assertEqual(self.gate()['status'],'BLOCKED')
 
     def test_strategy_must_be_explicit(self):
         self.m.pop('deploymentStrategy');self.assertEqual(self.gate()['status'],'BLOCKED')
@@ -94,30 +178,29 @@ class DirectMainnetTests(unittest.TestCase):
                 v=self.read(row['operations']);v['certificateSha256']='bad' if variant=='identity' else v['certificateSha256'];v['alertDeliveryVerified']=variant!='alert';row['operations']=self.write(v)
             self.assertEqual(self.gate()['status'],'BLOCKED',variant);self.r['hostEvidence']=saved
 
-    def test_custody_chain_genesis_manager_recovery_each_block(self):
-        for flag in ('chainIdApproved','genesisApproved','managerBootstrapReviewed','managerInitializationReviewed'):
-            self.e[flag]=False;self.assertEqual(self.gate()['status'],'BLOCKED',flag);self.e[flag]=True
+    def test_custody_chain_governance_recovery_each_block(self):
+        self.e['chainIdApproved']=False;self.assertEqual(self.gate()['status'],'BLOCKED');self.e['chainIdApproved']=True
         self.e['genesisPublic']['custodyProposalApproved']=False
         self.assertEqual(self.gate()['status'],'BLOCKED');self.e['genesisPublic']['custodyProposalApproved']=True
         self.m['operations']['offHostRecoveryVerified']=False
         self.assertEqual(self.gate()['status'],'BLOCKED')
 
     def test_uninitialized_manager_and_unsafe_governance_refused(self):
+        self.chain_ready()
+        self.assertEqual(self.gate(operation='createChain')['status'],'PASS')
         old=copy.deepcopy(self.r['securityReview']);self.change('securityReview',{'uninitializedProxyCallable':True})
-        self.assertEqual(self.gate()['status'],'BLOCKED');self.r['securityReview']=old
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED');self.r['securityReview']=old
         review=self.read(old);review['governance']['threshold']=1;self.r['securityReview']=self.write(review)
-        self.assertEqual(self.gate()['status'],'BLOCKED')
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
 
     def test_each_transaction_needs_own_approval_and_previous_acceptance(self):
-        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
-        self.e['subnetId']='SYNTHETIC-SUBNET'
-        item=self.r['transactions']['createChain']
-        req=self.read(item['request']);req['parameters']['subnetId']=self.e['subnetId'];item['request']=self.write(req)
+        self.chain_ready();item=self.r['transactions']['createChain'];approved=copy.deepcopy(item['approval'])
         item['approval']=copy.deepcopy(self.r['transactions']['createSubnet']['approval'])
         self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
-        item['approval']=self.approve(dict(operation='createChain',networkId=1,accountId=self.m['accountId'],region=self.m['region'],requestSha256=direct.sha(self.read(item['request']))))
+        item['approval']=approved
+        previous=copy.deepcopy(self.r['executionEvidence']);self.r['executionEvidence']={'path':None,'sha256':None}
         self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
-        self.r['executionEvidence']=self.write(dict(networkId=1,chainId=self.e['evmChainId'],genesisSha256=self.e['genesisSha256'],operations={'createSubnet':{'requestSha256':direct.sha(self.read(self.r['transactions']['createSubnet']['request'])),'accepted':True,'transactionId':'SYNTHETIC'}}))
+        self.r['executionEvidence']=previous
         self.assertEqual(self.gate(operation='createChain')['status'],'PASS')
         self.r['transactions']['createSubnet']['approval']['approved']=False
         self.assertEqual(self.gate()['status'],'BLOCKED')
@@ -134,6 +217,7 @@ class DirectMainnetTests(unittest.TestCase):
         self.assertEqual(self.gate('POST_MAINNET_ACCEPTANCE')['status'],'BLOCKED')
 
     def post_packet(self):
+        self.chain_ready()
         self.e.update(blockchainId='SYNTHETIC-CHAIN',genesisBlockHash='0x'+'d'*64)
         receipt={'transactionHash':'0x'+'1'*64,'status':1,'blockHash':'0x'+'2'*64,'gasUsed':21000,'effectiveGasPrice':1}
         fee_receipt={'transactionHash':'0x'+'3'*64,'status':1}
@@ -175,8 +259,9 @@ class DirectMainnetTests(unittest.TestCase):
     def test_stale_collision_review_and_altered_genesis_rejected(self):
         old=copy.deepcopy(self.r['chainApproval']);self.change('chainApproval',{'checkedAt':'2020-01-01T00:00:00+00:00'})
         self.assertEqual(self.gate()['status'],'BLOCKED');self.r['chainApproval']=old
+        self.chain_ready()
         g=self.read(self.r['genesis']);g['alloc'][next(iter(g['alloc']))]['balance']='0x1';self.r['genesis']=self.write(g)
-        self.assertEqual(self.gate()['status'],'BLOCKED')
+        self.assertEqual(self.gate(operation='createChain')['status'],'BLOCKED')
 
     def test_expired_operation_approval_and_altered_fee_ceiling_rejected(self):
         a=self.r['transactions']['createSubnet']['approval'];a['expiresAt']='2020-01-01T00:00:00+00:00'
