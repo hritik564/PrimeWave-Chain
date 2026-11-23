@@ -35,20 +35,30 @@ test('health check reports only static-server health', async () => {
   const { response, body } = await request('/healthz');
   assert.equal(response.status, 200);
   assert.deepEqual(JSON.parse(body), { status: 'ok', service: 'pwcscan-static' });
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
 
-test('deep client route falls back to the production SPA shell', async () => {
-  const { response, body } = await request('/address/0x1234567890abcdef', {
-    headers: { accept: 'text/html' },
+for (const route of [
+  '/',
+  '/mainnet',
+  '/mainnet/blocks',
+  '/mainnet/transactions',
+  '/testnet/blocks',
+]) {
+  test(`frontend navigation route ${route} serves the SPA shell without Accept negotiation`, async () => {
+    const { response, body } = await request(route);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /^text\/html/);
+    assert.match(body, /PWCScan test shell/);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
   });
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /PWCScan test shell/);
-  assert.equal(response.headers.get('cache-control'), 'no-store');
-});
+}
 
-test('missing indexer returns a truthful 503 without preventing the shell', async () => {
-  const { response, body } = await request('/indexer-api/blocks');
+test('missing indexer health route returns sanitized 503 without preventing the shell', async () => {
+  const { response, body } = await request('/indexer-api/health');
   assert.equal(response.status, 503);
   assert.deepEqual(JSON.parse(body), {
     success: false,
@@ -76,6 +86,16 @@ test('static assets have correct MIME types and immutable cache only for hashed 
 test('unknown assets, traversal attempts and unsupported methods do not become SPA pages', async () => {
   const missing = await request('/missing.png', { headers: { accept: 'text/html' } });
   assert.equal(missing.response.status, 404);
+
+  const missingExtensionlessAsset = await request('/images/missing-logo', {
+    headers: { accept: 'text/html' },
+  });
+  assert.equal(missingExtensionlessAsset.response.status, 404);
+
+  const unknownNetworkRoute = await request('/mainnet/not-a-route', {
+    headers: { accept: 'text/html' },
+  });
+  assert.equal(unknownNetworkRoute.response.status, 404);
 
   const traversal = await request('/%2e%2e/package.json', { headers: { accept: 'text/html' } });
   assert.equal(traversal.response.status, 404);

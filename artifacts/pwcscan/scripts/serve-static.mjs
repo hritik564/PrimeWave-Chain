@@ -29,6 +29,25 @@ const INDEXER_UNAVAILABLE = JSON.stringify({
   },
 });
 
+const NETWORK_ROUTE = String.raw`(?:devnet|testnet|mainnet)`;
+const ROUTE_PARAM = String.raw`[^/.]+`;
+const SPA_ROUTE_PATTERNS = [
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/blocks(?:/${ROUTE_PARAM})?/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/transactions/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/tx/${ROUTE_PARAM}/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/address/${ROUTE_PARAM}/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/contract/${ROUTE_PARAM}/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/contracts/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/validators/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/validator/${ROUTE_PARAM}/?$`),
+  new RegExp(String.raw`^/${NETWORK_ROUTE}/(?:staking|rewards|fees|governance|stats|search)/?$`),
+];
+
+function isSpaRoute(pathname) {
+  return SPA_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
 function sendText(response, status, contentType, body, extraHeaders = {}) {
   response.writeHead(status, {
     'Cache-Control': 'no-store',
@@ -114,8 +133,7 @@ export function createStaticServer(distDirectory) {
     try {
       const fileStat = statSync(filePath);
       if (!fileStat.isFile()) {
-        const acceptsHtml = (request.headers.accept ?? '').includes('text/html');
-        if (acceptsHtml && !url.pathname.startsWith('/assets/')) {
+        if (isSpaRoute(url.pathname)) {
           filePath = indexFile;
           isHtml = true;
         } else {
@@ -124,9 +142,7 @@ export function createStaticServer(distDirectory) {
         }
       }
     } catch {
-      const acceptsHtml = (request.headers.accept ?? '').includes('text/html');
-      const hasExtension = path.extname(url.pathname) !== '';
-      if (acceptsHtml && !hasExtension) {
+      if (isSpaRoute(url.pathname)) {
         filePath = indexFile;
         isHtml = true;
       } else {
