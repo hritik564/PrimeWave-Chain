@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useState } from "react"
 import { useLocation } from "wouter"
-import { Menu, Sun, Moon, Settings, Database, RefreshCw, ChevronDown, Check, Globe2 } from "lucide-react"
+import { Menu, Sun, Moon, Settings, RefreshCw, ChevronDown, Check, Globe2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/lib/settings"
 import { useStats } from "@/lib/api"
@@ -121,14 +121,18 @@ export function NavBar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div className="mx-auto flex h-[4.25rem] w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex items-center gap-6">
-          <NetworkLink href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Database className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-xl hidden sm:inline-block tracking-tight text-foreground">
-              PWCScan
+          <NetworkLink href="/" className="flex items-center gap-2.5">
+            <img
+              src="/pwcscan-approved-logo.png"
+              alt=""
+              aria-hidden="true"
+              className="h-9 w-9 shrink-0 object-contain"
+            />
+            <span className="hidden leading-tight sm:grid">
+              <span className="font-display text-[17px] font-semibold tracking-tight text-foreground">PWCScan</span>
+              <span className="text-[9px] font-semibold uppercase tracking-[0.17em] text-muted-foreground">PrimeWave explorer</span>
             </span>
           </NetworkLink>
 

@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
+import { sendIndexerUnavailable } from './src/lib/indexer-proxy-response';
 
 const rawPort = process.env.PORT;
 
@@ -89,6 +90,14 @@ export default defineConfig({
         target: 'http://127.0.0.1:4000',
         changeOrigin: false,
         rewrite: (path: string) => path.replace(/^\/indexer-api/, ''),
+        configure: (proxy) => {
+          // Vite's default proxy error is an opaque HTTP 500. The indexer is
+          // intentionally not started until RPC, database and schema checks
+          // pass, so report an unavailable dependency without leaking details.
+          proxy.on('error', (_error, _request, response) => {
+            if (response) sendIndexerUnavailable(response);
+          });
+        },
       },
     },
   },

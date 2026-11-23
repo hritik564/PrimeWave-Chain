@@ -1,3 +1,4 @@
+import { buildMainnetNetwork } from './mainnet-config.js';
 import { isGenesisHash, isSafeIndexerUrl } from './network-identity';
 
 export type NetworkId = 'devnet' | 'testnet' | 'mainnet';
@@ -19,7 +20,11 @@ export interface NetworkDefinition {
   description: string;
   status: NetworkStatus;
   chainId: number | null;
+  subnetId: string | null;
+  blockchainId: string | null;
+  nativeCurrency: { name: string; symbol: string; decimals: number };
   rpcUrl: string | null;
+  websocketUrl: string | null;
   indexerApiUrl: string | null;
   expectedGenesisHash: string | null;
   contractAddresses: Partial<Record<ContractName, string>>;
@@ -100,7 +105,11 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
     description: 'Local development',
     status: safeDevnetIndexerApiUrl && devnetRpcUrl ? 'configured' : 'unconfigured',
     chainId: 73571,
+    subnetId: null,
+    blockchainId: null,
+    nativeCurrency: { name: 'PrimeWave', symbol: 'PW', decimals: 18 },
     rpcUrl: devnetRpcUrl,
+    websocketUrl: null,
     indexerApiUrl: safeDevnetIndexerApiUrl,
     expectedGenesisHash: null,
     contractAddresses: devnetAddresses,
@@ -113,14 +122,18 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
     id: 'testnet',
     label: 'Testnet',
     shortLabel: 'Testnet',
-    description: safeTestnetIndexerApiUrl
+    description: testnetIndexerApiUrl
       ? 'Chain 77 test environment'
       : 'Chain 77 indexer endpoint pending',
     status: safeTestnetIndexerApiUrl ? 'configured' : 'unconfigured',
     chainId: 77,
+    subnetId: null,
+    blockchainId: TESTNET_BLOCKCHAIN_ID,
+    nativeCurrency: { name: 'PrimeWave', symbol: 'PW', decimals: 18 },
     rpcUrl:
       envValue('VITE_TESTNET_RPC_URL') ??
       `https://rpc.testnet.primewave.xyz/ext/bc/${TESTNET_BLOCKCHAIN_ID}/rpc`,
+    websocketUrl: envValue('VITE_TESTNET_WS_URL') ?? null,
     indexerApiUrl: safeTestnetIndexerApiUrl,
     expectedGenesisHash: isGenesisHash(envValue('VITE_TESTNET_GENESIS_HASH'))
       ? envValue('VITE_TESTNET_GENESIS_HASH')!.toLowerCase()
@@ -133,27 +146,19 @@ const configuredNetworks: Record<Exclude<NetworkId, 'mainnet'>, NetworkDefinitio
   },
 };
 
-const mainnetIndexerApiUrl = envValue('VITE_MAINNET_INDEXER_API_URL');
-const safeMainnetIndexerApiUrl = isSafeIndexerUrl(mainnetIndexerApiUrl)
-  ? mainnetIndexerApiUrl
+const mainnetNetwork = buildMainnetNetwork({
+  VITE_MAINNET_CHAIN_ID: envValue('VITE_MAINNET_CHAIN_ID'),
+  VITE_MAINNET_BLOCKCHAIN_ID: envValue('VITE_MAINNET_BLOCKCHAIN_ID'),
+  VITE_MAINNET_RPC_URL: envValue('VITE_MAINNET_RPC_URL'),
+  VITE_MAINNET_WS_URL: envValue('VITE_MAINNET_WS_URL'),
+  VITE_MAINNET_INDEXER_API_URL: envValue('VITE_MAINNET_INDEXER_API_URL'),
+});
+const mainnetExpectedGenesisHashValue = envValue('VITE_MAINNET_GENESIS_HASH');
+const mainnetExpectedGenesisHash = isGenesisHash(mainnetExpectedGenesisHashValue)
+  ? mainnetExpectedGenesisHashValue.toLowerCase()
   : null;
-const mainnetChainIdValue = envValue('VITE_MAINNET_CHAIN_ID');
-const mainnetChainId =
-  mainnetChainIdValue && /^\d+$/.test(mainnetChainIdValue)
-    ? Number(mainnetChainIdValue)
-    : null;
-const mainnetGenesisHashValue = envValue('VITE_MAINNET_GENESIS_HASH');
-const mainnetGenesisHash = isGenesisHash(mainnetGenesisHashValue)
-  ? mainnetGenesisHashValue.toLowerCase()
-  : null;
-const mainnetIsConfigured =
-  Boolean(safeMainnetIndexerApiUrl && mainnetGenesisHash) &&
-  mainnetChainId !== null &&
-  Number.isSafeInteger(mainnetChainId) &&
-  mainnetChainId > 0;
-const hasPartialMainnetConfiguration =
-  Boolean(mainnetIndexerApiUrl || mainnetChainIdValue || mainnetGenesisHashValue) &&
-  !mainnetIsConfigured;
+const mainnetIdentityConfigured =
+  mainnetNetwork.status === 'configured' && mainnetExpectedGenesisHash !== null;
 
 export const NETWORKS: Record<NetworkId, NetworkDefinition> = {
   ...configuredNetworks,
@@ -161,16 +166,18 @@ export const NETWORKS: Record<NetworkId, NetworkDefinition> = {
     id: 'mainnet',
     label: 'Mainnet',
     shortLabel: 'Mainnet',
-    description: mainnetIsConfigured
+    description: mainnetIdentityConfigured
       ? 'Identity verification required'
-      : hasPartialMainnetConfiguration
-        ? 'Launch configuration incomplete'
-        : 'Launch configuration pending',
-    status: mainnetIsConfigured ? 'configured' : 'unconfigured',
-    chainId: mainnetIsConfigured ? mainnetChainId : null,
-    rpcUrl: null,
-    indexerApiUrl: mainnetIsConfigured ? safeMainnetIndexerApiUrl : null,
-    expectedGenesisHash: mainnetIsConfigured ? mainnetGenesisHash : null,
+      : 'Launch configuration pending or incomplete',
+    status: mainnetIdentityConfigured ? 'configured' : 'unconfigured',
+    chainId: mainnetNetwork.chainId,
+    subnetId: mainnetNetwork.subnetId,
+    blockchainId: mainnetNetwork.blockchainId,
+    nativeCurrency: mainnetNetwork.nativeCurrency,
+    rpcUrl: mainnetIdentityConfigured ? mainnetNetwork.rpcUrl : null,
+    websocketUrl: mainnetIdentityConfigured ? mainnetNetwork.websocketUrl : null,
+    indexerApiUrl: mainnetIdentityConfigured ? mainnetNetwork.indexerApiUrl : null,
+    expectedGenesisHash: mainnetIdentityConfigured ? mainnetExpectedGenesisHash : null,
     contractAddresses: {},
     visual: {
       color: 'mainnet',
@@ -200,7 +207,7 @@ export function getNetwork(id: string): NetworkDefinition {
 
 export function getDefaultNetwork(): NetworkId {
   const configuredDefault = envValue('VITE_DEFAULT_NETWORK');
-  const candidate = isNetworkId(configuredDefault) && configuredDefault !== 'mainnet'
+  const candidate = isNetworkId(configuredDefault)
     ? configuredDefault
     : SAFE_DEFAULT_NETWORK;
   return isNetworkAvailable(candidate) ? candidate : 'testnet';
@@ -208,8 +215,7 @@ export function getDefaultNetwork(): NetworkId {
 
 export function validateNetwork(network: NetworkDefinition): void {
   if (network.status === 'unconfigured') return;
-  if (!network.indexerApiUrl || network.chainId === null ||
-    (network.id === 'mainnet' && !network.expectedGenesisHash)) {
+  if (!network.indexerApiUrl || network.chainId === null) {
     throw new Error(`${network.label} network is partially configured`);
   }
 }

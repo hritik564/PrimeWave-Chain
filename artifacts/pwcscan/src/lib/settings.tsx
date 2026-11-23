@@ -19,7 +19,7 @@ const SettingsContext = createContext<SettingsState | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(
-    (localStorage.getItem('pwc-theme') as Theme) || 'system'
+    (localStorage.getItem('pwc-theme') as Theme) || 'light'
   );
   const [addressDisplay, setAddressDisplayState] = useState<AddressDisplay>(
     (localStorage.getItem('pwc-addr-display') as AddressDisplay) || 'truncated'

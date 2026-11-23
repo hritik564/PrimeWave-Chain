@@ -6,9 +6,16 @@
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "vite build --config vite.config.ts",
+    "start": "node scripts/serve-static.mjs",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:search": "tsx --test src/lib/search-client.test.ts src/lib/network-identity.test.ts src/lib/format.test.ts"
+    "test:search": "tsx --test src/lib/search-client.test.ts",
+    "test:pagination": "tsx --test src/lib/pagination.test.ts",
+    "test:mainnet-config": "node --test src/lib/mainnet-config.test.mjs",
+    "test:proxy-response": "tsx --test src/lib/indexer-proxy-response.test.ts",
+    "test:static-server": "node --test scripts/serve-static.test.mjs",
+    "test:post-merge-safety": "node --test scripts/post-merge-safety.test.mjs",
+    "test:network-identity": "tsx --test src/lib/network-identity.test.ts src/lib/format.test.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -69,6 +76,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
+    "tsx": "catalog:",
     "tw-animate-css": "^1.4.0",
     "vaul": "^1.1.2",
     "vite": "catalog:",

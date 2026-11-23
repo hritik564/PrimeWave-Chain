@@ -64,7 +64,7 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 210 40% 98%;
+  --background: 210 33% 98%;
   --foreground: 222 47% 11%;
   --border: 214 32% 91%;
   
@@ -85,7 +85,7 @@
   --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 91%;
 
-  --primary: 221 83% 53%;
+  --primary: 224 76% 48%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 210 40% 96.1%;
@@ -118,6 +118,47 @@
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
+
+/* PWCScan's explorer shell: calm light surfaces, ink-blue data accents. */
+.pw-home { --pw-surface: 0 0% 100%; }
+.pw-hero {
+  border-color: hsl(var(--primary) / .14);
+  background:
+    radial-gradient(ellipse at 83% 14%, hsl(193 88% 76% / .27), transparent 34%),
+    radial-gradient(ellipse at 96% 96%, hsl(225 85% 79% / .23), transparent 42%),
+    linear-gradient(118deg, hsl(216 44% 99%), hsl(219 48% 96%) 56%, hsl(194 45% 97%));
+  box-shadow: 0 22px 65px -42px hsl(222 47% 20% / .26);
+}
+.dark .pw-hero {
+  background:
+    radial-gradient(ellipse at 83% 14%, hsl(193 88% 45% / .14), transparent 34%),
+    radial-gradient(ellipse at 96% 96%, hsl(225 85% 60% / .18), transparent 42%),
+    linear-gradient(118deg, hsl(222 42% 13%), hsl(222 38% 15%) 56%, hsl(211 38% 16%));
+}
+.pw-hero-orbit { pointer-events: none; position: absolute; z-index: 0; border: 1px solid hsl(var(--primary) / .09); border-radius: 9999px; }
+.pw-hero-orbit-one { width: 29rem; height: 29rem; right: -8rem; top: -18rem; }
+.pw-hero-orbit-two { width: 39rem; height: 39rem; right: -13rem; top: -23rem; border-color: hsl(190 70% 45% / .08); }
+.pw-gradient-text { background: linear-gradient(105deg, hsl(224 76% 48%), hsl(196 74% 39%)); color: transparent; background-clip: text; }
+.dark .pw-gradient-text { background-image: linear-gradient(105deg, hsl(216 92% 72%), hsl(185 78% 65%)); }
+.pw-hero-chip { display: inline-flex; align-items: center; gap: .4rem; border: 1px solid hsl(var(--primary) / .12); border-radius: 9999px; background: hsl(var(--background) / .7); padding: .4rem .7rem; color: hsl(var(--muted-foreground)); font-size: .72rem; }
+.pw-hero-chip strong { color: hsl(var(--foreground)); }
+.pw-metric-card { border-color: hsl(var(--border) / .78); background: hsl(var(--card)); box-shadow: 0 6px 22px -20px hsl(222 47% 20% / .3); transition: transform .18s ease, box-shadow .18s ease; }
+.pw-metric-card:hover { transform: translateY(-2px); box-shadow: 0 16px 28px -22px hsl(222 47% 20% / .35); }
+.pw-metric-icon,.pw-section-icon { display: grid; height: 2.25rem; width: 2.25rem; flex: 0 0 auto; place-items: center; border-radius: .8rem; background: hsl(217 88% 96%); color: hsl(224 76% 48%); }
+.dark .pw-metric-icon,.dark .pw-section-icon { background: hsl(217 70% 24% / .65); color: hsl(216 92% 72%); }
+.pw-section-icon-violet { background: hsl(263 80% 96%); color: hsl(263 70% 53%); }
+.dark .pw-section-icon-violet { background: hsl(263 55% 27% / .65); color: hsl(263 85% 78%); }
+.pw-data-card { border-color: hsl(var(--border) / .8); box-shadow: 0 12px 32px -28px hsl(222 47% 20% / .3); }
+.pw-table-head { border-bottom: 1px solid hsl(var(--border) / .6); }
+.pw-feature-link { display: flex; min-width: 0; align-items: center; gap: .85rem; border: 1px solid hsl(var(--border) / .8); border-radius: .9rem; background: hsl(var(--card)); padding: 1rem; transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+.pw-feature-link:hover { transform: translateY(-1px); border-color: hsl(var(--primary) / .3); box-shadow: 0 10px 25px -20px hsl(var(--primary) / .5); }
+.pw-feature-link span { display: grid; gap: .15rem; }
+.pw-feature-link strong { font-size: .82rem; font-weight: 600; }
+.pw-feature-link small { color: hsl(var(--muted-foreground)); font-size: .7rem; }
+.pw-skeleton { border-radius: .4rem; background: linear-gradient(90deg, hsl(var(--muted)), hsl(var(--muted) / .5), hsl(var(--muted))); background-size: 200% 100%; animation: pw-shimmer 1.4s ease-in-out infinite; }
+.pw-live-dot { box-shadow: 0 0 0 4px hsl(142 71% 45% / .12); }
+@keyframes pw-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .pw-metric-card,.pw-feature-link { transition: none; } .pw-skeleton { animation: none; } }
 
 .dark {
   --button-outline: rgba(255, 255, 255, 0.1);
