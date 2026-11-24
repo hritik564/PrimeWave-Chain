@@ -3,6 +3,8 @@ modules = ["nodejs-24", "python-base-3.13", "postgresql-16"]
 [deployment]
 router = "application"
 deploymentTarget = "vm"
+build = 'PORT="${PORT:-5000}" BASE_PATH=/ VITE_DEFAULT_NETWORK=mainnet corepack pnpm --filter @workspace/pwcscan build'
+run = 'PORT="${PORT:-5000}" BASE_PATH=/ corepack pnpm --filter @workspace/pwcscan start'
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
